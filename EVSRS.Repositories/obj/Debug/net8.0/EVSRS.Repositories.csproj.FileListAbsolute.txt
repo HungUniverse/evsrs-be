@@ -1,0 +1,11 @@
+D:\FALL2025\evsrs-server\EVSRS.Repositories\bin\Debug\net8.0\EVSRS.Repositories.deps.json
+D:\FALL2025\evsrs-server\EVSRS.Repositories\bin\Debug\net8.0\EVSRS.Repositories.dll
+D:\FALL2025\evsrs-server\EVSRS.Repositories\bin\Debug\net8.0\EVSRS.Repositories.pdb
+D:\FALL2025\evsrs-server\EVSRS.Repositories\obj\Debug\net8.0\EVSRS.Repositories.GeneratedMSBuildEditorConfig.editorconfig
+D:\FALL2025\evsrs-server\EVSRS.Repositories\obj\Debug\net8.0\EVSRS.Repositories.AssemblyInfoInputs.cache
+D:\FALL2025\evsrs-server\EVSRS.Repositories\obj\Debug\net8.0\EVSRS.Repositories.AssemblyInfo.cs
+D:\FALL2025\evsrs-server\EVSRS.Repositories\obj\Debug\net8.0\EVSRS.Repositories.csproj.CoreCompileInputs.cache
+D:\FALL2025\evsrs-server\EVSRS.Repositories\obj\Debug\net8.0\EVSRS.Repositories.dll
+D:\FALL2025\evsrs-server\EVSRS.Repositories\obj\Debug\net8.0\refint\EVSRS.Repositories.dll
+D:\FALL2025\evsrs-server\EVSRS.Repositories\obj\Debug\net8.0\EVSRS.Repositories.pdb
+D:\FALL2025\evsrs-server\EVSRS.Repositories\obj\Debug\net8.0\ref\EVSRS.Repositories.dll

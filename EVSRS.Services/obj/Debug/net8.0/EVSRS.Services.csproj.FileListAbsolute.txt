@@ -1,0 +1,11 @@
+D:\FALL2025\evsrs-server\EVSRS.Services\bin\Debug\net8.0\EVSRS.Services.deps.json
+D:\FALL2025\evsrs-server\EVSRS.Services\bin\Debug\net8.0\EVSRS.Services.dll
+D:\FALL2025\evsrs-server\EVSRS.Services\bin\Debug\net8.0\EVSRS.Services.pdb
+D:\FALL2025\evsrs-server\EVSRS.Services\obj\Debug\net8.0\EVSRS.Services.GeneratedMSBuildEditorConfig.editorconfig
+D:\FALL2025\evsrs-server\EVSRS.Services\obj\Debug\net8.0\EVSRS.Services.AssemblyInfoInputs.cache
+D:\FALL2025\evsrs-server\EVSRS.Services\obj\Debug\net8.0\EVSRS.Services.AssemblyInfo.cs
+D:\FALL2025\evsrs-server\EVSRS.Services\obj\Debug\net8.0\EVSRS.Services.csproj.CoreCompileInputs.cache
+D:\FALL2025\evsrs-server\EVSRS.Services\obj\Debug\net8.0\EVSRS.Services.dll
+D:\FALL2025\evsrs-server\EVSRS.Services\obj\Debug\net8.0\refint\EVSRS.Services.dll
+D:\FALL2025\evsrs-server\EVSRS.Services\obj\Debug\net8.0\EVSRS.Services.pdb
+D:\FALL2025\evsrs-server\EVSRS.Services\obj\Debug\net8.0\ref\EVSRS.Services.dll

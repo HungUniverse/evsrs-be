@@ -1,0 +1,8 @@
+D:\FALL2025\SWP392\evsrs-server\EVSRS.BusinessObjects\obj\Debug\net8.0\EVSRS.BusinessObjects.GeneratedMSBuildEditorConfig.editorconfig
+D:\FALL2025\SWP392\evsrs-server\EVSRS.BusinessObjects\obj\Debug\net8.0\EVSRS.BusinessObjects.AssemblyInfoInputs.cache
+D:\FALL2025\SWP392\evsrs-server\EVSRS.BusinessObjects\obj\Debug\net8.0\EVSRS.BusinessObjects.AssemblyInfo.cs
+D:\FALL2025\SWP392\evsrs-server\EVSRS.BusinessObjects\obj\Debug\net8.0\EVSRS.BusinessObjects.csproj.CoreCompileInputs.cache
+D:\FALL2025\evsrs-server\EVSRS.BusinessObjects\obj\Debug\net8.0\EVSRS.BusinessObjects.GeneratedMSBuildEditorConfig.editorconfig
+D:\FALL2025\evsrs-server\EVSRS.BusinessObjects\obj\Debug\net8.0\EVSRS.BusinessObjects.AssemblyInfoInputs.cache
+D:\FALL2025\evsrs-server\EVSRS.BusinessObjects\obj\Debug\net8.0\EVSRS.BusinessObjects.AssemblyInfo.cs
+D:\FALL2025\evsrs-server\EVSRS.BusinessObjects\obj\Debug\net8.0\EVSRS.BusinessObjects.csproj.CoreCompileInputs.cache
