@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj",
+      "projectUniqueName": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj",
       "projectName": "EVSRS.BusinessObjects",
-      "projectPath": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj",
+      "projectPath": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj",
       "packagesPath": "C:\\Users\\hungvd\\.nuget\\packages\\",
-      "outputPath": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\obj\\",
+      "outputPath": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
