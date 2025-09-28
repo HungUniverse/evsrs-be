@@ -1,26 +1,38 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\FALL2025\\evsrs-server\\",
+  "WorkspaceRootPath": "D:\\FA25\\SWP391\\evsrs-be\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\evsrs-server\\evsrs.businessobjects\\entity\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Depot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EVSRS.BusinessObjects\\Entity\\Depot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\evsrs-server\\evsrs.businessobjects\\base\\baseentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\base\\baseentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\CarEVDetail.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EVSRS.BusinessObjects\\Entity\\CarEVDetail.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DB9710C2-0A53-475A-9FA7-BC84FBC0DF42}|EVSRS.API\\EVSRS.API.csproj|d:\\fall2025\\evsrs-server\\evsrs.api\\evsrs.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{DB9710C2-0A53-475A-9FA7-BC84FBC0DF42}|EVSRS.API\\EVSRS.API.csproj|solutionrelative:evsrs.api\\evsrs.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\OrderBooking.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EVSRS.BusinessObjects\\Entity\\OrderBooking.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A60FADA8-DA83-4CF3-9CCC-7536FEFE2C2F}|EVSRS.Services\\EVSRS.Services.csproj|d:\\fall2025\\evsrs-server\\evsrs.services\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A60FADA8-DA83-4CF3-9CCC-7536FEFE2C2F}|EVSRS.Services\\EVSRS.Services.csproj|solutionrelative:evsrs.services\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EVSRS.BusinessObjects\\Entity\\Notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{60005A7A-DBED-4760-BB3F-E77781609811}|EVSRS.Repositories\\EVSRS.Repositories.csproj|d:\\fall2025\\evsrs-server\\evsrs.repositories\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{60005A7A-DBED-4760-BB3F-E77781609811}|EVSRS.Repositories\\EVSRS.Repositories.csproj|solutionrelative:evsrs.repositories\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Base\\BaseEntity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EVSRS.BusinessObjects\\Base\\BaseEntity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\FA25\\SWP391\\evsrs-be\\EVSRS.API\\EVSRS.API.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EVSRS.API\\EVSRS.API.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\FA25\\SWP391\\evsrs-be\\EVSRS.Services\\Class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EVSRS.Services\\Class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\FA25\\SWP391\\evsrs-be\\EVSRS.Repositories\\Class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EVSRS.Repositories\\Class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -35,10 +47,49 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "Depot.cs",
+              "DocumentMoniker": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Depot.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\Depot.cs",
+              "ToolTip": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Depot.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\Depot.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAABlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T09:14:50.592Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "CarEVDetail.cs",
+              "DocumentMoniker": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\CarEVDetail.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\CarEVDetail.cs",
+              "ToolTip": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\CarEVDetail.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\CarEVDetail.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAABoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T09:14:24.65Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "OrderBooking.cs",
+              "DocumentMoniker": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\OrderBooking.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\OrderBooking.cs",
+              "ToolTip": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\OrderBooking.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\OrderBooking.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAACQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T08:44:17.585Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "Notification.cs",
-              "DocumentMoniker": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\Entity\\Notification.cs",
+              "DocumentMoniker": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Notification.cs",
               "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\Notification.cs",
-              "ToolTip": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\Entity\\Notification.cs",
+              "ToolTip": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Notification.cs",
               "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\Notification.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -47,54 +98,55 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "BaseEntity.cs",
-              "DocumentMoniker": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
+              "DocumentMoniker": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
               "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
-              "ToolTip": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
+              "ToolTip": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
               "RelativeToolTip": "EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-28T07:42:19.532Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-28T07:42:19.532Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "EVSRS.API",
-              "DocumentMoniker": "D:\\FALL2025\\evsrs-server\\EVSRS.API\\EVSRS.API.csproj",
+              "DocumentIndex": 5,
+              "Title": "EVSRS.API.csproj",
+              "DocumentMoniker": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.API\\EVSRS.API.csproj",
               "RelativeDocumentMoniker": "EVSRS.API\\EVSRS.API.csproj",
-              "ToolTip": "D:\\FALL2025\\evsrs-server\\EVSRS.API\\EVSRS.API.csproj",
+              "ToolTip": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.API\\EVSRS.API.csproj",
               "RelativeToolTip": "EVSRS.API\\EVSRS.API.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-09-28T07:42:15.355Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-28T07:42:15.355Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "Class1.cs",
-              "DocumentMoniker": "D:\\FALL2025\\evsrs-server\\EVSRS.Services\\Class1.cs",
+              "DocumentMoniker": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.Services\\Class1.cs",
               "RelativeDocumentMoniker": "EVSRS.Services\\Class1.cs",
-              "ToolTip": "D:\\FALL2025\\evsrs-server\\EVSRS.Services\\Class1.cs",
+              "ToolTip": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.Services\\Class1.cs",
               "RelativeToolTip": "EVSRS.Services\\Class1.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-28T07:34:29.36Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-28T07:34:29.36Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 7,
               "Title": "Class1.cs",
-              "DocumentMoniker": "D:\\FALL2025\\evsrs-server\\EVSRS.Repositories\\Class1.cs",
+              "DocumentMoniker": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.Repositories\\Class1.cs",
               "RelativeDocumentMoniker": "EVSRS.Repositories\\Class1.cs",
-              "ToolTip": "D:\\FALL2025\\evsrs-server\\EVSRS.Repositories\\Class1.cs",
+              "ToolTip": "D:\\FA25\\SWP391\\evsrs-be\\EVSRS.Repositories\\Class1.cs",
               "RelativeToolTip": "EVSRS.Repositories\\Class1.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-28T07:34:11.05Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
             }
           ]
         }
