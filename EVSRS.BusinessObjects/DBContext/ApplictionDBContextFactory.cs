@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EVSRS.BusinessObjects.DBContext
 {
-    internal class ApplictionDBContextFactory
+    public class ApplictionDBContextFactory
     {
     }
 }
