@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\FALL2025\\evsrs-server\\EVSRS.Repositories\\EVSRS.Repositories.csproj": {}
+    "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.Repositories\\EVSRS.Repositories.csproj": {}
   },
   "projects": {
-    "D:\\FALL2025\\evsrs-server\\EVSRS.Repositories\\EVSRS.Repositories.csproj": {
+    "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.Repositories\\EVSRS.Repositories.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\FALL2025\\evsrs-server\\EVSRS.Repositories\\EVSRS.Repositories.csproj",
+        "projectUniqueName": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.Repositories\\EVSRS.Repositories.csproj",
         "projectName": "EVSRS.Repositories",
-        "projectPath": "D:\\FALL2025\\evsrs-server\\EVSRS.Repositories\\EVSRS.Repositories.csproj",
+        "projectPath": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.Repositories\\EVSRS.Repositories.csproj",
         "packagesPath": "C:\\Users\\hungvd\\.nuget\\packages\\",
-        "outputPath": "D:\\FALL2025\\evsrs-server\\EVSRS.Repositories\\obj\\",
+        "outputPath": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.Repositories\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
