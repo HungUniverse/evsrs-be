@@ -19,5 +19,8 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Longitude { get; set; }
         public DateTime? OpenTime { get; set; }
         public DateTime? CloseTime { get; set; }
+
+        public virtual ICollection<CarEVDetail> Details { get; set; } = new List<CarEVDetail>();
+        public virtual ICollection<OrderBooking> OrderBookings { get; set; } =  new List<OrderBooking>();
     }
 }

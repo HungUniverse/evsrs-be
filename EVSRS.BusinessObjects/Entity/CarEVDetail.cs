@@ -15,5 +15,8 @@ namespace EVSRS.BusinessObjects.Entity
         public string? BatteryhealthPercentage { get; set; }
         public string? Status { get; set; }
 
+        public CarEV? CarEV { get; set; }
+        public Depot? Depot { get; set; }
+
     }
 }

@@ -23,6 +23,10 @@ namespace EVSRS.BusinessObjects.Entity
         public virtual ICollection<OTP>? OTPs { get; set; } = new List<OTP>();
         public ApplicationRole? Role { get; set; };
         public virtual ICollection<Notification>? Notifications { get; set; } = new List<Notification>();
+        public virtual ICollection<Feedback>? Feedbacks { get; set; } = new List<Feedback>();
+        public virtual ICollection<VoucherDiscount>? VoucherDiscounts { get; set; } = [];
+        public virtual ICollection<IdentifyDocument> IdentifyDocuments { get; set; } = new List<IdentifyDocument>();
+
 
     }
 }

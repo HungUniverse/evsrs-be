@@ -14,5 +14,8 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Code { get; set; }
         public string? status { get; set; }
 
+        public ApplicationUser? User { get; set; }
+        public VoucherBatch? VoucherBatch { get; set; }
+
     }
 }

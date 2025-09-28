@@ -14,5 +14,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Images { get; set; }
         public string? Description { get; set; }
         public string? Rated { get; set; }
+
+        public ApplicationUser? User { get; set; }
     }
 }
