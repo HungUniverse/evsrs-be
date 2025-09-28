@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EVSRS.BusinessObjects.Entity
 {
-    public class ModelEV: BaseEntity
+    public class CarEV: BaseEntity
     {
         public string? ManufacturerCarId { get; set; }
         public string? ModelName { get; set; }
@@ -15,6 +15,12 @@ namespace EVSRS.BusinessObjects.Entity
         public string? RangeKm { get; set; }
         public string? Seats { get; set; }
         public double? Price { get; set; }
+
+        public CarManufacture? CarManufacture { get; set; }
+        public Amenities? Amenities { get; set; }
+        public virtual ICollection<CarEVDetail> CarEVDetails { get; set; } = new List<CarEVDetail>();
+
+
 
     }
 }

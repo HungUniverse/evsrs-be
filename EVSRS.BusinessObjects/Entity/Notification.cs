@@ -16,6 +16,8 @@ namespace EVSRS.BusinessObjects.Entity
         public string? ActionUrl { get; set; }
         public string? MetaData { get; set; }
         public bool IsRead { get; set; } = false;
+
+
         public ApplicationUser? Receiver { get; set; }
 
 }

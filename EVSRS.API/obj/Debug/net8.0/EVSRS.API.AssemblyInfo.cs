@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EVSRS.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+697499ac49b4f639f3264b504dfabe4cb5dab968")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5f441fb8cb27c3ca2476d88edad3fdba05c28324")]
 [assembly: System.Reflection.AssemblyProductAttribute("EVSRS.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EVSRS.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
