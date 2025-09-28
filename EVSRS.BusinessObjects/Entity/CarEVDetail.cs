@@ -15,5 +15,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? BatteryhealthPercentage { get; set; }
         public string? Status { get; set; }
 
+        public virtual ICollection<OrderBooking>? OrderBooking { get; set; } = new List<OrderBooking>();
+
     }
 }

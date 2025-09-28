@@ -15,5 +15,9 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Discount { get; set; }
         public string? Total { get; set; }
         public string? Notes { get; set; }
+
+        public OrderBooking? OrderBooking { get; set; }
+        public virtual ICollection<SettlementItem>? SettlementItem { get; set; } = new List<SettlementItem>();
+
     }
 }

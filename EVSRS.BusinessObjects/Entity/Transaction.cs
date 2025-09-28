@@ -22,5 +22,8 @@ namespace EVSRS.BusinessObjects.Entity
         public string? SubAccount { get; set; }
         public string? ReferenceCode { get; set; }
         public string? Description { get; set; }
+
+        public OrderBooking? OrderBooking { get; set; }
     }
+    
 }
