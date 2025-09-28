@@ -23,7 +23,11 @@ namespace EVSRS.BusinessObjects.Entity
         public string? ReferenceCode { get; set; }
         public string? Description { get; set; }
 
+
         public OrderBooking? OrderBooking { get; set; }
+
+        public ApplicationUser? User { get; set; }
+
     }
     
 }

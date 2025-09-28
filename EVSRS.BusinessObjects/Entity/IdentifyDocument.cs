@@ -19,5 +19,9 @@ namespace EVSRS.BusinessObjects.Entity
         public DateTime? VerifiedBy { get; set; }
         public DateTime? VerifiedAt { get; set; }
         public string? Note { get; set; }
+
+
+
+        public ApplicationUser? User { get; set; }
     }
 }

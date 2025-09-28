@@ -15,6 +15,10 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Description { get; set; }
         public string? Rated { get; set; }
 
+
         public OrderBooking? OrderBooking { get; set; }
+
+        public ApplicationUser? User { get; set; }
+
     }
 }

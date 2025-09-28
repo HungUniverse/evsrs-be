@@ -20,6 +20,11 @@ namespace EVSRS.BusinessObjects.Entity
         public DateTime? OpenTime { get; set; }
         public DateTime? CloseTime { get; set; }
 
+
         public virtual ICollection<Transaction>? Transaction { get; set; } = new List<Transaction>();
+
+        public virtual ICollection<CarEVDetail> Details { get; set; } = new List<CarEVDetail>();
+        public virtual ICollection<OrderBooking> OrderBookings { get; set; } =  new List<OrderBooking>();
+
     }
 }
