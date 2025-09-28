@@ -19,5 +19,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Longitude { get; set; }
         public DateTime? OpenTime { get; set; }
         public DateTime? CloseTime { get; set; }
+
+        public virtual ICollection<Transaction>? Transaction { get; set; } = new List<Transaction>();
     }
 }

@@ -15,5 +15,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Description { get; set; }
         public string? Images { get; set; }
 
+        public HandoverInspection? HandoverInspection { get; set }
+
     }
 }
