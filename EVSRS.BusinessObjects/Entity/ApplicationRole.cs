@@ -9,7 +9,8 @@ namespace EVSRS.BusinessObjects.Entity
 {
     public class ApplicationRole: BaseEntity
     {
-        private string? RoleName { get; set; }
+        public string? RoleName { get; set; }
+
         public virtual ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
     }
 }

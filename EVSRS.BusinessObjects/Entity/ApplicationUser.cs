@@ -26,6 +26,7 @@ namespace EVSRS.BusinessObjects.Entity
         public virtual ICollection<Feedback>? Feedbacks { get; set; } = new List<Feedback>();
         public virtual ICollection<VoucherDiscount>? VoucherDiscounts { get; set; } = [];
         public virtual ICollection<IdentifyDocument> IdentifyDocuments { get; set; } = new List<IdentifyDocument>();
+        public virtual ICollection<OrderBooking>? OrderBookings { get; set; } = [];
 
 
     }

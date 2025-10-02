@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EVSRS.BusinessObjects")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9c7be30423b18f1de1afb32cb4e078ed3e7c1a07")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+22b26fd3f304ae9c41521cb2b5574b2b69b0b8af")]
 [assembly: System.Reflection.AssemblyProductAttribute("EVSRS.BusinessObjects")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EVSRS.BusinessObjects")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

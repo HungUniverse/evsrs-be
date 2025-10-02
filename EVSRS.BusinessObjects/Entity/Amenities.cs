@@ -11,6 +11,8 @@ namespace EVSRS.BusinessObjects.Entity
     {
         public string? Name { get; set; }
         public string? Icon { get; set; }
+
+        public virtual ICollection<Model> CarEVs { get; set; } = new List<Model>();
         
     }
 }

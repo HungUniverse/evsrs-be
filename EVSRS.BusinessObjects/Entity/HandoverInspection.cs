@@ -17,5 +17,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Notes { get; set; }
         public string? StaffId { get; set; }
 
+        public OrderBooking? OrderBooking { get; set; }
+        public virtual ICollection<InspectionDamageItem> InspectionDamageItems { get; set; } = new List<InspectionDamageItem>();
     }
 }

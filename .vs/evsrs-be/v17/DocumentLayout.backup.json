@@ -1,25 +1,105 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\FALL2025\\evsrs-server\\",
+  "WorkspaceRootPath": "D:\\FALL2025\\SWP392\\evsrs-be\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\evsrs-server\\evsrs.businessobjects\\entity\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\dbcontext\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\dbcontext\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\applicationuser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\applicationuser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\orderbooking.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\orderbooking.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\carmanufacture.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\carmanufacture.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\carev.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\carev.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\carevdetail.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\carevdetail.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\inspectiondamageitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\inspectiondamageitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\voucherbatch.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\voucherbatch.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\applicationrole.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\applicationrole.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\voucherdiscount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\voucherdiscount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\settlementitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\settlementitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\returnsettlement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\returnsettlement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\otp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\otp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\evsrs-server\\evsrs.businessobjects\\base\\baseentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\handoverinspection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\handoverinspection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\feedback.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\feedback.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\depot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\depot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\entity\\amenities.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\entity\\amenities.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\dbcontext\\applictiondbcontextfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\dbcontext\\applictiondbcontextfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\evsrs.businessobjects.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\evsrs.businessobjects.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.businessobjects\\base\\baseentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B335378F-02F3-8A01-03B1-21C0483B09D3}|EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj|solutionrelative:evsrs.businessobjects\\base\\baseentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DB9710C2-0A53-475A-9FA7-BC84FBC0DF42}|EVSRS.API\\EVSRS.API.csproj|d:\\fall2025\\evsrs-server\\evsrs.api\\evsrs.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "AbsoluteMoniker": "D:0:0:{DB9710C2-0A53-475A-9FA7-BC84FBC0DF42}|EVSRS.API\\EVSRS.API.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.api\\evsrs.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
       "RelativeMoniker": "D:0:0:{DB9710C2-0A53-475A-9FA7-BC84FBC0DF42}|EVSRS.API\\EVSRS.API.csproj|solutionrelative:evsrs.api\\evsrs.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A60FADA8-DA83-4CF3-9CCC-7536FEFE2C2F}|EVSRS.Services\\EVSRS.Services.csproj|d:\\fall2025\\evsrs-server\\evsrs.services\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A60FADA8-DA83-4CF3-9CCC-7536FEFE2C2F}|EVSRS.Services\\EVSRS.Services.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.services\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A60FADA8-DA83-4CF3-9CCC-7536FEFE2C2F}|EVSRS.Services\\EVSRS.Services.csproj|solutionrelative:evsrs.services\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{60005A7A-DBED-4760-BB3F-E77781609811}|EVSRS.Repositories\\EVSRS.Repositories.csproj|d:\\fall2025\\evsrs-server\\evsrs.repositories\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{60005A7A-DBED-4760-BB3F-E77781609811}|EVSRS.Repositories\\EVSRS.Repositories.csproj|d:\\fall2025\\swp392\\evsrs-be\\evsrs.repositories\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{60005A7A-DBED-4760-BB3F-E77781609811}|EVSRS.Repositories\\EVSRS.Repositories.csproj|solutionrelative:evsrs.repositories\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
@@ -30,28 +110,292 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 14,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "CarManufacture.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\CarManufacture.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\CarManufacture.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\CarManufacture.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\CarManufacture.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T11:03:36.451Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "InspectionDamageItem.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\InspectionDamageItem.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\InspectionDamageItem.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\InspectionDamageItem.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\InspectionDamageItem.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAcwBMAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:51:59.34Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "HandoverInspection.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\HandoverInspection.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\HandoverInspection.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\HandoverInspection.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\HandoverInspection.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAA4wA8AAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:50:34.837Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CarEV.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\CarEV.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\CarEV.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\CarEV.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\CarEV.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAcwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:44:33.377Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "Amenities.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Amenities.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\Amenities.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Amenities.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\Amenities.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAABTAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:43:58.571Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "VoucherDiscount.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\VoucherDiscount.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\VoucherDiscount.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\VoucherDiscount.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\VoucherDiscount.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:42:22.39Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "VoucherBatch.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\VoucherBatch.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\VoucherBatch.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\VoucherBatch.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\VoucherBatch.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAmwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:42:19.745Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "SettlementItem.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\SettlementItem.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\SettlementItem.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\SettlementItem.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\SettlementItem.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAA6wBIAAABGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:42:15.539Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "ReturnSettlement.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\ReturnSettlement.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\ReturnSettlement.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\ReturnSettlement.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\ReturnSettlement.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:42:12.143Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "OTP.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\OTP.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\OTP.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\OTP.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\OTP.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:42:07.59Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "ApplictionDBContextFactory.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\DBContext\\ApplictionDBContextFactory.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\DBContext\\ApplictionDBContextFactory.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\DBContext\\ApplictionDBContextFactory.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\DBContext\\ApplictionDBContextFactory.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:39:33.374Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "Feedback.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Feedback.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\Feedback.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Feedback.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\Feedback.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABIAAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:34:10.397Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Transaction.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Transaction.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\Transaction.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Transaction.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\Transaction.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAABCwBoAAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T10:33:44.281Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "EVSRS.BusinessObjects",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\EVSRS.BusinessObjects.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-09-28T09:56:53.434Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "ApplicationDBContext.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\DBContext\\ApplicationDBContext.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\DBContext\\ApplicationDBContext.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\DBContext\\ApplicationDBContext.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\DBContext\\ApplicationDBContext.cs",
+              "ViewState": "AgIAAEAAAAAAAAAAAAA0wFYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T09:37:28.606Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ApplicationUser.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\ApplicationUser.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\ApplicationUser.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\ApplicationUser.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\ApplicationUser.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAA5wB8AAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T09:35:15.189Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ApplicationRole.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\ApplicationRole.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\ApplicationRole.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\ApplicationRole.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\ApplicationRole.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T09:35:11.88Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{269a02dc-6af8-11d3-bdc4-00c04f688e50}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "Depot.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Depot.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\Depot.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Depot.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\Depot.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAIwBYAAABgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T09:14:50.592Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CarEVDetail.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\CarEVDetail.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\CarEVDetail.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\CarEVDetail.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\CarEVDetail.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABMAAABkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T09:14:24.65Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "OrderBooking.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\OrderBooking.cs",
+              "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\OrderBooking.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\OrderBooking.cs",
+              "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\OrderBooking.cs",
+              "ViewState": "AgIAABoAAAAAAAAAAAA0wCYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T08:44:17.585Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
               "Title": "Notification.cs",
-              "DocumentMoniker": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\Entity\\Notification.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Notification.cs",
               "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Entity\\Notification.cs",
-              "ToolTip": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\Entity\\Notification.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Entity\\Notification.cs",
               "RelativeToolTip": "EVSRS.BusinessObjects\\Entity\\Notification.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAApAAAAAAAAAA==",
+              "ViewState": "AgIAAAsAAAAAAAAAAAA1wAsAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-28T07:42:23.975Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 21,
               "Title": "BaseEntity.cs",
-              "DocumentMoniker": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
               "RelativeDocumentMoniker": "EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
-              "ToolTip": "D:\\FALL2025\\evsrs-server\\EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
               "RelativeToolTip": "EVSRS.BusinessObjects\\Base\\BaseEntity.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -60,11 +404,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "EVSRS.API",
-              "DocumentMoniker": "D:\\FALL2025\\evsrs-server\\EVSRS.API\\EVSRS.API.csproj",
+              "DocumentIndex": 22,
+              "Title": "EVSRS.API.csproj",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.API\\EVSRS.API.csproj",
               "RelativeDocumentMoniker": "EVSRS.API\\EVSRS.API.csproj",
-              "ToolTip": "D:\\FALL2025\\evsrs-server\\EVSRS.API\\EVSRS.API.csproj",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.API\\EVSRS.API.csproj",
               "RelativeToolTip": "EVSRS.API\\EVSRS.API.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
@@ -73,11 +417,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 23,
               "Title": "Class1.cs",
-              "DocumentMoniker": "D:\\FALL2025\\evsrs-server\\EVSRS.Services\\Class1.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.Services\\Class1.cs",
               "RelativeDocumentMoniker": "EVSRS.Services\\Class1.cs",
-              "ToolTip": "D:\\FALL2025\\evsrs-server\\EVSRS.Services\\Class1.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.Services\\Class1.cs",
               "RelativeToolTip": "EVSRS.Services\\Class1.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -86,15 +430,16 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 24,
               "Title": "Class1.cs",
-              "DocumentMoniker": "D:\\FALL2025\\evsrs-server\\EVSRS.Repositories\\Class1.cs",
+              "DocumentMoniker": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.Repositories\\Class1.cs",
               "RelativeDocumentMoniker": "EVSRS.Repositories\\Class1.cs",
-              "ToolTip": "D:\\FALL2025\\evsrs-server\\EVSRS.Repositories\\Class1.cs",
+              "ToolTip": "D:\\FALL2025\\SWP392\\evsrs-be\\EVSRS.Repositories\\Class1.cs",
               "RelativeToolTip": "EVSRS.Repositories\\Class1.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-28T07:34:11.05Z"
+              "WhenOpened": "2025-09-28T07:34:11.05Z",
+              "EditorCaption": ""
             }
           ]
         }

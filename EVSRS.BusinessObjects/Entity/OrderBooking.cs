@@ -26,5 +26,13 @@ namespace EVSRS.BusinessObjects.Entity
         public string? PaymentType { get; set; }
         public string? PaymentStatus { get; set; }
         public string? Note { get; set; }
+
+        public ApplicationUser? User { get; set; }
+        public virtual ICollection<Feedback> Feedbacks { get; set; } =  new List<Feedback>();
+        public virtual ICollection<Transaction> Transactions { get; set; } = [];
+        public virtual ICollection<HandoverInspection> HandoverInspections { get; set; } = new List<HandoverInspection>();
+        public ReturnSettlement? ReturnSettlement { get; set; }
+        public CarEV? CarEVDetail { get; set; }
+        public virtual ICollection<Depot> Depots { get; set; } = new List<Depot>();
     }
 }

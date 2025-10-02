@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EVSRS.BusinessObjects.Entity
 {
-    public class Notification: BaseEntity
+    public class Notification : BaseEntity
     {
         public string? UserId { get; set; }
         public string? NotificationTitle { get; set; }
@@ -19,5 +19,5 @@ namespace EVSRS.BusinessObjects.Entity
 
 
         public ApplicationUser? Receiver { get; set; }
-
+    }
 }
