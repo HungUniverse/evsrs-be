@@ -1,0 +1,19 @@
+# Global code owners
+* @HungUniverse
+
+# API related files
+/EVSRS.API/ @HungUniverse
+
+# Business Objects
+/EVSRS.BusinessObjects/ @HungUniverse
+
+# Services
+/EVSRS.Services/ @HungUniverse
+
+# Repositories
+/EVSRS.Repositories/ @HungUniverse
+
+# Docker and deployment
+docker-compose*.yml @HungUniverse
+Dockerfile @HungUniverse
+.env.example @HungUniverse
