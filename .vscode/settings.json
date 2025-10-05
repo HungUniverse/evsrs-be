@@ -1,0 +1,9 @@
+{
+    "chat.mcp.serverSampling": {
+        "evsrs-be/.vscode/mcp.json: github": {
+            "allowedModels": [
+                "copilot/claude-sonnet-4"
+            ]
+        }
+    }
+}

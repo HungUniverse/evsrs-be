@@ -1,0 +1,17 @@
+using System;
+using EVSRS.Repositories.Interface;
+
+namespace EVSRS.Repositories.Implement
+{
+    public interface IUnitOfWork
+    {
+        IUserRepository UserRepository { get; }
+        ITokenRepository TokenRepository { get; }
+        IOTPRepository OTPRepository { get; }
+        int SaveChanges();
+        Task<int> SaveChangesAsync();
+        void BeginTransaction();
+        void CommitTransaction();
+        void RollBack();
+    }
+}

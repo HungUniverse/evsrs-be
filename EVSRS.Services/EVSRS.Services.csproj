@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\EVSRS.Repositories\EVSRS.Repositories.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="CloudinaryDotNet" Version="1.27.5" />
+      <PackageReference Include="contentful.csharp" Version="8.4.1" />
+      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
+      <PackageReference Include="Hangfire" Version="1.8.20" />
+      <PackageReference Include="Hangfire.AspNetCore" Version="1.8.20" />
+      <PackageReference Include="Hangfire.PostgreSql" Version="1.20.12" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15" />
+      <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.15" />
+      <!-- ML.NET packages -->
+      <PackageReference Include="Microsoft.ML" Version="3.0.1"/>
+      <PackageReference Include="Microsoft.ML.FastTree" Version="3.0.1"/>
+      <PackageReference Include="Microsoft.ML.Recommender" Version="0.21.1"/>
+
+      <!-- For data visualization -->
+      <PackageReference Include="OxyPlot.Core" Version="2.1.2"/>
+
+      <!-- Logging -->
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3"/>
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Mapper\" />
+      <Folder Include="Service\" />
+      <Folder Include="Validator\" />
+    </ItemGroup>
+
+</Project>

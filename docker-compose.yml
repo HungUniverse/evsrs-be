@@ -1,0 +1,154 @@
+﻿version: "3.8"
+
+services:
+  evsrs-api:
+    image: evsrs-api:latest
+    build:
+      context: .
+      dockerfile: EVSRS.API/Dockerfile
+    restart: unless-stopped
+    container_name: evsrs-api-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=evsrs-db-do-user-25819034-0.e.db.ondigitalocean.com;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Port=25060;Pooling=true;MinPoolSize=5;MaxPoolSize=20;
+      - JWT__Issuer=${JWT_ISSUER}
+      - JWT__Audience=${JWT_AUDIENCE}
+      - JWT__SecretKey=${JWT_SECRET_KEY}
+      - JWT__AccessTokenExpirationMinutes=${JWT_ACCESS_TOKEN_EXPIRATION}
+      - JWT__RefreshTokenExpirationDays=${JWT_REFRESH_TOKEN_EXPIRATION}
+      - Cloudinary__CloudName=${CLOUDINARY_CLOUD_NAME}
+      - Cloudinary__ApiKey=${CLOUDINARY_API_KEY}
+      - Cloudinary__ApiSecret=${CLOUDINARY_API_SECRET}
+      - EmailSettings__ApiKey=${MAILGUN_API_KEY}
+      - EmailSettings__ApiBaseUri=${MAILGUN_API_BASE_URI}
+      - EmailSettings__Domain=${MAILGUN_DOMAIN}
+      - EmailSettings__FromEmail=${MAILGUN_FROM_EMAIL}
+      - EmailSettings__FromName=${MAILGUN_FROM_NAME}
+      - RedisSettings__ConnectionString=evsrs-redis:6379
+      - SepaySettings__ApiKey=${SEPAY_API_KEY}
+      - SepaySettings__ApiBaseUri=${SEPAY_API_BASE_URI}
+      - SepaySettings__AccountNumber=${SEPAY_ACCOUNT_NUMBER}
+      - SepaySettings__AccountName=${SEPAY_ACCOUNT_NAME}
+      - SepaySettings__BankCode=${SEPAY_BANK_CODE}
+      - Contentful__SpaceId=${CONTENTFUL_SPACE_ID}
+      - Contentful__ContentDeliveryKey=${CONTENTFUL_CONTENT_DELIVERY_KEY}
+      - Contentful__EntryId=${CONTENTFUL_ENTRY_ID}
+      - Contentful__SecretKey=${CONTENTFUL_SECRET_KEY}
+      - Contentful__ManagementToken=${CONTENTFUL_MANAGEMENT_TOKEN}
+      - GhtkSettings__ApiToken=${GHTK_API_TOKEN}
+      - GhtkSettings__BaseUri=${GHTK_BASE_URI}
+      - AI__Providers__Groq__ApiKey=${GROQ_API_KEY}
+      - AI__Providers__Groq__Enabled=true
+      - AI__Providers__Groq__Model=${GROQ_MODEL}
+      - AI__Providers__Groq__MaxTokens=${GROQ_MAX_TOKENS}
+      - AI__Providers__Ollama__Enabled=false
+      - AI__Providers__Ollama__BaseUrl=http://localhost:11434
+      - AI__Providers__Ollama__Model=llama2
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - default
+
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    container_name: nginx-proxy-manager
+    ports:
+      - "80:80"
+      - "81:81"
+      - "443:443"
+    volumes:
+      - ./data/nginx-proxy-manager/data:/data
+      - ./data/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    networks:
+      - default
+
+
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    container_name: evsrs-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - default
+
+  filebeat:
+    image: elastic/filebeat:8.13.4
+    container_name: filebeat
+    user: root
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    command: ["--strict.perms=false"]
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./logs:/app/logs:ro
+    networks:
+      - default
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.4
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - default
+
+
+networks:
+  default:
+    name: evsrs-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+      
