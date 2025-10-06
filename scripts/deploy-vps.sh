@@ -75,12 +75,19 @@ pull_images() {
 deploy_core_services() {
     echo -e "${YELLOW}🚀 Deploying core services...${NC}"
     
-    # Start infrastructure services first
-    echo "Starting database..."
-    docker compose -f $COMPOSE_FILE up -d postgres
+    # Start infrastructure services first (External DigitalOcean Database)
+    echo "Using external DigitalOcean PostgreSQL database..."
     
-    # Wait for database to be healthy
-    check_service_health "postgres" || exit 1
+    # Test database connection
+    echo "Testing database connection..."
+    if docker run --rm postgres:15-alpine psql \
+      "postgresql://doadmin:AVNS_j67WYcfsnOlYoQBIBdM@evsrs-db-do-user-25819034-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require" \
+      -c "SELECT 'Connection OK' as status;" > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ External database connection successful${NC}"
+    else
+        echo -e "${RED}❌ External database connection failed${NC}"
+        exit 1
+    fi
     
     # Start proxy and management services
     echo "Starting proxy and container management..."
@@ -105,14 +112,7 @@ deploy_core_services() {
     # Wait a moment for Portainer to initialize
     sleep 5
     
-    # Run database migration
-    echo "Running database migration..."
-    if [ -f "scripts/migrate-database.sh" ]; then
-        chmod +x scripts/migrate-database.sh
-        ./scripts/migrate-database.sh || echo "⚠️ Migration failed, but continuing..."
-    fi
-    
-    # Start application
+    # Start application (No database migration needed - using external DigitalOcean DB)
     echo "Starting EVSRS API..."
     docker compose -f $COMPOSE_FILE up -d evsrs-api
     check_service_health "evsrs-api" || exit 1
@@ -172,19 +172,20 @@ show_status() {
     echo ""
 }
 
-# Create backup
+# Create backup from DigitalOcean database
 create_backup() {
-    echo -e "${YELLOW}📦 Creating database backup...${NC}"
+    echo -e "${YELLOW}📦 Creating DigitalOcean database backup...${NC}"
     
-    if docker compose -f $COMPOSE_FILE ps postgres | grep -q "Up"; then
-        BACKUP_FILE="./backups/backup_$(date +%Y%m%d_%H%M%S).sql"
-        mkdir -p ./backups
-        docker compose -f $COMPOSE_FILE exec -T postgres pg_dump -U evsrs_user evsrs_production > "$BACKUP_FILE"
-        gzip "$BACKUP_FILE"
-        echo -e "${GREEN}✅ Backup created: ${BACKUP_FILE}.gz${NC}"
-    else
-        echo -e "${YELLOW}⚠️ Database not running, skipping backup${NC}"
-    fi
+    BACKUP_FILE="./backups/backup_$(date +%Y%m%d_%H%M%S).sql"
+    mkdir -p ./backups
+    
+    # Backup from DigitalOcean database directly
+    docker run --rm postgres:15-alpine pg_dump \
+      "postgresql://doadmin:AVNS_j67WYcfsnOlYoQBIBdM@evsrs-db-do-user-25819034-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require" \
+      > "$BACKUP_FILE"
+    
+    gzip "$BACKUP_FILE"
+    echo -e "${GREEN}✅ Backup created: ${BACKUP_FILE}.gz${NC}"
 }
 
 # Cleanup old images and containers
