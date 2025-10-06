@@ -1,4 +1,4 @@
-name: EVSRS CI/CD Pipeline
+name: EVSRS Automated Deployment
 
 on:
   push:
@@ -7,8 +7,6 @@ on:
       - '**.md'
       - '.gitignore'
       - 'docs/**'
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 env:
@@ -111,15 +109,102 @@ jobs:
         build-args: |
           BUILD_CONFIGURATION=Release
 
-    - name: � Deployment Instructions
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    name: 🚀 Deploy to VPS
+    if: github.ref == 'refs/heads/main'
+    environment: 
+      name: production
+      url: http://206.189.86.22:8080
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+    - name: Add VPS to known hosts
       run: |
-        echo "🎉 Docker image built and pushed successfully!"
+        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to VPS
+      run: |
+        ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          set -e
+          
+          echo "🚀 Starting automated deployment..."
+          
+          # Navigate to project directory
+          cd /opt/evsrs/evsrs-be
+          
+          # Pull latest code
+          git fetch origin
+          git reset --hard origin/main
+          
+          # Create backup before deployment
+          if [ -f "scripts/backup.sh" ]; then
+            ./scripts/backup.sh
+          fi
+          
+          # Deploy using existing script
+          ./scripts/deploy-vps.sh
+          
+          echo "✅ Deployment completed successfully!"
+        EOF
+
+    - name: Verify deployment
+      run: |
+        echo "⏳ Waiting for services to be ready..."
+        sleep 30
+        
+        # Test API health
+        if curl -f http://${{ secrets.VPS_HOST }}:8080/health; then
+          echo "✅ API is healthy!"
+        else
+          echo "❌ API health check failed!"
+          exit 1
+        fi
+        
+        # Test Nginx Proxy Manager
+        if curl -f http://${{ secrets.VPS_HOST }}:81; then
+          echo "✅ Nginx Proxy Manager is accessible!"
+        else
+          echo "⚠️ Nginx Proxy Manager check failed (may be normal)"
+        fi
+        
+        echo "🎉 Deployment verification completed!"
+
+    - name: 📋 Deployment Summary
+      if: success()
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo ""
+        echo "🌐 Service URLs:"
+        echo "- API: http://${{ secrets.VPS_HOST }}:8080"
+        echo "- API Health: http://${{ secrets.VPS_HOST }}:8080/health"
+        echo "- API Swagger: http://${{ secrets.VPS_HOST }}:8080/swagger"
+        echo "- Nginx Proxy Manager: http://${{ secrets.VPS_HOST }}:81"
+        echo "- Portainer: https://${{ secrets.VPS_HOST }}:9443"
+        echo ""
+        echo "📊 Deployment Info:"
+        echo "- Commit: ${{ github.sha }}"
+        echo "- Branch: ${{ github.ref_name }}"
+        echo "- Actor: ${{ github.actor }}"
+
+    - name: 📋 Manual Fallback Instructions
+      if: failure()
+      run: |
+        echo "❌ Automated deployment failed!"
         echo ""
         echo "📋 Manual Deployment Instructions:"
         echo "================================="
         echo ""
         echo "1. SSH to your VPS:"
-        echo "   ssh your-user@your-vps-ip"
+        echo "   ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
         echo ""
         echo "2. Navigate to project directory:"
         echo "   cd /opt/evsrs/evsrs-be"
@@ -127,13 +212,5 @@ jobs:
         echo "3. Pull latest code:"
         echo "   git pull origin main"
         echo ""
-        echo "4. Deploy with updated image:"
+        echo "4. Deploy manually:"
         echo "   ./scripts/deploy-vps.sh"
-        echo ""
-        echo "🔗 Available images:"
-        echo "   - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-        echo "   - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
-        echo ""
-        echo "🌐 After deployment, verify at:"
-        echo "   - API: http://your-vps-ip:8080/health"
-        echo "   - Swagger: http://your-vps-ip:8080/swagger"
