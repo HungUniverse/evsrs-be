@@ -11,7 +11,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432};Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Pooling=true;MinPoolSize=5;MaxPoolSize=20;Timeout=15;Encoding=UTF8;SslMode=${POSTGRES_SSL_MODE:-Disable};
+      - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT};Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Pooling=true;MinPoolSize=5;MaxPoolSize=20;Timeout=15;Encoding=UTF8;SslMode=${POSTGRES_SSL_MODE};
       - JWT__Issuer=${JWT_ISSUER}
       - JWT__Audience=${JWT_AUDIENCE}
       - JWT__SecretKey=${JWT_SECRET_KEY}
@@ -75,31 +75,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    container_name: evsrs-postgres
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
-    env_file:
-      - .env
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backups:/var/backups
-    networks:
-      - evsrs-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
 
 
   # Elasticsearch for Logging (Optional)
@@ -186,8 +161,6 @@ networks:
     name: evsrs-network
 
 volumes:
-  postgres_data:
-    driver: local
   portainer_data:
     driver: local
   elasticsearch_data:
