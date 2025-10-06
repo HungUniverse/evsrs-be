@@ -11,7 +11,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST:-postgres};Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Port=${POSTGRES_PORT:-5432};Pooling=true;MinPoolSize=5;MaxPoolSize=50;SslMode=${POSTGRES_SSL_MODE:-Disable};
+      - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432};Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Pooling=true;MinPoolSize=5;MaxPoolSize=20;Timeout=15;Encoding=UTF8;SslMode=${POSTGRES_SSL_MODE:-Disable};
       - JWT__Issuer=${JWT_ISSUER}
       - JWT__Audience=${JWT_AUDIENCE}
       - JWT__SecretKey=${JWT_SECRET_KEY}
