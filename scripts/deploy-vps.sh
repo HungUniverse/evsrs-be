@@ -105,6 +105,13 @@ deploy_core_services() {
     # Wait a moment for Portainer to initialize
     sleep 5
     
+    # Run database migration
+    echo "Running database migration..."
+    if [ -f "scripts/migrate-database.sh" ]; then
+        chmod +x scripts/migrate-database.sh
+        ./scripts/migrate-database.sh || echo "⚠️ Migration failed, but continuing..."
+    fi
+    
     # Start application
     echo "Starting EVSRS API..."
     docker compose -f $COMPOSE_FILE up -d evsrs-api
