@@ -37,37 +37,41 @@ sudo reboot
 2. Tạo tài khoản admin (lần đầu tiên)
 3. Chọn "Get Started" → "Docker Standalone"
 
-### Bước 3: Clone repository và cấu hình
+### 4. Configure Environment Variables
+
+Copy the example file and update with your actual values:
 
 ```bash
-# SSH vào VPS
-ssh your_user@YOUR_VPS_IP
-
-# Clone repository
-cd /opt/evsrs
-git clone https://github.com/HungUniverse/evsrs-be.git .
-
-# Cấu hình environment
 cp .env.vps.example .env
 nano .env
 ```
 
-**Các giá trị quan trọng cần thay đổi trong `.env`:**
+**Important configurations:**
+
+For **DigitalOcean Managed Database**:
 ```bash
-# Database
-POSTGRES_PASSWORD=your_secure_password_here
-
-# Redis
-REDIS_PASSWORD=your_redis_password_here
-
-# JWT (tạo key dài ít nhất 32 ký tự)
-JWT_SECRET_KEY=your_very_long_jwt_secret_key_here
-
-# API keys của các dịch vụ external
-CLOUDINARY_API_KEY=your_key
-MAILGUN_API_KEY=your_key
-# ... các keys khác
+POSTGRES_HOST=your-db-host.db.ondigitalocean.com
+POSTGRES_PORT=25060
+POSTGRES_DB=defaultdb
+POSTGRES_USER=doadmin
+POSTGRES_PASSWORD=your-actual-password
+POSTGRES_SSL_MODE=Require
 ```
+
+For **Local PostgreSQL** (if preferred):
+```bash
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=evsrs_production
+POSTGRES_USER=evsrs_user
+POSTGRES_PASSWORD=your-secure-password
+POSTGRES_SSL_MODE=Disable
+```
+
+**Other required variables:**
+- JWT settings (generate secure keys)
+- API keys for external services
+- Domain and SSL configurations
 
 ### Bước 4: Deploy ứng dụng
 
