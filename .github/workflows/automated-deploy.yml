@@ -121,10 +121,7 @@ jobs:
 
     - name: Deploy to VPS
       run: |
-        # Pass GitHub token securely via environment
-        ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-          "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" \
-          'bash -s' << 'EOF'
+        ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
           set -e
           
           echo "🚀 Starting automated deployment..."
@@ -132,24 +129,19 @@ jobs:
           # Navigate to project directory
           cd /opt/evsrs/evsrs-be
           
-          # Configure git to use token for this session
-          git config --local credential.helper "store --file=.git-credentials"
-          echo "https://${GITHUB_TOKEN}@github.com" > .git-credentials
+          # Pull latest code (already configured with credentials)
+          git pull origin main || echo "Git pull failed, but continuing..."
           
-          # Pull latest code
-          git fetch origin
-          git reset --hard origin/main
-          
-          # Clean up credentials
-          rm -f .git-credentials
-          git config --local --unset credential.helper
-          
-          # Create backup before deployment
+          # Create backup before deployment (with error handling)
           if [ -f "scripts/backup.sh" ]; then
             echo "📦 Creating backup..."
             chmod +x scripts/backup.sh
-            ./scripts/backup.sh || echo "⚠️ Backup failed, continuing..."
+            ./scripts/backup.sh || echo "⚠️ Backup failed, continuing with deployment..."
           fi
+          
+          # Clean up existing containers
+          docker stop portainer 2>/dev/null || true
+          docker rm portainer 2>/dev/null || true
           
           # Make deploy script executable and run
           chmod +x scripts/deploy-vps.sh

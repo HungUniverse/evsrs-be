@@ -84,6 +84,11 @@ deploy_core_services() {
     
     # Start proxy and management services
     echo "Starting proxy and container management..."
+    
+    # Clean up existing portainer container if exists
+    docker stop portainer 2>/dev/null || true
+    docker rm portainer 2>/dev/null || true
+    
     docker compose -f $COMPOSE_FILE up -d nginx-proxy-manager portainer
     check_service_health "nginx-proxy-manager" || exit 1
     
