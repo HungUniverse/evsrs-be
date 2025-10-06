@@ -161,6 +161,25 @@ services:
     depends_on:
       - elasticsearch
 
+  # Portainer Container Management
+  portainer:
+    image: portainer/portainer-ce:latest
+    restart: unless-stopped
+    container_name: portainer
+    ports:
+      - "9443:9443"
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - evsrs-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000", "||", "curl", "-k", "-f", "https://localhost:9443"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 networks:
   evsrs-network:
     driver: bridge
@@ -168,6 +187,8 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+  portainer_data:
     driver: local
   elasticsearch_data:
     driver: local
