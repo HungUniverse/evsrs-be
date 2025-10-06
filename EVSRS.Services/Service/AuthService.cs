@@ -108,7 +108,7 @@ public class AuthService : IAuthService
     }
     public async Task SendOtpEmailAsync(string email, string otpCode)
     {
-        string subject = "Your OTP Code - MamaFit";
+        string subject = "Your OTP Code - Eco Rent System";
         string preheader = "Use this OTP code to complete your registration. This code is valid for 5 minutes.";
 
         string content = $@"
@@ -132,13 +132,13 @@ public class AuthService : IAuthService
     <body>
         <span style=""display:none!important;"">{preheader}</span>
         <div class=""container"">
-            <div class=""brand"">MamaFit</div>
+            <div class=""brand"">Eco Rent System</div>
             <div class=""title"">Your One-Time Password (OTP)</div>
             <div class=""message"">Hello,<br/>Use the code below to complete your registration.<br/>This code will expire in <b>5 minutes</b>.</div>
             <div class=""otp"">{otpCode}</div>
             <div class=""footer"">
                 If you did not request this, please ignore this email.<br>
-                &copy; {DateTime.Now.Year} MamaFit. All rights reserved.
+                &copy; {DateTime.Now.Year} Eco Rent System. All rights reserved.
             </div>
         </div>
     </body>
