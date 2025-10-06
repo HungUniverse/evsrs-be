@@ -82,9 +82,9 @@ deploy_core_services() {
     # Wait for database to be healthy
     check_service_health "postgres" || exit 1
     
-    # Start Nginx Proxy Manager
-    echo "Starting Nginx Proxy Manager..."
-    docker compose -f $COMPOSE_FILE up -d nginx-proxy-manager
+    # Start proxy and management services
+    echo "Starting proxy and container management..."
+    docker compose -f $COMPOSE_FILE up -d nginx-proxy-manager portainer
     check_service_health "nginx-proxy-manager" || exit 1
     
     # Start application
