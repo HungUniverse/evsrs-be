@@ -4,7 +4,11 @@
 Hướng dẫn này giúp bạn deploy EVSRS trên VPS sử dụng:
 - **Docker** (theo tài liệu chính thức)
 - **Portainer** để quản lý containers
-- **Nginx Proxy Manager** cho reverse proxy và SSL
+## Services Included
+
+- **EVSRS API**: ASP.NET Core 8.0 application (built from source)
+- **PostgreSQL 15**: Database with health checks
+- **Nginx Proxy Manager**: Reverse proxy with SSL automation
 - **Cloudflare** để quản lý DNS
 
 ## 🚀 Hướng dẫn từng bước
