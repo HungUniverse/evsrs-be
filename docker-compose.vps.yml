@@ -174,11 +174,14 @@ services:
       - portainer_data:/data
     networks:
       - evsrs-network
+    environment:
+      - PORTAINER_HTTP_ENABLED=true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000", "||", "curl", "-k", "-f", "https://localhost:9443"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/api/system/status", "||", "exit", "1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
 networks:
   evsrs-network:
