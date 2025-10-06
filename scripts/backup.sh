@@ -25,10 +25,15 @@ mkdir -p $BACKUP_DIR
 backup_database() {
     echo -e "${YELLOW}📊 Backing up PostgreSQL database...${NC}"
     
-    # Get database connection info from environment
+    # Get database connection info from environment (with error handling)
     if [ -f ".env" ]; then
-        source .env
+        # Source .env safely, ignore syntax errors
+        source .env 2>/dev/null || echo "Warning: .env file has syntax issues, using defaults"
     fi
+    
+    # Use defaults if env vars not set
+    POSTGRES_USER=${POSTGRES_USER:-"evsrs_user"}
+    POSTGRES_DB=${POSTGRES_DB:-"evsrs_production"}
     
     BACKUP_FILE="$BACKUP_DIR/postgres_backup_$TIMESTAMP.sql"
     
