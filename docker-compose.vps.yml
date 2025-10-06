@@ -1,9 +1,6 @@
-version: "3.8"
-
 services:
   # EVSRS API Application
   evsrs-api:
-    image: hunguniverse/evsrs-api:latest
     build:
       context: .
       dockerfile: EVSRS.API/Dockerfile
@@ -28,7 +25,6 @@ services:
       - EmailSettings__Domain=${MAILGUN_DOMAIN}
       - EmailSettings__FromEmail=${MAILGUN_FROM_EMAIL}
       - EmailSettings__FromName=${MAILGUN_FROM_NAME}
-      - RedisSettings__ConnectionString=redis:6379
       - SepaySettings__ApiKey=${SEPAY_API_KEY}
       - SepaySettings__ApiBaseUri=${SEPAY_API_BASE_URI}
       - SepaySettings__AccountNumber=${SEPAY_ACCOUNT_NUMBER}
@@ -49,8 +45,6 @@ services:
       - .env
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     volumes:
       - ./logs:/app/logs
@@ -107,23 +101,7 @@ services:
       retries: 5
       start_period: 30s
 
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    container_name: evsrs-redis
-    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy allkeys-lru
-    env_file:
-      - .env
-    volumes:
-      - redis_data:/data
-    networks:
-      - evsrs-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
+
 
   # Elasticsearch for Logging (Optional)
   elasticsearch:
@@ -188,8 +166,6 @@ networks:
 
 volumes:
   postgres_data:
-    driver: local
-  redis_data:
     driver: local
   elasticsearch_data:
     driver: local
