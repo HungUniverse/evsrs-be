@@ -1,4 +1,4 @@
-name: EVSRS Production Deployment
+name: EVSRS CI/CD Pipeline
 
 on:
   push:
@@ -7,16 +7,9 @@ on:
       - '**.md'
       - '.gitignore'
       - 'docs/**'
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - staging
 
 env:
   REGISTRY: ghcr.io
@@ -48,6 +41,10 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     name: 🔒 Security Scan
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     
     steps:
     - name: Checkout code
@@ -62,15 +59,17 @@ jobs:
         output: 'trivy-results.sarif'
 
     - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
+        category: 'trivy'
 
   build-and-push:
     runs-on: ubuntu-latest
     needs: [test, security-scan]
     name: 🐳 Build & Push Image
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
@@ -93,7 +92,6 @@ jobs:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
           type=ref,event=branch
-          type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
 
@@ -113,125 +111,29 @@ jobs:
         build-args: |
           BUILD_CONFIGURATION=Release
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [build-and-push]
-    name: 🚀 Deploy to Production
-    environment: 
-      name: production
-      url: https://api.your-domain.com
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.8.0
-      with:
-        ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
-
-    - name: Add VPS to known hosts
+    - name: � Deployment Instructions
       run: |
-        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-
-    - name: Deploy to VPS
-      run: |
-        ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-          set -e
-          
-          # Navigate to project directory
-          cd /opt/evsrs
-          
-          # Pull latest code
-          git fetch origin
-          git reset --hard origin/main
-          
-          # Update environment variables
-          echo "IMAGE_TAG=${{ github.sha }}" >> .env.production
-          
-          # Create backup before deployment
-          /opt/evsrs/scripts/backup.sh
-          
-          # Pull new image
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          
-          # Update docker-compose to use new image
-          sed -i "s|image: hunguniverse/evsrs-api:.*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}|" docker-compose.production.yml
-          
-          # Deploy with zero-downtime strategy
-          docker-compose -f docker-compose.production.yml up -d --no-deps evsrs-api
-          
-          # Wait for health check
-          echo "Waiting for application to be healthy..."
-          for i in {1..30}; do
-            if curl -f https://api.your-domain.com/health > /dev/null 2>&1; then
-              echo "Application is healthy!"
-              break
-            fi
-            if [ $i -eq 30 ]; then
-              echo "Health check failed, rolling back..."
-              docker-compose -f docker-compose.production.yml logs evsrs-api
-              exit 1
-            fi
-            sleep 10
-          done
-          
-          # Cleanup old images
-          docker image prune -f
-          
-          echo "Deployment completed successfully!"
-        EOF
-
-    - name: Run post-deployment tests
-      run: |
-        # Wait a bit for the application to fully start
-        sleep 30
-        
-        # Test API endpoints
-        curl -f https://api.your-domain.com/health
-        curl -f https://api.your-domain.com/swagger/index.html
-        
-        echo "Post-deployment tests passed!"
-
-    - name: Notify deployment status
-      uses: 8398a7/action-slack@v3
-      if: always()
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        text: |
-          EVSRS Deployment to Production
-          Status: ${{ job.status }}
-          Commit: ${{ github.sha }}
-          Author: ${{ github.actor }}
-          Branch: ${{ github.ref_name }}
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-
-  rollback:
-    runs-on: ubuntu-latest
-    name: 🔄 Rollback (Manual)
-    if: failure() && github.event_name == 'workflow_dispatch'
-    environment: production
-    
-    steps:
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.8.0
-      with:
-        ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
-
-    - name: Rollback deployment
-      run: |
-        ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-          cd /opt/evsrs
-          
-          # Get previous image tag from git
-          PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
-          
-          # Rollback to previous image
-          sed -i "s|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:.*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${PREVIOUS_COMMIT}|" docker-compose.production.yml
-          
-          # Deploy previous version
-          docker-compose -f docker-compose.production.yml up -d --no-deps evsrs-api
-          
-          echo "Rollback completed!"
-        EOF
+        echo "🎉 Docker image built and pushed successfully!"
+        echo ""
+        echo "📋 Manual Deployment Instructions:"
+        echo "================================="
+        echo ""
+        echo "1. SSH to your VPS:"
+        echo "   ssh your-user@your-vps-ip"
+        echo ""
+        echo "2. Navigate to project directory:"
+        echo "   cd /opt/evsrs/evsrs-be"
+        echo ""
+        echo "3. Pull latest code:"
+        echo "   git pull origin main"
+        echo ""
+        echo "4. Deploy with updated image:"
+        echo "   ./scripts/deploy-vps.sh"
+        echo ""
+        echo "🔗 Available images:"
+        echo "   - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+        echo "   - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
+        echo ""
+        echo "🌐 After deployment, verify at:"
+        echo "   - API: http://your-vps-ip:8080/health"
+        echo "   - Swagger: http://your-vps-ip:8080/swagger"
