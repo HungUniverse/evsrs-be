@@ -85,12 +85,25 @@ deploy_core_services() {
     # Start proxy and management services
     echo "Starting proxy and container management..."
     
-    # Clean up existing portainer container if exists
-    docker stop portainer 2>/dev/null || true
-    docker rm portainer 2>/dev/null || true
+    # Clean up existing portainer container if exists (but keep volume)
+    if docker ps -a --format "table {{.Names}}" | grep -q "^portainer$"; then
+        echo "Stopping existing Portainer container..."
+        docker stop portainer 2>/dev/null || true
+        docker rm portainer 2>/dev/null || true
+        echo "Waiting for cleanup..."
+        sleep 3
+    fi
     
-    docker compose -f $COMPOSE_FILE up -d nginx-proxy-manager portainer
+    # Start services with docker-compose
+    docker compose -f $COMPOSE_FILE up -d nginx-proxy-manager
     check_service_health "nginx-proxy-manager" || exit 1
+    
+    # Start Portainer separately to avoid conflicts
+    echo "Starting Portainer..."
+    docker compose -f $COMPOSE_FILE up -d portainer
+    
+    # Wait a moment for Portainer to initialize
+    sleep 5
     
     # Start application
     echo "Starting EVSRS API..."
