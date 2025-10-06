@@ -76,12 +76,11 @@ deploy_core_services() {
     echo -e "${YELLOW}🚀 Deploying core services...${NC}"
     
     # Start infrastructure services first
-    echo "Starting database and cache..."
-    docker compose -f $COMPOSE_FILE up -d postgres redis
+    echo "Starting database..."
+    docker compose -f $COMPOSE_FILE up -d postgres
     
-    # Wait for database and redis to be healthy
+    # Wait for database to be healthy
     check_service_health "postgres" || exit 1
-    check_service_health "redis" || exit 1
     
     # Start Nginx Proxy Manager
     echo "Starting Nginx Proxy Manager..."
