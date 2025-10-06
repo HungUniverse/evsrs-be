@@ -1,0 +1,195 @@
+version: "3.8"
+
+services:
+  # EVSRS API Application
+  evsrs-api:
+    image: hunguniverse/evsrs-api:latest
+    build:
+      context: .
+      dockerfile: EVSRS.API/Dockerfile
+      args:
+        BUILD_CONFIGURATION: Release
+    restart: unless-stopped
+    container_name: evsrs-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Port=5432;Pooling=true;MinPoolSize=5;MaxPoolSize=50;
+      - JWT__Issuer=${JWT_ISSUER}
+      - JWT__Audience=${JWT_AUDIENCE}
+      - JWT__SecretKey=${JWT_SECRET_KEY}
+      - JWT__AccessTokenExpirationMinutes=${JWT_ACCESS_TOKEN_EXPIRATION}
+      - JWT__RefreshTokenExpirationDays=${JWT_REFRESH_TOKEN_EXPIRATION}
+      - Cloudinary__CloudName=${CLOUDINARY_CLOUD_NAME}
+      - Cloudinary__ApiKey=${CLOUDINARY_API_KEY}
+      - Cloudinary__ApiSecret=${CLOUDINARY_API_SECRET}
+      - EmailSettings__ApiKey=${MAILGUN_API_KEY}
+      - EmailSettings__ApiBaseUri=${MAILGUN_API_BASE_URI}
+      - EmailSettings__Domain=${MAILGUN_DOMAIN}
+      - EmailSettings__FromEmail=${MAILGUN_FROM_EMAIL}
+      - EmailSettings__FromName=${MAILGUN_FROM_NAME}
+      - RedisSettings__ConnectionString=redis:6379
+      - SepaySettings__ApiKey=${SEPAY_API_KEY}
+      - SepaySettings__ApiBaseUri=${SEPAY_API_BASE_URI}
+      - SepaySettings__AccountNumber=${SEPAY_ACCOUNT_NUMBER}
+      - SepaySettings__AccountName=${SEPAY_ACCOUNT_NAME}
+      - SepaySettings__BankCode=${SEPAY_BANK_CODE}
+      - Contentful__SpaceId=${CONTENTFUL_SPACE_ID}
+      - Contentful__ContentDeliveryKey=${CONTENTFUL_CONTENT_DELIVERY_KEY}
+      - Contentful__EntryId=${CONTENTFUL_ENTRY_ID}
+      - Contentful__SecretKey=${CONTENTFUL_SECRET_KEY}
+      - Contentful__ManagementToken=${CONTENTFUL_MANAGEMENT_TOKEN}
+      - GhtkSettings__ApiToken=${GHTK_API_TOKEN}
+      - GhtkSettings__BaseUri=${GHTK_BASE_URI}
+      - AI__Providers__Groq__ApiKey=${GROQ_API_KEY}
+      - AI__Providers__Groq__Enabled=true
+      - AI__Providers__Groq__Model=${GROQ_MODEL}
+      - AI__Providers__Groq__MaxTokens=${GROQ_MAX_TOKENS}
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - evsrs-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Proxy Manager
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    container_name: nginx-proxy-manager
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ./data/nginx-proxy-manager:/data
+      - ./data/letsencrypt:/etc/letsencrypt
+    networks:
+      - evsrs-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:81"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    container_name: evsrs-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/var/backups
+    networks:
+      - evsrs-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    container_name: evsrs-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    env_file:
+      - .env
+    volumes:
+      - redis_data:/data
+    networks:
+      - evsrs-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Elasticsearch for Logging (Optional)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: evsrs-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - evsrs-network
+    profiles:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Kibana for Log Viewing (Optional)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.4
+    container_name: evsrs-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - XPACK_SECURITY_ENABLED=false
+    networks:
+      - evsrs-network
+    profiles:
+      - monitoring
+    depends_on:
+      - elasticsearch
+
+  # Filebeat for Log Collection (Optional)
+  filebeat:
+    image: elastic/filebeat:8.13.4
+    container_name: evsrs-filebeat
+    user: root
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    command: ["--strict.perms=false"]
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./logs:/app/logs:ro
+    networks:
+      - evsrs-network
+    profiles:
+      - monitoring
+    depends_on:
+      - elasticsearch
+
+networks:
+  evsrs-network:
+    driver: bridge
+    name: evsrs-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
