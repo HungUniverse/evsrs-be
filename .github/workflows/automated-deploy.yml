@@ -129,8 +129,15 @@ jobs:
           # Navigate to project directory
           cd /opt/evsrs/evsrs-be
           
-          # Pull latest code (already configured with credentials)
-          git pull origin main || echo "Git pull failed, but continuing..."
+          # Stash any local changes before pulling
+          echo "💾 Stashing local changes..."
+          git stash push -m "Auto-stash before deployment $(date)" || echo "Nothing to stash"
+          
+          # Pull latest code from main branch
+          echo "📥 Pulling latest code..."
+          git fetch origin
+          git checkout main
+          git reset --hard origin/main
           
           # Create backup before deployment (with error handling)
           if [ -f "scripts/backup.sh" ]; then
@@ -140,10 +147,12 @@ jobs:
           fi
           
           # Clean up existing containers
+          echo "🧹 Cleaning up containers..."
           docker stop portainer 2>/dev/null || true
           docker rm portainer 2>/dev/null || true
           
           # Make deploy script executable and run
+          echo "🚀 Running deployment script..."
           chmod +x scripts/deploy-vps.sh
           ./scripts/deploy-vps.sh
           
@@ -204,6 +213,7 @@ jobs:
         echo "   cd /opt/evsrs/evsrs-be"
         echo ""
         echo "3. Pull latest code:"
+        echo "   git stash push -m 'Manual stash'"
         echo "   git pull origin main"
         echo ""
         echo "4. Deploy manually:"
