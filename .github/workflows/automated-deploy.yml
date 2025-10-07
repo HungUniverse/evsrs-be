@@ -139,13 +139,6 @@ jobs:
           git checkout main
           git reset --hard origin/main
           
-          # Create backup before deployment (with error handling)
-          if [ -f "scripts/backup.sh" ]; then
-            echo "📦 Creating backup..."
-            chmod +x scripts/backup.sh
-            ./scripts/backup.sh || echo "⚠️ Backup failed, continuing with deployment..."
-          fi
-          
           # Clean up existing containers
           echo "🧹 Cleaning up containers..."
           docker stop portainer 2>/dev/null || true
