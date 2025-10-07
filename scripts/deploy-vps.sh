@@ -80,9 +80,16 @@ deploy_core_services() {
     
     # Test database connection
     echo "Testing database connection..."
-    if docker run --rm postgres:15-alpine psql \
-      "postgresql://doadmin:AVNS_j67WYcfsnOlYoQBIBdM@evsrs-db-do-user-25819034-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require" \
-      -c "SELECT 'Connection OK' as status;" > /dev/null 2>&1; then
+    
+    # Load environment variables
+    if [ -f ".env" ]; then
+        source .env 2>/dev/null || echo "Warning: .env file has syntax issues"
+    fi
+    
+    # Build connection string from environment variables
+    POSTGRES_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=require"
+    
+    if docker run --rm postgres:15-alpine psql "$POSTGRES_URL" -c "SELECT 'Connection OK' as status;" > /dev/null 2>&1; then
         echo -e "${GREEN}✅ External database connection successful${NC}"
     else
         echo -e "${RED}❌ External database connection failed${NC}"
@@ -172,22 +179,6 @@ show_status() {
     echo ""
 }
 
-# Create backup from DigitalOcean database
-create_backup() {
-    echo -e "${YELLOW}📦 Creating DigitalOcean database backup...${NC}"
-    
-    BACKUP_FILE="./backups/backup_$(date +%Y%m%d_%H%M%S).sql"
-    mkdir -p ./backups
-    
-    # Backup from DigitalOcean database directly
-    docker run --rm postgres:15-alpine pg_dump \
-      "postgresql://doadmin:AVNS_j67WYcfsnOlYoQBIBdM@evsrs-db-do-user-25819034-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require" \
-      > "$BACKUP_FILE"
-    
-    gzip "$BACKUP_FILE"
-    echo -e "${GREEN}✅ Backup created: ${BACKUP_FILE}.gz${NC}"
-}
-
 # Cleanup old images and containers
 cleanup() {
     echo -e "${YELLOW}🧹 Cleaning up old images and containers...${NC}"
@@ -232,9 +223,6 @@ case "${1:-deploy}" in
     "status")
         show_status
         ;;
-    "backup")
-        create_backup
-        ;;
     "cleanup")
         cleanup
         ;;
@@ -257,12 +245,11 @@ case "${1:-deploy}" in
         docker compose -f $COMPOSE_FILE --profile monitoring up -d
         ;;
     *)
-        echo "Usage: $0 {deploy|status|backup|cleanup|logs|restart|stop|start|monitoring}"
+        echo "Usage: $0 {deploy|status|cleanup|logs|restart|stop|start|monitoring}"
         echo ""
         echo "Commands:"
         echo "  deploy     - Full deployment (default)"
         echo "  status     - Show current status and access URLs"
-        echo "  backup     - Create database backup"
         echo "  cleanup    - Clean up unused Docker resources"
         echo "  logs       - Show logs (optionally specify service)"
         echo "  restart    - Restart service (default: evsrs-api)"
