@@ -45,18 +45,19 @@ namespace EVSRS.API
 
 
                 // Configure the HTTP request pipeline.
+                app.UseSwagger();
+                
                 if (app.Environment.IsDevelopment())
                 {
-                    app.UseSwagger();
                     app.UseSwaggerUI();
                 }
                 else
                 {
-                    app.UseSwagger();
+                    // Production swagger UI configuration
                     app.UseSwaggerUI(c =>
                     {
                         c.SwaggerEndpoint("/swagger/v1/swagger.json", "EVSRS API V1");
-                        c.RoutePrefix = string.Empty;
+                        c.RoutePrefix = "swagger";  // Set explicit route prefix
                     });
                 }
 
@@ -67,8 +68,6 @@ namespace EVSRS.API
                 app.UseRouting();
 
                 app.UseCors(CorsConstant.PolicyName);
-
-                app.UseSwagger();
 
                 app.UseAuthentication();
 
