@@ -75,7 +75,15 @@ pull_images() {
 deploy_core_services() {
     echo -e "${YELLOW}🚀 Deploying core services...${NC}"
     
-    # Start infrastructure services first (External DigitalOcean Database)
+    # Stop existing containers to force fresh start
+    echo "Stopping existing containers..."
+    docker compose -f $COMPOSE_FILE down || true
+    
+    # Remove old images to ensure fresh build
+    echo "Removing old API images..."
+    docker images | grep evsrs-be | grep evsrs-api | awk '{print $3}' | xargs docker rmi -f 2>/dev/null || true
+    
+    # Infrastructure services first (External DigitalOcean Database)
     echo "Using external DigitalOcean PostgreSQL database..."
     
     # Test database connection
@@ -119,8 +127,9 @@ deploy_core_services() {
     # Wait a moment for Portainer to initialize
     sleep 5
     
-    # Start application (No database migration needed - using external DigitalOcean DB)
-    echo "Starting EVSRS API..."
+    # Start application with fresh build (No database migration needed - using external DigitalOcean DB)
+    echo "Building and starting EVSRS API with latest code..."
+    docker compose -f $COMPOSE_FILE build --no-cache evsrs-api
     docker compose -f $COMPOSE_FILE up -d evsrs-api
     check_service_health "evsrs-api" || exit 1
     
