@@ -46,22 +46,16 @@ namespace EVSRS.API
 
                 // Configure the HTTP request pipeline.
                 app.UseSwagger();
-                
-                if (app.Environment.IsDevelopment())
+                app.UseSwaggerUI(c =>
                 {
-                    app.UseSwaggerUI();
-                }
-                else
-                {
-                    // Production swagger UI configuration
-                    app.UseSwaggerUI(c =>
-                    {
-                        c.SwaggerEndpoint("/swagger/v1/swagger.json", "EVSRS API V1");
-                        c.RoutePrefix = "swagger";  // Set explicit route prefix
-                    });
-                }
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "EVSRS API V1");
+                    c.RoutePrefix = "swagger";  // Swagger UI available at /swagger
+                });
 
                 app.UseMiddleware<ExceptionMiddleware>();
+
+                // Enable static files for Swagger UI
+                app.UseStaticFiles();
 
                 app.UseHttpsRedirection();
 
