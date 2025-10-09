@@ -28,6 +28,10 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IOTPRepository, OTPRepository>();
             services.AddScoped<ITokenRepository, TokenRepository>();
+            services.AddScoped<ICarManufactureRepository, CarManufactureRepository>();
+            services.AddScoped<IModelRepository, ModelRepository>();
+            
+
         }
         public static void AddServices(this IServiceCollection services)
         {
@@ -37,6 +41,11 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IValidationService, ValidationService>();
             services.AddScoped<IEmailSenderSevice, EmailSenderService>();
+            services.AddScoped<ICarManufactureService, CarManufactureService>();
+            services.AddScoped<IModelService, ModelService>();
+            
+
+
         }
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)
         {

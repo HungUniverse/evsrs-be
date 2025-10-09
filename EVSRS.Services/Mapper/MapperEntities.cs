@@ -1,5 +1,8 @@
 using System;
 using AutoMapper;
+
+using EVSRS.BusinessObjects.DTO.CarManufactureDto;
+using EVSRS.BusinessObjects.DTO.ModelDto;
 using EVSRS.BusinessObjects.DTO.TokenDto;
 using EVSRS.BusinessObjects.DTO.UserDto;
 using EVSRS.BusinessObjects.Entity;
@@ -14,6 +17,7 @@ namespace EVSRS.Services.Mapper
 
             CreateMap<ApplicationUserToken, TokenResponseDto>().ReverseMap();
             CreateMap<ApplicationUserToken, RefreshTokenRequestDto>().ReverseMap();
+
 
             #endregion
 
@@ -32,6 +36,19 @@ namespace EVSRS.Services.Mapper
             // CreateMap<ApplicationUser, UpdateProfileRequestDto>().ReverseMap();
 
             #endregion
+
+            #region CarManufacture Mapper
+
+            CreateMap<CarManufacture, CarManufactureResponseDto>().ReverseMap();
+            CreateMap<CarManufacture, CarManufactureRequestDto>().ReverseMap();
+            #endregion
+
+            #region Model Mapper
+            CreateMap<Model, ModelResponseDto>().ReverseMap();
+            CreateMap<Model, ModelRequestDto>().ReverseMap();
+            #endregion
+
+
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using EVSRS.BusinessObjects.DBContext;
 using EVSRS.Repositories.Interface;
+using EVSRS.Repositories.Repository;
 
 namespace EVSRS.Repositories.Implement;
 
@@ -13,14 +14,21 @@ public class UnitOfWork : IUnitOfWork
 
     public ITokenRepository TokenRepository { get; }
     public IOTPRepository OTPRepository { get; }
+    public ICarManufactureRepository CarManufactureRepository { get; }
+    public IModelRepository ModelRepository { get; }
+    
 
-    public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ITokenRepository tokenRepository, IOTPRepository otpRepository)
+    public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ITokenRepository tokenRepository, IOTPRepository otpRepository, ICarManufactureRepository carManufactureRepository, IModelRepository modelRepository)
     {
         _context = context;
         UserRepository = userRepository;
         TokenRepository = tokenRepository;
         OTPRepository = otpRepository;
+        CarManufactureRepository = carManufactureRepository;
+        ModelRepository = modelRepository;
+        
     }
+    
 
     public int SaveChanges()
     {

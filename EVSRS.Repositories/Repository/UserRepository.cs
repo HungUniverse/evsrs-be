@@ -46,17 +46,17 @@ public class UserRepository : GenericRepository<ApplicationUser>, IUserRepositor
         return response;
     }
 
-    public Task<ApplicationUser?> GetByEmailPhoneAsync(string email, string phoneNumber)
+    public async Task<ApplicationUser?> GetByEmailPhoneAsync(string email, string phoneNumber)
     {
-        var response = _dbSet
+        var response = await _dbSet
             .Where(x => !x.IsDeleted && x.UserEmail == email && x.PhoneNumber == phoneNumber)
             .FirstOrDefaultAsync();
         return response;
     }
 
-    public Task<ApplicationUser?> GetByPhoneAsync(string phoneNumber)
+    public async Task<ApplicationUser?> GetByPhoneAsync(string phoneNumber)
     {
-        var response = _dbSet
+        var response = await _dbSet
             .Where(x => !x.IsDeleted && x.PhoneNumber == phoneNumber)
             .FirstOrDefaultAsync();
         return response;
