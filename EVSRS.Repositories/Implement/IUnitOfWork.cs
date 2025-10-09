@@ -8,6 +8,9 @@ namespace EVSRS.Repositories.Implement
         IUserRepository UserRepository { get; }
         ITokenRepository TokenRepository { get; }
         IOTPRepository OTPRepository { get; }
+        ICarManufactureRepository CarManufactureRepository { get; }
+        IModelRepository ModelRepository { get; }
+        
         int SaveChanges();
         Task<int> SaveChangesAsync();
         void BeginTransaction();

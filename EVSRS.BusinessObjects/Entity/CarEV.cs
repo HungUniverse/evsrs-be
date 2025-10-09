@@ -12,9 +12,8 @@ namespace EVSRS.BusinessObjects.Entity
         public string? ModelId { get; set; }
         public string? DepotId { get; set; }
         public string? OdoMeter { get; set; }
-        public string? BatteryhealthPercentage { get; set; }
+        public string? BatteryHealthPercentage { get; set; }
         public string? Status { get; set; }
-
         public Model? Model { get; set; }
         public Depot? Depot { get; set; }
         public virtual ICollection<OrderBooking> OrderBookings { get; set; } = new List<OrderBooking>();
