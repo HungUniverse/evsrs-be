@@ -10,7 +10,11 @@ namespace EVSRS.Repositories.Implement
         IOTPRepository OTPRepository { get; }
         ICarManufactureRepository CarManufactureRepository { get; }
         IModelRepository ModelRepository { get; }
-        
+        ICarEVRepository CarEVRepository { get; }
+        IAmenitiesRepository AmenitiesRepository { get; }
+        IFeedbackRepository FeedbackRepository { get; }
+
+
         int SaveChanges();
         Task<int> SaveChangesAsync();
         void BeginTransaction();
