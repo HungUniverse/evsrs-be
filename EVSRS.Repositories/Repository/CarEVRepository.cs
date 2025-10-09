@@ -1,0 +1,48 @@
+﻿using EVSRS.BusinessObjects.Entity;
+using EVSRS.Repositories.Implement;
+using EVSRS.Repositories.Infrastructure;
+using EVSRS.Repositories.Interface;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace EVSRS.Repositories.Repository
+{
+    public class CarEVRepository : GenericRepository<CarEV> , ICarEVRepository
+    {
+        public CarEVRepository(EVSRS.BusinessObjects.DBContext.ApplicationDbContext context, Microsoft.AspNetCore.Http.IHttpContextAccessor httpContextAccessor) : base(context, httpContextAccessor)
+        {
+        }
+        public async Task CreateCarEVAsync(CarEV carEV)
+        {
+            await InsertAsync(carEV);
+
+
+        }
+
+        public async Task DeleteCarEVAsync(CarEV carEV)
+        {
+            await DeleteAsync(carEV);
+        }
+
+        public async Task<CarEV?> GetCarEVByIdAsync(string id)
+        {
+            var response = await _dbSet.Where(x => !x.IsDeleted && x.Id == id).FirstOrDefaultAsync();
+            return response;
+        }
+
+        public async Task<PaginatedList<CarEV>> GetCarEVList()
+        {
+            var response = await _dbSet.ToListAsync();
+            return PaginatedList<CarEV>.Create(response, 1, response.Count);
+        }
+
+        public async Task UpdateCarEVAsync(CarEV carEV)
+        {
+            await UpdateAsync(carEV);
+        }
+    }
+}

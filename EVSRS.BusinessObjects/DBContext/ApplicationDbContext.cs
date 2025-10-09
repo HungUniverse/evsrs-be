@@ -23,8 +23,8 @@ namespace EVSRS.BusinessObjects.DBContext
         public DbSet<ApplicationUser> Users { get; set; }
         public DbSet<OrderBooking> Bookings { get; set; }
         public DbSet<Amenities> Amenities { get; set; }
-        public DbSet<Model> CarEVs { get; set; }
-        public DbSet<CarEV> CarEVDetails { get; set; }
+        public DbSet<Model> Models { get; set; }
+        public DbSet<CarEV> CarEVs { get; set; }
         public DbSet<CarManufacture> CarManufactures { get; set; }
         public DbSet<Depot> Depots { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }

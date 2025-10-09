@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Text.Json;
 using EVSRS.BusinessObjects.DBContext;
+
 using EVSRS.Repositories.Implement;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Repositories.Interface;
@@ -9,6 +10,7 @@ using EVSRS.Repositories.Repository;
 using EVSRS.Services.Interface;
 using EVSRS.Services.Mapper;
 using EVSRS.Services.Service;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -30,7 +32,11 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<ITokenRepository, TokenRepository>();
             services.AddScoped<ICarManufactureRepository, CarManufactureRepository>();
             services.AddScoped<IModelRepository, ModelRepository>();
-            
+            services.AddScoped<ICarEVRepository, CarEVRepository>();
+            services.AddScoped<IAmenitiesRepository, AmenitiesRepository>();
+            services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+
+
 
         }
         public static void AddServices(this IServiceCollection services)
@@ -43,7 +49,11 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<IEmailSenderSevice, EmailSenderService>();
             services.AddScoped<ICarManufactureService, CarManufactureService>();
             services.AddScoped<IModelService, ModelService>();
-            
+            services.AddScoped<ICarEVService, CarEVService>();
+            services.AddScoped<IAmenitiesService, AmenitiesService>();
+            services.AddScoped<IFeedbackService, FeedbackService>();
+
+
 
 
         }
@@ -200,10 +210,13 @@ namespace EVSRS.API.DependencyInjection
             services.AddAutoMapper();
             services.AddRepositories();
             services.AddServices();
+            
         }
         private static void AddAutoMapper(this IServiceCollection services)
         {
             services.AddAutoMapper(typeof(MapperEntities).Assembly);
         }
+        
+        
     }
 }
