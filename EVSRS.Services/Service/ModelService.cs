@@ -92,7 +92,7 @@ namespace EVSRS.Services.Service
             {
                 throw new KeyNotFoundException($"Model with ID {id} not found.");
             }
-            existingModel.UpdatedAt = DateTime.Now;
+            existingModel.UpdatedAt = DateTime.UtcNow;
             existingModel.UpdatedBy = GetCurrentUserName();
             await _unitOfWork.ModelRepository.UpdateModelAsync(existingModel);
             await _unitOfWork.SaveChangesAsync();
