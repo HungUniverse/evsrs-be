@@ -411,6 +411,7 @@ public class AuthService : IAuthService
             new Claim("username", user.UserName ?? string.Empty),
             new Claim("name", user.FullName ?? string.Empty),
             new Claim("email", user.UserEmail ?? string.Empty),
+            new Claim("phone", user.PhoneNumber ?? string.Empty),
             new Claim("role", role),
         };
 

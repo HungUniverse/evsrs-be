@@ -18,7 +18,8 @@ namespace EVSRS.BusinessObjects.DTO.CarEVDto
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string CreatedBy { get; set; } 
-        public string UpdatedBy { get; set; } 
+        public string UpdatedBy { get; set; }
+        public bool isDeleted { get; set; }
 
     }
 }
