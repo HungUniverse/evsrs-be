@@ -16,6 +16,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? RangeKm { get; set; }
         public string? LimiteDailyKm { get; set; }
         public string? Seats { get; set; }
+        public string? Image { get; set; }
         public double? Price { get; set; }
 
         public CarManufacture? CarManufacture { get; set; }
