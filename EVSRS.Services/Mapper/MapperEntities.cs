@@ -3,6 +3,7 @@ using AutoMapper;
 using EVSRS.BusinessObjects.DTO.AmenitiesDto;
 using EVSRS.BusinessObjects.DTO.CarEVDto;
 using EVSRS.BusinessObjects.DTO.CarManufactureDto;
+using EVSRS.BusinessObjects.DTO.DepotDto;
 using EVSRS.BusinessObjects.DTO.FeedbackDto;
 
 using EVSRS.BusinessObjects.DTO.ModelDto;
@@ -65,6 +66,12 @@ namespace EVSRS.Services.Mapper
             CreateMap<Feedback, FeedbackResponseDto>().ReverseMap();
             CreateMap<Feedback, FeedbackRequestDto>().ReverseMap();
             #endregion
+
+            #region Depot  Mapper
+            CreateMap<Depot, DepotRequestDto>().ReverseMap();
+            CreateMap<Depot, DepotResponseDto>().ReverseMap();
+            #endregion
+
 
         }
     }

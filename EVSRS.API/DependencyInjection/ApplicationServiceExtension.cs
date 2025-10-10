@@ -35,6 +35,7 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<ICarEVRepository, CarEVRepository>();
             services.AddScoped<IAmenitiesRepository, AmenitiesRepository>();
             services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+            services.AddScoped<IDepotRepository, DepotRepository>();
 
 
 
@@ -52,6 +53,7 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<ICarEVService, CarEVService>();
             services.AddScoped<IAmenitiesService, AmenitiesService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
+            services.AddScoped<IDepotService, DepotService>();
 
 
 

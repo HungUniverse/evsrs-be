@@ -13,6 +13,8 @@ namespace EVSRS.Repositories.Implement
         ICarEVRepository CarEVRepository { get; }
         IAmenitiesRepository AmenitiesRepository { get; }
         IFeedbackRepository FeedbackRepository { get; }
+        IDepotRepository DepotRepository { get; }
+
 
 
         int SaveChanges();
