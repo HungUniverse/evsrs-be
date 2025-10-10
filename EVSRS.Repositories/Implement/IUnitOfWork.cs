@@ -14,6 +14,7 @@ namespace EVSRS.Repositories.Implement
         IAmenitiesRepository AmenitiesRepository { get; }
         IFeedbackRepository FeedbackRepository { get; }
         IDepotRepository DepotRepository { get; }
+        ITransactionRepository TransactionRepository { get; }
 
 
 

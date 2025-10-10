@@ -8,6 +8,7 @@ using EVSRS.BusinessObjects.DTO.FeedbackDto;
 
 using EVSRS.BusinessObjects.DTO.ModelDto;
 using EVSRS.BusinessObjects.DTO.TokenDto;
+using EVSRS.BusinessObjects.DTO.TransactionDto;
 using EVSRS.BusinessObjects.DTO.UserDto;
 using EVSRS.BusinessObjects.Entity;
 
@@ -70,6 +71,11 @@ namespace EVSRS.Services.Mapper
             #region Depot  Mapper
             CreateMap<Depot, DepotRequestDto>().ReverseMap();
             CreateMap<Depot, DepotResponseDto>().ReverseMap();
+            #endregion
+
+            #region Transaction  Mapper
+            CreateMap<Transaction, TransactionResponseDto>().ReverseMap();
+            CreateMap<Transaction, TransactionRequestDto>().ReverseMap();
             #endregion
 
 

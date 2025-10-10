@@ -36,6 +36,7 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<IAmenitiesRepository, AmenitiesRepository>();
             services.AddScoped<IFeedbackRepository, FeedbackRepository>();
             services.AddScoped<IDepotRepository, DepotRepository>();
+            services.AddScoped<ITransactionRepository, TransactionRepository>();
 
 
 
@@ -54,6 +55,7 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<IAmenitiesService, AmenitiesService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IDepotService, DepotService>();
+            services.AddScoped<ITransactionService, TransactionService>();
 
 
 

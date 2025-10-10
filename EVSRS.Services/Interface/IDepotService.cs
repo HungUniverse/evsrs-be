@@ -16,7 +16,7 @@ namespace EVSRS.Services.Interface
         Task<DepotResponseDto> GetDepotByNameAsync(string name);
         Task<DepotResponseDto> GetDepotByMapId(string mapId);
         Task CreateDepotAsync(DepotRequestDto depot);
-        Task UpdateDepotAsync(Depot depot);
+        Task UpdateDepotAsync(String id, Depot depot);
         Task DeleteDepotAsync(string id);
 
 

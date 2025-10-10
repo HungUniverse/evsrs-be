@@ -1,4 +1,5 @@
 ﻿using EVSRS.BusinessObjects.Entity;
+using EVSRS.Repositories.Implement;
 using EVSRS.Repositories.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EVSRS.Repositories.Interface
 {
-    public interface IDepotRepository
+    public interface IDepotRepository: IGenericRepository<Depot>
     {
         Task <PaginatedList<Depot>> GetAllDepot();
         Task <Depot> GetDepotById(string id);
