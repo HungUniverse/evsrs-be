@@ -1,4 +1,5 @@
 ﻿using EVSRS.BusinessObjects.Entity;
+using EVSRS.Repositories.Implement;
 using EVSRS.Repositories.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EVSRS.Repositories.Interface
 {
-    public interface IFeedbackRepository
+    public interface IFeedbackRepository: IGenericRepository<Feedback>
     {
         Task<PaginatedList<Feedback>> GetFeedbacksAsync();
         Task<Feedback?> GetFeedbackByIdAsync(string id);

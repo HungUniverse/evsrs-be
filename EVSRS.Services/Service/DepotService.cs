@@ -96,17 +96,17 @@ namespace EVSRS.Services.Service
             return depotDto;
         }
 
-        public async Task UpdateDepotAsync(Depot depot)
+        public async Task UpdateDepotAsync(String id, Depot depot)
         {
-            var existingDepot = await _unitOfWork.DepotRepository.GetDepotById(depot.Id);
+            var existingDepot = await _unitOfWork.DepotRepository.GetDepotById(id);
             if (existingDepot == null)
             {
-                throw new KeyNotFoundException($"Depot with ID {depot.Id} not found.");
+                throw new KeyNotFoundException($"Depot with ID {id} not found.");
             }
             existingDepot.UpdatedAt = DateTime.UtcNow;
             existingDepot.UpdatedBy = GetCurrentUserName();
-            
-            await _unitOfWork.DepotRepository.UpdateDepotAsync(depot);
+            _mapper.Map(depot, existingDepot);
+            await _unitOfWork.DepotRepository.UpdateDepotAsync(existingDepot);
             await _unitOfWork.SaveChangesAsync();
         }
 

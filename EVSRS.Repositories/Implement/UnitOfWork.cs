@@ -20,10 +20,11 @@ public class UnitOfWork : IUnitOfWork
     public IAmenitiesRepository AmenitiesRepository { get; set; }
     public IFeedbackRepository FeedbackRepository { get; set; }
     public IDepotRepository DepotRepository { get; set;  }
+    public ITransactionRepository TransactionRepository { get; set; }
 
 
 
-    public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ITokenRepository tokenRepository, IOTPRepository otpRepository, ICarManufactureRepository carManufactureRepository, IModelRepository modelRepository, ICarEVRepository carEVRepository, IAmenitiesRepository amenitiesRepository, IFeedbackRepository feedbackRepository, IDepotRepository depotRepository)
+    public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ITokenRepository tokenRepository, IOTPRepository otpRepository, ICarManufactureRepository carManufactureRepository, IModelRepository modelRepository, ICarEVRepository carEVRepository, IAmenitiesRepository amenitiesRepository, IFeedbackRepository feedbackRepository, IDepotRepository depotRepository, ITransactionRepository transactionRepository)
     {
         _context = context;
         UserRepository = userRepository;
@@ -35,6 +36,7 @@ public class UnitOfWork : IUnitOfWork
         AmenitiesRepository = amenitiesRepository;
         FeedbackRepository = feedbackRepository;
         DepotRepository = depotRepository;
+        TransactionRepository = transactionRepository;
 
     }
     
