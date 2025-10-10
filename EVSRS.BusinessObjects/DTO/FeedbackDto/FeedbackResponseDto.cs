@@ -19,5 +19,6 @@ namespace EVSRS.BusinessObjects.DTO.FeedbackDto
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public bool isDeleted { get; set; }
     }
 }

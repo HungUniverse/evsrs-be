@@ -17,5 +17,7 @@ namespace EVSRS.BusinessObjects.DTO.ModelDto
         public double? Price { get; set; }
         public string BatteryCapacityKwh { get; set; } = string.Empty;
         public string? Image { get; set; }
-    }
+
+        public bool isDeleted { get; set; }
+        }
 }
