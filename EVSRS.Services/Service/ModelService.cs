@@ -31,23 +31,11 @@ namespace EVSRS.Services.Service
         public async Task CreateModelAsync(ModelRequestDto model)
         {
             await _validationService.ValidateAndThrowAsync(model);
-            
-           
-            
-            // Manual mapping to ensure proper create
-            var newModel = new Model
-            {
-                ModelName = model.ModelName,
-              
-                LimiteDailyKm = model.LimiteDailyKm,
-                RangeKm = model.RangeKm,
-                Seats = model.Seats,
-                Price = model.Price,
-                BatteryCapacityKwh = model.BatteryCapacityKwh
-            };
-            
+            var newModel = _mapper.Map<Model>(model);
             await _unitOfWork.ModelRepository.CreateModelAsync(newModel);
             await _unitOfWork.SaveChangesAsync();
+
+
 
         }
 
@@ -97,29 +85,17 @@ namespace EVSRS.Services.Service
 
         }
 
-        public async Task<ModelResponseDto> UpdateModelAsync(string id, ModelRequestDto model)
+        public async Task UpdateModelAsync(string id, ModelRequestDto model)
         {
-            await _validationService.ValidateAndThrowAsync(model);
-            var existingModel = await _unitOfWork.ModelRepository.GetModelByIdAsync(id);
+            var existingModel = await _unitOfWork.ModelRepository.GetByIdAsync(id);
             if (existingModel == null)
             {
                 throw new KeyNotFoundException($"Model with ID {id} not found.");
             }
-            
-            // Manual mapping to ensure proper update
-            existingModel.ModelName = model.ModelName;
-            
-            existingModel.LimiteDailyKm = model.LimiteDailyKm;
-            existingModel.RangeKm = model.RangeKm;
-            existingModel.Seats = model.Seats;
-            existingModel.Price = model.Price;
-            existingModel.BatteryCapacityKwh = model.BatteryCapacityKwh;
+            existingModel.UpdatedAt = DateTime.Now;
             existingModel.UpdatedBy = GetCurrentUserName();
-            existingModel.UpdatedAt = DateTime.UtcNow;
-            
             await _unitOfWork.ModelRepository.UpdateModelAsync(existingModel);
             await _unitOfWork.SaveChangesAsync();
-            return _mapper.Map<ModelResponseDto>(existingModel);
 
         }
 

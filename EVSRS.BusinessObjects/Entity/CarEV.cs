@@ -18,6 +18,5 @@ namespace EVSRS.BusinessObjects.Entity
         public Depot? Depot { get; set; }
         public virtual ICollection<OrderBooking> OrderBookings { get; set; } = new List<OrderBooking>();
 
-
     }
 }

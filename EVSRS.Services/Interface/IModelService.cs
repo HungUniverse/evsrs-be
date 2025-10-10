@@ -14,7 +14,7 @@ namespace EVSRS.Services.Interface
         Task<ModelResponseDto> GetModelByIdAsync(string id);
         Task<ModelResponseDto> GetModelByNameAsync(string name);
         Task CreateModelAsync(ModelRequestDto model);
-        Task<ModelResponseDto> UpdateModelAsync(string id, ModelRequestDto model);
+        Task UpdateModelAsync(string id, ModelRequestDto model);
         Task DeleteModelAsync(string id);
     }
 }
