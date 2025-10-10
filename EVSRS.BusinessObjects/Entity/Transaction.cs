@@ -15,7 +15,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Gateway { get; set; }
         public DateTime? TransactionDate { get; set; }
         public string? AccountNumber { get; set; }
-        public String? Code { get; set; }
+        public string? Code { get; set; }
         public string? Content { get; set; }
         public string? TransferType { get; set; }
         public string? TranferAmount { get; set; }
