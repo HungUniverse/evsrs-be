@@ -9,7 +9,7 @@ namespace EVSRS.BusinessObjects.DTO.FeedbackDto
     public class FeedbackRequestDto
     {
         public string OrderBookingId { get; set; }    // bắt buộc
-        public string Rated { get; set; }                           // 1..5
+        public string? Rated { get; set; }                           // 1..5
         public string? Description { get; set; }
         public string? Images { get; set; }
     }

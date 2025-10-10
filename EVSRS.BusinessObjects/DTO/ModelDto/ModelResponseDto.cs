@@ -17,6 +17,7 @@ namespace EVSRS.BusinessObjects.DTO.ModelDto
         public string AmenitiesId { get; set; }
         public string Seats { get; set; }
         public double Price { get; set; }
+        public int Sale { get; set; }
         public string Image {get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
