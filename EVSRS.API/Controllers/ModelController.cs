@@ -79,13 +79,18 @@ namespace EVSRS.API.Controllers
         [HttpPut("{id:Guid}")]
         public async Task<IActionResult> UpdateModel(string id, [FromBody] ModelRequestDto model)
         {
-            var updatedModel = await _modelService.UpdateModelAsync(id, model);
-            return Ok(new ResponseModel<ModelResponseDto>(
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            await _modelService.UpdateModelAsync(id, model);
+            return Ok(new ResponseModel<string>(
                 StatusCodes.Status200OK,
                 ApiCodes.SUCCESS,
-                updatedModel,
+                null,
                 "Update model successfully!"
             ));
+
         }
 
         [HttpDelete("{id:Guid}")]

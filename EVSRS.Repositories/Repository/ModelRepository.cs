@@ -48,28 +48,8 @@ namespace EVSRS.Repositories.Repository
 
         public async Task UpdateModelAsync(Model model)
         {
-            // Ensure the entity is tracked by EF
-            var trackedEntity = await _dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);
-            if (trackedEntity != null)
-            {
-                // Update properties manually to ensure EF tracking works correctly
-                trackedEntity.ModelName = model.ModelName;
-                
-                trackedEntity.LimiteDailyKm = model.LimiteDailyKm;
-                trackedEntity.RangeKm = model.RangeKm;
-                trackedEntity.Seats = model.Seats;
-                trackedEntity.Price = model.Price;
-                trackedEntity.BatteryCapacityKwh = model.BatteryCapacityKwh;
-                trackedEntity.UpdatedAt = model.UpdatedAt;
-                trackedEntity.UpdatedBy = model.UpdatedBy;
-                
-                await UpdateAsync(trackedEntity);
-            }
-            else
-            {
-                // Fallback to regular update if entity not found
-                await UpdateAsync(model);
-            }
+            await UpdateAsync(model);
+            
         }
 
        

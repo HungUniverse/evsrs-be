@@ -15,6 +15,7 @@ namespace EVSRS.BusinessObjects.DTO.ModelDto
         public string LimiteDailyKm { get; set; }
         public string ManufacturerCarId { get; set; }
         public string AmenitiesId { get; set; }
+        public string Image {get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string CreatedBy { get; set; }
