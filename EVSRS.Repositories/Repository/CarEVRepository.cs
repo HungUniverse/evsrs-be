@@ -1,7 +1,9 @@
-﻿using EVSRS.BusinessObjects.Entity;
+﻿using EVSRS.BusinessObjects.DBContext;
+using EVSRS.BusinessObjects.Entity;
 using EVSRS.Repositories.Implement;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Repositories.Interface;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -13,7 +15,7 @@ namespace EVSRS.Repositories.Repository
 {
     public class CarEVRepository : GenericRepository<CarEV> , ICarEVRepository
     {
-        public CarEVRepository(EVSRS.BusinessObjects.DBContext.ApplicationDbContext context, Microsoft.AspNetCore.Http.IHttpContextAccessor httpContextAccessor) : base(context, httpContextAccessor)
+        public CarEVRepository(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor) : base(context, httpContextAccessor)
         {
         }
         public async Task CreateCarEVAsync(CarEV carEV)
@@ -36,7 +38,7 @@ namespace EVSRS.Repositories.Repository
 
         public async Task<PaginatedList<CarEV>> GetCarEVList()
         {
-            var response = await _dbSet.ToListAsync();
+            var response = await _dbSet.Include(c => c.Model).Include(c => c.Depot).Where(x => !x.IsDeleted).ToListAsync();
             return PaginatedList<CarEV>.Create(response, 1, response.Count);
         }
 

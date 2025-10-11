@@ -24,6 +24,8 @@ namespace EVSRS.BusinessObjects.Entity
         public Role? Role { get; set; }
         public virtual ICollection<ApplicationUserToken>? UserTokens { get; set; } = new List<ApplicationUserToken>();
         public virtual ICollection<Notification>? Notifications { get; set; } = new List<Notification>();
+        public virtual ICollection<Transaction>? Transactions { get; set; } = new List<Transaction>();
+        public virtual ICollection<Contract>? Contracts { get; set; } = new List<Contract>();
         public virtual ICollection<Feedback>? Feedbacks { get; set; } = new List<Feedback>();
         public virtual ICollection<IdentifyDocument> IdentifyDocuments { get; set; } = new List<IdentifyDocument>();
         public virtual ICollection<OrderBooking>? OrderBookings { get; set; } = [];
