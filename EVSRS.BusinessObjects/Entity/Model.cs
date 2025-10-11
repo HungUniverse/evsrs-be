@@ -18,7 +18,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Seats { get; set; }
         public string? Image { get; set; }
         public double? Price { get; set; }
-        public int? sale { get; set; }
+        public int? Sale { get; set; }
 
         
 
