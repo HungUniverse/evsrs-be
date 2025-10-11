@@ -1,4 +1,6 @@
 using System;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using AutoMapper;
 using EVSRS.BusinessObjects.DTO.SepayDto;
 using EVSRS.BusinessObjects.Enum;
@@ -20,10 +22,10 @@ public class SepayService : ISepayService
     private readonly ITransactionService _transactionService;
 
     public SepayService(
-        IUnitOfWork unitOfWork, 
-        IMapper mapper, 
-        IValidationService validationService, 
-        ITransactionService transactionService, 
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        IValidationService validationService,
+        ITransactionService transactionService,
         IOptions<SepaySettings> sepaySettings)
     {
         _unitOfWork = unitOfWork;
@@ -61,7 +63,7 @@ public class SepayService : ISepayService
         // Create transaction record (simplified for now)
         // await _transactionService.CreateTransactionAsync(payload, order.Id, order.Code);
         // var txn = await _unitOfWork.TransactionRepository.GetLatestTransactionByOrderIdAsync(order.Id);
-        
+
         if (order.User == null && !string.IsNullOrEmpty(order.UserId))
         {
             order.User = await _unitOfWork.UserRepository.GetByIdAsync(order.UserId);
@@ -76,10 +78,10 @@ public class SepayService : ISepayService
                 order.PaymentStatus = PaymentStatus.PAID_DEPOSIT;
                 order.UpdatedAt = DateTime.UtcNow;
                 order.UpdatedBy = "SepayWebhook";
-                
+
                 await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(order);
                 await _unitOfWork.SaveChangesAsync();
-                
+
                 // TODO: Send payment receipt and notification
             }
             else if (order.PaymentStatus == PaymentStatus.PAID_DEPOSIT)
@@ -89,10 +91,10 @@ public class SepayService : ISepayService
                 order.PaymentStatus = PaymentStatus.PAID_DEPOSIT_COMPLETED;
                 order.UpdatedAt = DateTime.UtcNow;
                 order.UpdatedBy = "SepayWebhook";
-                
+
                 await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(order);
                 await _unitOfWork.SaveChangesAsync();
-                
+
                 // TODO: Send payment receipt and notification
             }
         }
@@ -105,10 +107,10 @@ public class SepayService : ISepayService
                 order.PaymentStatus = PaymentStatus.PAID_FULL;
                 order.UpdatedAt = DateTime.UtcNow;
                 order.UpdatedBy = "SepayWebhook";
-                
+
                 await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(order);
                 await _unitOfWork.SaveChangesAsync();
-                
+
                 // TODO: Handle warranty specific logic
                 return;
             }
@@ -118,35 +120,121 @@ public class SepayService : ISepayService
             order.PaymentStatus = PaymentStatus.PAID_FULL;
             order.UpdatedAt = DateTime.UtcNow;
             order.UpdatedBy = "SepayWebhook";
-            
+
             await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(order);
             await _unitOfWork.SaveChangesAsync();
-            
+
             // TODO: Send payment receipt and notification
         }
     }
 
-    public Task<SepayQrResponse> CreatePaymentQrAsync(string orderId)
+    public async Task<SepayQrResponse> CreatePaymentQrAsync(string orderId)
     {
-        // TODO: Implement QR generation logic
-        throw new NotImplementedException("QR payment generation will be implemented later");
+        var order = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(orderId);
+        _validationService.CheckNotFound(order, $"Order with ID {orderId} not found");
+
+        if (order == null)
+        {
+            return new SepayQrResponse { QrUrl = "" };
+        }
+
+        // Determine payment amount based on payment type
+        decimal paymentAmount = 0;
+        if (order.PaymentType == PaymentType.DEPOSIT)
+        {
+            if (!decimal.TryParse(order.DepositAmount, out paymentAmount))
+            {
+                paymentAmount = decimal.Parse(order.TotalAmount ?? "0") * 0.3m; // 30% deposit
+            }
+        }
+        else
+        {
+            if (!decimal.TryParse(order.TotalAmount, out paymentAmount))
+            {
+                paymentAmount = 0;
+            }
+        }
+
+
+        // Generate Sepay QR URL
+        var qrUrl = GenerateSepayQrUrl(
+           accountNumber: _sepaySettings.AccountNumber,
+           bankCode: _sepaySettings.BankCode,
+           amount: paymentAmount,
+           description: $"{order.Code}",
+           template: "qronly",
+           download: "true");
+
+        return new SepayQrResponse
+        {
+            QrUrl = qrUrl,
+            OrderBooking = null // This will be populated by the calling service
+        };
+    }
+    private string GenerateSepayQrUrl(string accountNumber, string bankCode, decimal? amount, string description,
+            string template, string download)
+    {
+        string paymentCode = GeneratePaymentCode();
+        string fullDescription = $"{paymentCode}{description}";
+        var baseUrl = $"{_sepaySettings.ApiBaseUri}";
+
+        var queryParams = new Dictionary<string, string?>
+        {
+            ["acc"] = accountNumber,
+            ["bank"] = bankCode,
+            ["amount"] = amount?.ToString("0"),
+            ["des"] = fullDescription,
+            ["template"] = template,
+            ["download"] = download
+        };
+
+        var queryString = string.Join("&", queryParams
+            .Where(kv => !string.IsNullOrEmpty(kv.Value))
+            .Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"));
+
+        return $"{baseUrl}?{queryString}";
     }
 
-    public Task<string> GetPaymentStatusAsync(string orderId)
+    private string GeneratePaymentCode()
     {
-        // TODO: Implement payment status check
-        throw new NotImplementedException("Payment status check will be implemented later");
+        var prefix = "TF";
+        var randomPart = GenerateRandomString(7);
+        return $"{prefix}{randomPart}";
+    }
+
+    private string GenerateRandomString(int length)
+    {
+        const string chars = "0123456789";
+        var data = new byte[length];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(data);
+        }
+
+        var result = new char[length];
+        for (int i = 0; i < length; i++)
+        {
+            result[i] = chars[data[i] % chars.Length];
+        }
+
+        return new string(result);
+    }
+    public async Task<string> GetPaymentStatusAsync(string orderId)
+    {
+        var order = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(orderId);
+        _validationService.CheckNotFound(order, "Order not found");
+
+        return order.PaymentStatus.ToString();
     }
 
     private bool ValidateAuthHeader(string authHeader)
     {
-        // TODO: Implement auth header validation
-        return true; // For now, always return true
+        return authHeader == $"Apikey {_sepaySettings.ApiKey}";
     }
 
     private string ExtractOrderCodeFromContent(string content)
     {
-        // TODO: Implement order code extraction from payment content
-        return content; // For now, return content as is
+        var match = Regex.Match(content, @"ORD\d{7}");
+        return match.Success ? match.Value : null;
     }
 }

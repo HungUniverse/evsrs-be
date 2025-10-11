@@ -112,6 +112,12 @@ namespace EVSRS.Services.Service
                 "Payment must be completed before checkout"
             );
 
+            // Check if handover inspection exists
+            var handoverInspection = await _unitOfWork.HandoverInspectionRepository
+                .GetHandoverInspectionByOrderAndTypeAsync(id, "HANDOVER");
+            _validationService.CheckBadRequest(handoverInspection == null, 
+                "Handover inspection must be completed before checkout");
+
             booking.Status = OrderBookingStatus.CHECKED_OUT;
             booking.CheckOutedAt = DateTime.UtcNow;
             booking.UpdatedBy = GetCurrentUserName();
@@ -124,6 +130,99 @@ namespace EVSRS.Services.Service
                 car.Status = CarEvStatus.IN_USE;
                 await _unitOfWork.CarEVRepository.UpdateCarEVAsync(car);
             }
+
+            await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
+            await _unitOfWork.SaveChangesAsync();
+
+            return _mapper.Map<OrderBookingResponseDto>(booking);
+        }
+
+        public async Task<OrderBookingResponseDto> StartOrderAsync(string id)
+        {
+            var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
+            _validationService.CheckNotFound(booking, $"Order booking with ID {id} not found");
+
+            _validationService.CheckBadRequest(
+                booking!.Status != OrderBookingStatus.CHECKED_OUT,
+                "Only checked out bookings can be started"
+            );
+
+            booking.Status = OrderBookingStatus.IN_USE;
+            booking.UpdatedBy = GetCurrentUserName();
+            booking.UpdatedAt = DateTime.UtcNow;
+
+            // Update car status  
+            if (!string.IsNullOrEmpty(booking.CarEVDetailId))
+            {
+                var car = await _unitOfWork.CarEVRepository.GetCarEVByIdAsync(booking.CarEVDetailId);
+                if (car != null)
+                {
+                    car.Status = CarEvStatus.IN_USE;
+                    await _unitOfWork.CarEVRepository.UpdateCarEVAsync(car);
+                }
+            }
+
+            await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
+            await _unitOfWork.SaveChangesAsync();
+
+            return _mapper.Map<OrderBookingResponseDto>(booking);
+        }
+
+        public async Task<OrderBookingResponseDto> ProcessReturnOrderAsync(string id)
+        {
+            var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
+            _validationService.CheckNotFound(booking, $"Order booking with ID {id} not found");
+
+            _validationService.CheckBadRequest(
+                booking!.Status != OrderBookingStatus.IN_USE,
+                "Only orders in use can be returned"
+            );
+
+            // Check if return inspection exists
+            var returnInspection = await _unitOfWork.HandoverInspectionRepository
+                .GetHandoverInspectionByOrderAndTypeAsync(id, "RETURN");
+            _validationService.CheckBadRequest(returnInspection == null, 
+                "Return inspection must be completed before processing return");
+
+            booking.Status = OrderBookingStatus.RETURNED;
+            booking.ReturnedAt = DateTime.UtcNow;
+            booking.UpdatedBy = GetCurrentUserName();
+            booking.UpdatedAt = DateTime.UtcNow;
+
+            // Update car status
+            if (!string.IsNullOrEmpty(booking.CarEVDetailId))
+            {
+                var car = await _unitOfWork.CarEVRepository.GetCarEVByIdAsync(booking.CarEVDetailId);
+                if (car != null)
+                {
+                    car.Status = CarEvStatus.AVAILABLE;
+                    await _unitOfWork.CarEVRepository.UpdateCarEVAsync(car);
+                }
+            }
+
+            await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
+            await _unitOfWork.SaveChangesAsync();
+
+            return _mapper.Map<OrderBookingResponseDto>(booking);
+        }
+
+        public async Task<OrderBookingResponseDto> CompleteOrderAsync(string id)
+        {
+            var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
+            _validationService.CheckNotFound(booking, $"Order booking with ID {id} not found");
+
+            _validationService.CheckBadRequest(
+                booking!.Status != OrderBookingStatus.RETURNED,
+                "Only returned orders can be completed"
+            );
+
+            // Check if return settlement exists (if there are additional fees)
+            var returnSettlement = await _unitOfWork.ReturnSettlementRepository.GetReturnSettlementByOrderIdAsync(id);
+            // Return settlement is optional - only needed if there are additional fees
+
+            booking.Status = OrderBookingStatus.COMPLETED;
+            booking.UpdatedBy = GetCurrentUserName();
+            booking.UpdatedAt = DateTime.UtcNow;
 
             await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
             await _unitOfWork.SaveChangesAsync();
@@ -234,10 +333,11 @@ namespace EVSRS.Services.Service
                         qrResponse = await sepayService.CreatePaymentQrAsync(booking.Id);
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     // Log error but don't fail the booking creation
                     // QR can be generated later if needed
+                    Console.WriteLine($"Failed to generate QR URL: {ex.Message}");
                     qrResponse.QrUrl = "";
                 }
             }

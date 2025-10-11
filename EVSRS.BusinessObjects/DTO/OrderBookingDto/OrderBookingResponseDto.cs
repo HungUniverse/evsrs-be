@@ -30,9 +30,6 @@ public class OrderBookingResponseDto
     public PaymentStatus PaymentStatus { get; set; }
     public string? Note { get; set; }
     
-    // QR Code for payment (if applicable)
-    public string? PaymentQrUrl { get; set; }
-    
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public string CreatedBy { get; set; } = string.Empty;
