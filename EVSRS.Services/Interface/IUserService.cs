@@ -5,8 +5,13 @@ namespace EVSRS.Services.Interface;
 
 public interface IUserService
 {
-    Task<PaginatedList<UserResponseDto>> GetAllUserAsync();
+    Task<PaginatedList<UserResponseDto>> GetAllUserAsync(int pageNumber, int pageSize);
     Task<UserResponseDto> GetUserByIdAsync(string id);
+    Task<UserResponseDto> GetUserByEmailAsync(string email);    
+    Task<UserResponseDto> GetUserByPhoneAsync(string phone);
+    Task<UserResponseDto> GetUserByUsernameAsync(string username);
+    Task UpdateUserAsync(string userId, UserRequestDto updateUserRequestDto);
+
     Task<UserResponseDto> RegisterUserAsync(RegisterUserRequestDto registerUserRequestDto);
     Task DeleteUserAsync(string userId);
 }

@@ -15,9 +15,11 @@ public class UserRepository : GenericRepository<ApplicationUser>, IUserRepositor
     {
     }
 
-    public async Task<PaginatedList<ApplicationUser>> GetUsersAsync(int index, int pageSize, string search)
+    public async Task<PaginatedList<ApplicationUser>> GetUsersAsync()
     {
-        throw new NotImplementedException();
+        var response = await _dbSet.Where(x => !x.IsDeleted).ToListAsync();
+        var paginatedList = PaginatedList<ApplicationUser>.Create(response, 1, response.Count);
+        return paginatedList;
     }
 
     public async Task<List<ApplicationUser>> GetAllUserAsync()
