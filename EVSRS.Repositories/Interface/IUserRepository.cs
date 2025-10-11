@@ -7,7 +7,7 @@ namespace EVSRS.Repositories.Interface;
 
 public interface IUserRepository : IGenericRepository<ApplicationUser>
 {
-    Task<PaginatedList<ApplicationUser>> GetUsersAsync(int index, int pageSize, string search);
+    Task<PaginatedList<ApplicationUser>> GetUsersAsync();
     Task<List<ApplicationUser>> GetAllUserAsync();
     Task<ApplicationUser?> GetUserByIdAsync(string id);
     Task<ApplicationUser?> GetUserByUsernameAsync(string username);

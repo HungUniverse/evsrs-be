@@ -251,6 +251,54 @@ namespace EVSRS.API.Controllers
         }
 
         /// <summary>
+        /// Start order (customer begins using car)
+        /// </summary>
+        [HttpPost("{id}/start")]
+        [Authorize]
+        public async Task<IActionResult> StartOrder(string id)
+        {
+            var result = await _orderBookingService.StartOrderAsync(id);
+            return Ok(new ResponseModel<OrderBookingResponseDto>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                result,
+                "Order started successfully"
+            ));
+        }
+
+        /// <summary>
+        /// Process return (customer returns car)
+        /// </summary>
+        [HttpPost("{id}/process-return")]
+        [Authorize]
+        public async Task<IActionResult> ProcessReturnOrder(string id)
+        {
+            var result = await _orderBookingService.ProcessReturnOrderAsync(id);
+            return Ok(new ResponseModel<OrderBookingResponseDto>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                result,
+                "Order return processed successfully"
+            ));
+        }
+
+        /// <summary>
+        /// Complete order (finalize and close)
+        /// </summary>
+        [HttpPost("{id}/complete")]
+        [Authorize]
+        public async Task<IActionResult> CompleteOrder(string id)
+        {
+            var result = await _orderBookingService.CompleteOrderAsync(id);
+            return Ok(new ResponseModel<OrderBookingResponseDto>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                result,
+                "Order completed successfully"
+            ));
+        }
+
+        /// <summary>
         /// Return order (end rental)
         /// </summary>
         [HttpPost("{id}/return")]
