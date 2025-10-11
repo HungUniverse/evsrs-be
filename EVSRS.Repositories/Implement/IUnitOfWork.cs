@@ -16,6 +16,9 @@ namespace EVSRS.Repositories.Implement
         IDepotRepository DepotRepository { get; }
         ITransactionRepository TransactionRepository { get; }
         IOrderBookingRepository OrderRepository { get; }
+        IHandoverInspectionRepository HandoverInspectionRepository { get; }
+        IReturnSettlementRepository ReturnSettlementRepository { get; }
+        IContractRepository ContractRepository { get; }
 
 
 

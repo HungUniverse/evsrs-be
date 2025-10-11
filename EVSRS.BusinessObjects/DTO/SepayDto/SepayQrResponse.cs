@@ -5,6 +5,6 @@ namespace EVSRS.BusinessObjects.DTO.SepayDto;
 
 public class SepayQrResponse
 {
-    public string QrUrl { get; set; }
-    public OrderBookingResponseDto OrderBooking { get; set; }
+    public string QrUrl { get; set; } = string.Empty;
+    public OrderBookingResponseDto? OrderBooking { get; set; }
 }

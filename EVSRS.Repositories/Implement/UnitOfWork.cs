@@ -22,10 +22,13 @@ public class UnitOfWork : IUnitOfWork
     public IDepotRepository DepotRepository { get; set;  }
     public ITransactionRepository TransactionRepository { get; set; }
     public IOrderBookingRepository OrderRepository { get; set; }
+    public IHandoverInspectionRepository HandoverInspectionRepository { get; set; }
+    public IReturnSettlementRepository ReturnSettlementRepository { get; set; }
+    public IContractRepository ContractRepository { get; set; }
 
 
 
-    public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ITokenRepository tokenRepository, IOTPRepository otpRepository, ICarManufactureRepository carManufactureRepository, IModelRepository modelRepository, ICarEVRepository carEVRepository, IAmenitiesRepository amenitiesRepository, IFeedbackRepository feedbackRepository, IDepotRepository depotRepository, ITransactionRepository transactionRepository, IOrderBookingRepository orderRepository)
+    public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ITokenRepository tokenRepository, IOTPRepository otpRepository, ICarManufactureRepository carManufactureRepository, IModelRepository modelRepository, ICarEVRepository carEVRepository, IAmenitiesRepository amenitiesRepository, IFeedbackRepository feedbackRepository, IDepotRepository depotRepository, ITransactionRepository transactionRepository, IOrderBookingRepository orderRepository, IHandoverInspectionRepository handoverInspectionRepository, IReturnSettlementRepository returnSettlementRepository, IContractRepository contractRepository)
     {
         _context = context;
         UserRepository = userRepository;
@@ -39,6 +42,9 @@ public class UnitOfWork : IUnitOfWork
         DepotRepository = depotRepository;
         TransactionRepository = transactionRepository;
         OrderRepository = orderRepository;
+        HandoverInspectionRepository = handoverInspectionRepository;
+        ReturnSettlementRepository = returnSettlementRepository;
+        ContractRepository = contractRepository;
 
     }
     

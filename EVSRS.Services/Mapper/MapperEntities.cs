@@ -3,10 +3,13 @@ using AutoMapper;
 using EVSRS.BusinessObjects.DTO.AmenitiesDto;
 using EVSRS.BusinessObjects.DTO.CarEVDto;
 using EVSRS.BusinessObjects.DTO.CarManufactureDto;
+using EVSRS.BusinessObjects.DTO.ContractDto;
 using EVSRS.BusinessObjects.DTO.DepotDto;
 using EVSRS.BusinessObjects.DTO.FeedbackDto;
+using EVSRS.BusinessObjects.DTO.HandoverInspectionDto;
 using EVSRS.BusinessObjects.DTO.OrderBookingDto;
 using EVSRS.BusinessObjects.DTO.ModelDto;
+using EVSRS.BusinessObjects.DTO.ReturnSettlementDto;
 using EVSRS.BusinessObjects.DTO.TokenDto;
 using EVSRS.BusinessObjects.DTO.TransactionDto;
 using EVSRS.BusinessObjects.DTO.UserDto;
@@ -81,6 +84,23 @@ namespace EVSRS.Services.Mapper
             #region OrderBooking Mapper
             CreateMap<OrderBooking, OrderBookingResponseDto>().ReverseMap();
             CreateMap<OrderBooking, OrderBookingRequestDto>().ReverseMap();
+            #endregion
+
+            #region HandoverInspection Mapper
+            CreateMap<HandoverInspection, HandoverInspectionResponseDto>().ReverseMap();
+            CreateMap<HandoverInspection, HandoverInspectionRequestDto>().ReverseMap();
+            #endregion
+
+            #region Contract Mapper
+            CreateMap<Contract, ContractResponseDto>().ReverseMap();
+            CreateMap<Contract, ContractRequestDto>().ReverseMap();
+            #endregion
+
+            #region ReturnSettlement Mapper
+            CreateMap<ReturnSettlement, ReturnSettlementResponseDto>().ReverseMap();
+            CreateMap<ReturnSettlement, ReturnSettlementRequestDto>().ReverseMap();
+            CreateMap<SettlementItem, SettlementItemResponseDto>().ReverseMap();
+            CreateMap<SettlementItem, SettlementItemRequestDto>().ReverseMap();
             #endregion
 
 
