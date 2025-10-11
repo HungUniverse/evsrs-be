@@ -48,6 +48,15 @@ namespace EVSRS.Repositories.Repository
             return response;
         }
 
+        public async Task<Transaction?> GetLatestTransactionByOrderIdAsync(string orderId)
+        {
+            var response = await _dbSet
+                .Where(x => !x.IsDeleted && x.OrderBookingId == orderId)
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefaultAsync();
+            return response;
+        }
+
         public async Task<PaginatedList<Transaction>> GetTransactionList()
         {
             var respone = await _dbSet.ToListAsync();
