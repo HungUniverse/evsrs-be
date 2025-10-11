@@ -26,6 +26,10 @@ namespace EVSRS.BusinessObjects.Entity
         public PaymentStatus? PaymentMethod { get; set; }
         public PaymentType? PaymentType { get; set; }
         public PaymentStatus? PaymentStatus { get; set; }
+        public OrderType? Type { get; set; }
+        public string? ShippingFee { get; set; }
+        public string? RemainingBalance { get; set; }
+        public string? Code { get; set; }
         public string? Note { get; set; }
 
         public ApplicationUser? User { get; set; }
