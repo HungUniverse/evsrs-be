@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using System.Text.Json;
 using EVSRS.BusinessObjects.DBContext;
-
+using EVSRS.Repositories.Helper;
 using EVSRS.Repositories.Implement;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Repositories.Interface;
@@ -10,6 +10,7 @@ using EVSRS.Repositories.Repository;
 using EVSRS.Services.Interface;
 using EVSRS.Services.Mapper;
 using EVSRS.Services.Service;
+using EVSRS.Services.ExternalServices.SepayService;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,7 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<IFeedbackRepository, FeedbackRepository>();
             services.AddScoped<IDepotRepository, DepotRepository>();
             services.AddScoped<ITransactionRepository, TransactionRepository>();
+            services.AddScoped<IOrderBookingRepository, OrderBookingRepository>();
 
 
 
@@ -56,6 +58,8 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IDepotService, DepotService>();
             services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped<IOrderBookingService, OrderBookingService>();
+            services.AddScoped<ISepayService, SepayService>();
 
 
 
@@ -215,6 +219,9 @@ namespace EVSRS.API.DependencyInjection
             services.AddRepositories();
             services.AddServices();
             
+            // Register configuration settings
+            services.Configure<SepaySettings>(configuration.GetSection("SepaySettings"));
+            services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
         }
         
         private static void AddAutoMapper(this IServiceCollection services)

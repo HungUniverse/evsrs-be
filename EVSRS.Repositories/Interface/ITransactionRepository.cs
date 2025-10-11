@@ -19,6 +19,7 @@ namespace EVSRS.Repositories.Interface
         Task CreateTransactionAsync(Transaction transaction);
         Task UpdateTransactionAsync(Transaction transaction);
         Task DeleteTransactionAsync(Transaction transaction);
+        Task<Transaction?> GetLatestTransactionByOrderIdAsync(string orderId);
 
     }
 }

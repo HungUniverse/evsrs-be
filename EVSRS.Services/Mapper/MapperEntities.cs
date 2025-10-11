@@ -5,7 +5,7 @@ using EVSRS.BusinessObjects.DTO.CarEVDto;
 using EVSRS.BusinessObjects.DTO.CarManufactureDto;
 using EVSRS.BusinessObjects.DTO.DepotDto;
 using EVSRS.BusinessObjects.DTO.FeedbackDto;
-
+using EVSRS.BusinessObjects.DTO.OrderBookingDto;
 using EVSRS.BusinessObjects.DTO.ModelDto;
 using EVSRS.BusinessObjects.DTO.TokenDto;
 using EVSRS.BusinessObjects.DTO.TransactionDto;
@@ -76,6 +76,11 @@ namespace EVSRS.Services.Mapper
             #region Transaction  Mapper
             CreateMap<Transaction, TransactionResponseDto>().ReverseMap();
             CreateMap<Transaction, TransactionRequestDto>().ReverseMap();
+            #endregion
+
+            #region OrderBooking Mapper
+            CreateMap<OrderBooking, OrderBookingResponseDto>().ReverseMap();
+            CreateMap<OrderBooking, OrderBookingRequestDto>().ReverseMap();
             #endregion
 
 
