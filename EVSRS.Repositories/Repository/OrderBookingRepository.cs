@@ -33,7 +33,7 @@ namespace EVSRS.Repositories.Repository
         public async Task<List<OrderBooking>> GetActiveOrderBookingsAsync()
         {
             return await _dbSet
-                .Where(x => !x.IsDeleted && 
+                .Where(x => !x.IsDeleted &&
                            (x.Status == OrderBookingStatus.CONFIRMED ||
                             x.Status == OrderBookingStatus.CHECKED_OUT ||
                             x.Status == OrderBookingStatus.IN_USE))
@@ -130,7 +130,7 @@ namespace EVSRS.Repositories.Repository
         public async Task<List<OrderBooking>> GetPendingPaymentOrderBookingsAsync()
         {
             return await _dbSet
-                .Where(x => !x.IsDeleted && 
+                .Where(x => !x.IsDeleted &&
                            (x.PaymentStatus == PaymentStatus.PENDING ||
                             x.PaymentStatus == PaymentStatus.PAID_DEPOSIT))
                 .Include(x => x.User)
@@ -140,15 +140,25 @@ namespace EVSRS.Repositories.Repository
                 .ToListAsync();
         }
 
-        public async Task<bool> IsCarAvailableAsync(string carId, DateTime startDate, DateTime endDate)
+        public async Task<bool> IsCarAvailableAsync(string carId, DateTime startDate, DateTime endDate, string? excludeBookingId = null)
         {
-            var conflictingBookings = await _dbSet
-                .Where(x => !x.IsDeleted && 
+            // Kiểm tra overlap thời gian: booking mới overlap với booking hiện tại nếu:
+            // startDate <= existingEndDate && endDate >= existingStartDate
+            var query = _dbSet
+                .Where(x => !x.IsDeleted &&
                            x.CarEVDetailId == carId &&
                            x.Status != OrderBookingStatus.CANCELLED &&
                            x.Status != OrderBookingStatus.COMPLETED &&
-                           ((x.StartAt <= endDate && x.EndAt >= startDate)))
-                .AnyAsync();
+                           x.Status != OrderBookingStatus.RETURNED &&
+                           x.StartAt <= endDate && x.EndAt >= startDate); // Kiểm tra overlap thời gian
+            
+            // Loại trừ booking hiện tại nếu có (để update)
+            if (!string.IsNullOrEmpty(excludeBookingId))
+            {
+                query = query.Where(x => x.Id != excludeBookingId);
+            }
+
+            var conflictingBookings = await query.AnyAsync();
 
             return !conflictingBookings;
         }

@@ -94,7 +94,7 @@ namespace EVSRS.Services.Service
             if (car == null || car.Status != CarEvStatus.AVAILABLE)
                 return false;
 
-            return await _unitOfWork.OrderRepository.IsCarAvailableAsync(carId, startDate, endDate);
+            return await _unitOfWork.OrderRepository.IsCarAvailableAsync(carId, startDate, endDate, excludeBookingId);
         }
 
         public async Task<OrderBookingResponseDto> CheckoutOrderAsync(string id)
