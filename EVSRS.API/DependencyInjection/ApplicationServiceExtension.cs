@@ -216,6 +216,7 @@ namespace EVSRS.API.DependencyInjection
             services.AddServices();
             
         }
+        
         private static void AddAutoMapper(this IServiceCollection services)
         {
             services.AddAutoMapper(typeof(MapperEntities).Assembly);

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EVSRS.BusinessObjects.Enum;
 
 namespace EVSRS.BusinessObjects.Entity
 {
@@ -16,21 +17,22 @@ namespace EVSRS.BusinessObjects.Entity
         public DateTime? EndAt { get; set; }
         public DateTime? CheckOutedAt { get; set; }
         public DateTime? ReturnedAt { get; set; }
-        public string? status { get; set; }
+        public OrderBookingStatus? Status { get; set; }
         public string? SubTotal { get; set; }
         public string? Discount { get; set; }
         public string? DepositAmount { get; set; }
         public string ? TotalAmount { get; set; }
         public string? RemainingAmount { get; set; }
-        public string? PaymentMethod { get; set; }
-        public string? PaymentType { get; set; }
-        public string? PaymentStatus { get; set; }
+        public PaymentStatus? PaymentMethod { get; set; }
+        public PaymentType? PaymentType { get; set; }
+        public PaymentStatus? PaymentStatus { get; set; }
         public string? Note { get; set; }
 
         public ApplicationUser? User { get; set; }
         public virtual ICollection<Feedback>? Feedbacks { get; set; } =  [];
         public virtual ICollection<Transaction>? Transactions { get; set; } = [];
         public virtual ICollection<HandoverInspection> HandoverInspections { get; set; } = new List<HandoverInspection>();
+        public virtual ICollection<Contract>? Contracts { get; set; } = [];
         public ReturnSettlement? ReturnSettlement { get; set; }
         public CarEV? CarEvs { get; set; }
         public Depot? Depot { get; set; }

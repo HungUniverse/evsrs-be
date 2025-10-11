@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EVSRS.BusinessObjects.DTO.DepotDto;
+using EVSRS.BusinessObjects.DTO.ModelDto;
 
 namespace EVSRS.BusinessObjects.DTO.CarEVDto
-{
+    {
     public class CarEVResponseDto
     {
         public string Id { get; set; }
-        public string ModelId { get; set; } 
-        public string DepotId { get; set; } 
+        public ModelResponseDto Model { get; set; }
+        public DepotResponseDto Depot { get; set; } 
         public string OdoMeter { get; set; } 
         public string BatteryHealthPercentage { get; set; }
         
