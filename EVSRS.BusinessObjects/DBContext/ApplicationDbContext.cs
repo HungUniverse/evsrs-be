@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Bogus;
 using EVSRS.BusinessObjects.Entity;
+using EVSRS.BusinessObjects.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -36,6 +37,7 @@ namespace EVSRS.BusinessObjects.DBContext
         public DbSet<ReturnSettlement> ReturnSettlements { get; set; }
         public DbSet<SettlementItem> SettlementItems { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Contract> Contracts { get; set; }
         public DbSet<ApplicationUserToken> ApplicationUserTokens { get; set; }
 
 
@@ -59,6 +61,7 @@ namespace EVSRS.BusinessObjects.DBContext
             modelBuilder.Entity<ReturnSettlement>().ToTable("ReturnSettlement");
             modelBuilder.Entity<SettlementItem>().ToTable("SettlementItem");
             modelBuilder.Entity<Transaction>().ToTable("Transaction");
+            modelBuilder.Entity<Contract>().ToTable("Contract");
             modelBuilder.Entity<ApplicationUserToken>().ToTable("ApplicationUserToken");
             #endregion
 
@@ -95,7 +98,15 @@ namespace EVSRS.BusinessObjects.DBContext
                     .WithOne(t => t.User)
                     .HasForeignKey(t => t.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+                options.HasMany(u => u.Transactions)
+                    .WithOne(t => t.User)
+                    .HasForeignKey(t => t.UserId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
+                options.HasMany(u => u.Contracts)
+                    .WithOne(c => c.Users)
+                    .HasForeignKey(c => c.UserId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
             });
 
@@ -129,6 +140,10 @@ namespace EVSRS.BusinessObjects.DBContext
                 options.HasOne(o => o.Depot)
                     .WithMany(d => d.OrderBookings)
                     .HasForeignKey(o => o.DepotId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                options.HasMany(o => o.Contracts)
+                    .WithOne(c => c.OrderBooking)
+                    .HasForeignKey(c => c.OrderBookingId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
@@ -181,7 +196,10 @@ namespace EVSRS.BusinessObjects.DBContext
 
             // Configure many-to-many relationship between Depot and OrderBooking
             // Removed as OrderBooking now has direct foreign key to Depot
-        #endregion
+            #endregion
+            
+            // Seed initial data
+            SeedData.Seed(modelBuilder);
 
         }
 
