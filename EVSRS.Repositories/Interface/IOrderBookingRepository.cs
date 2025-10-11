@@ -20,7 +20,7 @@ namespace EVSRS.Repositories.Interface
         Task CreateOrderBookingAsync(OrderBooking orderBooking);
         Task UpdateOrderBookingAsync(OrderBooking orderBooking);
         Task DeleteOrderBookingAsync(OrderBooking orderBooking);
-        Task<bool> IsCarAvailableAsync(string carId, DateTime startDate, DateTime endDate);
+        Task<bool> IsCarAvailableAsync(string carId, DateTime startDate, DateTime endDate, string? excludeBookingId = null);
         Task<List<OrderBooking>> GetActiveOrderBookingsAsync();
         Task<List<OrderBooking>> GetPendingPaymentOrderBookingsAsync();
     }
