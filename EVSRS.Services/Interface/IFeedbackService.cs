@@ -12,8 +12,9 @@ namespace EVSRS.Services.Interface
     {
         Task<PaginatedList<FeedbackResponseDto>> GetAllFeedbacksAsync(int pageNumber, int pageSize);
         Task<FeedbackResponseDto?> GetFeedbackByIdAsync(string id);
-        Task CreateFeedbackAsync(FeedbackRequestDto feedbackRequestDto);
-        Task UpdateFeedbackAsync(string id, FeedbackRequestDto feedbackRequestDto);
+        Task<FeedbackResponseDto?> GetFeedbackByOrderBookingIdAsync(string orderBookingId);
+        Task<FeedbackResponseDto> CreateFeedbackAsync(FeedbackRequestDto feedbackRequestDto);
+        Task<FeedbackResponseDto> UpdateFeedbackAsync(string id, FeedbackRequestDto feedbackRequestDto);
         Task DeleteFeedbackAsync(string id);
     }
 }

@@ -27,13 +27,19 @@ namespace EVSRS.Services.Service
             _validationService = validationService;
         }
 
-        public async Task CreateFeedbackAsync(FeedbackRequestDto feedbackRequestDto)
+        public async Task<FeedbackResponseDto> CreateFeedbackAsync(FeedbackRequestDto feedbackRequestDto)
         {
             await _validationService.ValidateAndThrowAsync(feedbackRequestDto);
             var newFeedback = _mapper.Map<EVSRS.BusinessObjects.Entity.Feedback>(feedbackRequestDto);
+            
+            // Set UserId from current user context
+            newFeedback.UserId = GetCurrentUserName();
+            
             await _unitOfWork.FeedbackRepository.CreateFeedbackAsync(newFeedback);
             await _unitOfWork.SaveChangesAsync();
-
+            
+            var feedbackDto = _mapper.Map<FeedbackResponseDto>(newFeedback);
+            return feedbackDto;
         }
 
         public async Task DeleteFeedbackAsync(string id)
@@ -67,7 +73,18 @@ namespace EVSRS.Services.Service
             return feedbackDto;
         }
 
-        public async Task UpdateFeedbackAsync(string id, FeedbackRequestDto feedbackRequestDto)
+        public async Task<FeedbackResponseDto?> GetFeedbackByOrderBookingIdAsync(string orderBookingId)
+        {
+            var feedback = await _unitOfWork.FeedbackRepository.GetFeedbackByOrderBookingIdAsync(orderBookingId);
+            if (feedback == null)
+            {
+                return null;
+            }
+            var feedbackDto = _mapper.Map<FeedbackResponseDto>(feedback);
+            return feedbackDto;
+        }
+
+        public async Task<FeedbackResponseDto> UpdateFeedbackAsync(string id, FeedbackRequestDto feedbackRequestDto)
         {
             var existingFeedback = await _unitOfWork.FeedbackRepository.GetFeedbackByIdAsync(id);
             if (existingFeedback == null)
@@ -80,7 +97,9 @@ namespace EVSRS.Services.Service
             existingFeedback.UpdatedBy = GetCurrentUserName();
             await _unitOfWork.FeedbackRepository.UpdateFeedbackAsync(existingFeedback);
             await _unitOfWork.SaveChangesAsync();
-
+            
+            var feedbackDto = _mapper.Map<FeedbackResponseDto>(existingFeedback);
+            return feedbackDto;
         }
 
         private string GetCurrentUserName()

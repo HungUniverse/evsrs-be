@@ -12,16 +12,12 @@ namespace EVSRS.Services.Interface
     public interface IDepotService
     {
         Task<PaginatedList<DepotResponseDto>> GetAllDepotAsync(int page, int pageSize);
-        Task<DepotResponseDto> GetDepotByIdAsync(string id);
-        Task<DepotResponseDto> GetDepotByNameAsync(string name);
-        Task<DepotResponseDto> GetDepotByMapId(string mapId);
-        Task CreateDepotAsync(DepotRequestDto depot);
-        Task UpdateDepotAsync(String id, Depot depot);
+        Task<DepotResponseDto?> GetDepotByIdAsync(string id);
+        Task<DepotResponseDto?> GetDepotByNameAsync(string name);
+        Task<DepotResponseDto?> GetDepotByMapId(string mapId);
+        Task<PaginatedList<DepotResponseDto>> GetDepotsByLocationAsync(string? province, string? district, int page, int pageSize);
+        Task<DepotResponseDto> CreateDepotAsync(DepotRequestDto depot);
+        Task<DepotResponseDto> UpdateDepotAsync(String id, DepotRequestDto depot);
         Task DeleteDepotAsync(string id);
-
-
-        
-
-
     }
 }

@@ -13,6 +13,7 @@ namespace EVSRS.Repositories.Interface
     {
         Task<PaginatedList<Feedback>> GetFeedbacksAsync();
         Task<Feedback?> GetFeedbackByIdAsync(string id);
+        Task<Feedback?> GetFeedbackByOrderBookingIdAsync(string orderBookingId);
         Task CreateFeedbackAsync(Feedback feedback);
         Task UpdateFeedbackAsync(Feedback feedback);
         Task DeleteFeedbackAsync(Feedback feedback);

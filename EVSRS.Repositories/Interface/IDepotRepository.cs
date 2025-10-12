@@ -11,10 +11,11 @@ namespace EVSRS.Repositories.Interface
 {
     public interface IDepotRepository: IGenericRepository<Depot>
     {
-        Task <PaginatedList<Depot>> GetAllDepot();
-        Task <Depot> GetDepotById(string id);
-        Task <Depot> GetDepotByName(string name);
-        Task <Depot> GetDepotByMapId(string mapId);
+        Task<PaginatedList<Depot>> GetAllDepot();
+        Task<Depot?> GetDepotById(string id);
+        Task<Depot?> GetDepotByName(string name);
+        Task<Depot?> GetDepotByMapId(string mapId);
+        Task<PaginatedList<Depot>> GetDepotsByLocationAsync(string? province, string? district, int page, int pageSize);
         Task CreateDepotAsync(Depot depot);
         Task DeleteDepotAsync(Depot depot);
         Task UpdateDepotAsync(Depot depot);

@@ -30,13 +30,19 @@ namespace EVSRS.Repositories.Repository
 
         public async Task<PaginatedList<Feedback>> GetFeedbacksAsync()
         {
-            var response = await _dbSet.ToListAsync();
+            var response = await _dbSet.Where(x => !x.IsDeleted).ToListAsync();
             return PaginatedList<Feedback>.Create(response, 1, response.Count);
         }
 
         public async Task<Feedback?> GetFeedbackByIdAsync(string id)
         {
             var response = await _dbSet.Where(x => !x.IsDeleted && x.Id == id).FirstOrDefaultAsync();
+            return response;
+        }
+
+        public async Task<Feedback?> GetFeedbackByOrderBookingIdAsync(string orderBookingId)
+        {
+            var response = await _dbSet.Where(x => !x.IsDeleted && x.OrderBookingId == orderBookingId).FirstOrDefaultAsync();
             return response;
         }
 

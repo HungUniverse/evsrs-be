@@ -28,12 +28,15 @@ namespace EVSRS.Services.Service
             _validationService = validationService;
         }
 
-        public async Task CreateDepotAsync(DepotRequestDto depot)
+        public async Task<DepotResponseDto> CreateDepotAsync(DepotRequestDto depot)
         {
             await _validationService.ValidateAndThrowAsync(depot);
             var newDepot = _mapper.Map<Depot>(depot);
             await _unitOfWork.DepotRepository.CreateDepotAsync(newDepot);
             await _unitOfWork.SaveChangesAsync();
+            
+            var depotDto = _mapper.Map<DepotResponseDto>(newDepot);
+            return depotDto;
         }
 
         public async Task DeleteDepotAsync(string id)
@@ -58,45 +61,51 @@ namespace EVSRS.Services.Service
             return paginateList;
         }
 
-        public async Task<DepotResponseDto> GetDepotByIdAsync(string id)
+        public async Task<DepotResponseDto?> GetDepotByIdAsync(string id)
         {
             await _validationService.ValidateAndThrowAsync(id);
             var depot = await _unitOfWork.DepotRepository.GetDepotById(id);
             if (depot == null)
             {
-                throw new KeyNotFoundException($"Depot with ID {id} not found.");
+                return null;
             }
             var depotDto = _mapper.Map<DepotResponseDto>(depot);
             return depotDto;
-
-
         }
 
-        public async Task<DepotResponseDto> GetDepotByMapId(string mapId)
+        public async Task<DepotResponseDto?> GetDepotByMapId(string mapId)
         {
             await _validationService.ValidateAndThrowAsync(mapId);
             var depot = await _unitOfWork.DepotRepository.GetDepotByMapId(mapId);
             if (depot == null)
             {
-                throw new KeyNotFoundException($"Depot with Map ID {mapId} not found.");
+                return null;
             }
             var depotDto = _mapper.Map<DepotResponseDto>(depot);
             return depotDto;
         }
 
-        public async Task<DepotResponseDto> GetDepotByNameAsync(string name)
+        public async Task<DepotResponseDto?> GetDepotByNameAsync(string name)
         {
             await _validationService.ValidateAndThrowAsync(name);
             var depot = await _unitOfWork.DepotRepository.GetDepotByName(name);
             if (depot == null)
             {
-                throw new KeyNotFoundException($"Depot with Name {name} not found.");
+                return null;
             }
             var depotDto = _mapper.Map<DepotResponseDto>(depot);
             return depotDto;
         }
 
-        public async Task UpdateDepotAsync(String id, Depot depot)
+        public async Task<PaginatedList<DepotResponseDto>> GetDepotsByLocationAsync(string? province, string? district, int page, int pageSize)
+        {
+            var depots = await _unitOfWork.DepotRepository.GetDepotsByLocationAsync(province, district, page, pageSize);
+            var depotDtos = depots.Items.Select(d => _mapper.Map<DepotResponseDto>(d)).ToList();
+            var paginatedList = new PaginatedList<DepotResponseDto>(depotDtos, depots.TotalCount, page, pageSize);
+            return paginatedList;
+        }
+
+        public async Task<DepotResponseDto> UpdateDepotAsync(String id, DepotRequestDto depot)
         {
             var existingDepot = await _unitOfWork.DepotRepository.GetDepotById(id);
             if (existingDepot == null)
@@ -108,6 +117,9 @@ namespace EVSRS.Services.Service
             _mapper.Map(depot, existingDepot);
             await _unitOfWork.DepotRepository.UpdateDepotAsync(existingDepot);
             await _unitOfWork.SaveChangesAsync();
+            
+            var depotDto = _mapper.Map<DepotResponseDto>(existingDepot);
+            return depotDto;
         }
 
         private string GetCurrentUserName()
