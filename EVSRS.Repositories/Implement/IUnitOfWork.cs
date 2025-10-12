@@ -19,8 +19,7 @@ namespace EVSRS.Repositories.Implement
         IHandoverInspectionRepository HandoverInspectionRepository { get; }
         IReturnSettlementRepository ReturnSettlementRepository { get; }
         IContractRepository ContractRepository { get; }
-
-
+        IIdentifyDocumentRepository IdentifyDocumentRepository { get; }
 
         int SaveChanges();
         Task<int> SaveChangesAsync();
