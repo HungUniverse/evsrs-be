@@ -35,19 +35,19 @@ namespace EVSRS.Repositories.Repository
 
         public async Task<PaginatedList<IdentifyDocument>> GetAllIdentifyDocument()
         {
-            var response = await _dbSet.Where(x => !x.IsDeleted).ToListAsync();
+            var response = await _dbSet.Include(x => x.User).Where(x => !x.IsDeleted).ToListAsync();
             return PaginatedList<IdentifyDocument>.Create(response, 1, response.Count);
         }
 
         public async Task<IdentifyDocument?> GetByIdAsync(string id)
         {
-            var response = await _dbSet.Where(x => x.Id == id && !x.IsDeleted).FirstOrDefaultAsync();
+            var response = await _dbSet.Include(x => x.User).Where(x => x.Id == id && !x.IsDeleted).FirstOrDefaultAsync();
             return response;
         }
 
         public async Task<IdentifyDocument?> GetByUserIdAsync(string userId)
         {
-            var response = await _dbSet.Where(x => x.UserId == userId && !x.IsDeleted).FirstOrDefaultAsync();
+            var response = await _dbSet.Include(x => x.User).Where(x => x.UserId == userId && !x.IsDeleted).FirstOrDefaultAsync();
             return response;
         }
 
