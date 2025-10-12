@@ -12,14 +12,15 @@ namespace EVSRS.BusinessObjects.DTO.IdentifyDocumentDto
     public class IdentifyDocumentResponseDto
     {
         public string Id { get; set; } = string.Empty;
-        public UserResponseDto User { get; set; } 
-        public string Type { get; set; } = string.Empty;
+        public UserResponseDto User { get; set; }
+        public string? FrontImage { get; set; } = string.Empty;
+        public string? BackImage { get; set; } = string.Empty;
         public string CountryCode { get; set; } = string.Empty;
         public string NumberMasked { get; set; } = string.Empty;
         public string LicenseClass { get; set; } = string.Empty;
         public DateTime ExpireAt { get; set; }
         public IdentifyDocumentStatus Status { get; set; }
-        public DateTime VerifiedBy { get; set; }
+        public string VerifiedBy { get; set; }
         public DateTime VerifiedAt { get; set; }
         public string Note { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
