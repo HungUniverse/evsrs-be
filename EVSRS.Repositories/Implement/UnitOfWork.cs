@@ -25,10 +25,11 @@ public class UnitOfWork : IUnitOfWork
     public IHandoverInspectionRepository HandoverInspectionRepository { get; set; }
     public IReturnSettlementRepository ReturnSettlementRepository { get; set; }
     public IContractRepository ContractRepository { get; set; }
+    public IIdentifyDocumentRepository IdentifyDocumentRepository { get; set; }
 
 
 
-    public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ITokenRepository tokenRepository, IOTPRepository otpRepository, ICarManufactureRepository carManufactureRepository, IModelRepository modelRepository, ICarEVRepository carEVRepository, IAmenitiesRepository amenitiesRepository, IFeedbackRepository feedbackRepository, IDepotRepository depotRepository, ITransactionRepository transactionRepository, IOrderBookingRepository orderRepository, IHandoverInspectionRepository handoverInspectionRepository, IReturnSettlementRepository returnSettlementRepository, IContractRepository contractRepository)
+    public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ITokenRepository tokenRepository, IOTPRepository otpRepository, ICarManufactureRepository carManufactureRepository, IModelRepository modelRepository, ICarEVRepository carEVRepository, IAmenitiesRepository amenitiesRepository, IFeedbackRepository feedbackRepository, IDepotRepository depotRepository, ITransactionRepository transactionRepository, IOrderBookingRepository orderRepository, IHandoverInspectionRepository handoverInspectionRepository, IReturnSettlementRepository returnSettlementRepository, IContractRepository contractRepository, IIdentifyDocumentRepository identifyDocumentRepository)
     {
         _context = context;
         UserRepository = userRepository;
@@ -45,6 +46,7 @@ public class UnitOfWork : IUnitOfWork
         HandoverInspectionRepository = handoverInspectionRepository;
         ReturnSettlementRepository = returnSettlementRepository;
         ContractRepository = contractRepository;
+        IdentifyDocumentRepository = identifyDocumentRepository;
 
     }
     

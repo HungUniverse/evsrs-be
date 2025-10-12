@@ -22,11 +22,11 @@ namespace EVSRS.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateFeedback([FromBody] FeedbackRequestDto model)
         {
-            await _feedbackService.CreateFeedbackAsync(model);
-            return Ok(new ResponseModel<object>(
+            var result = await _feedbackService.CreateFeedbackAsync(model);
+            return Ok(new ResponseModel<FeedbackResponseDto>(
                 StatusCodes.Status201Created,
                 ApiCodes.CREATED,
-                null,
+                result,
                 "Create feedback successfully!"));
         }
 
@@ -56,6 +56,25 @@ namespace EVSRS.API.Controllers
                 ApiCodes.SUCCESS,
                 feedback));
         }
+
+        [HttpGet("order/{orderBookingId}")]
+        public async Task<IActionResult> GetFeedbackByOrderBookingId(string orderBookingId)
+        {
+            var feedback = await _feedbackService.GetFeedbackByOrderBookingIdAsync(orderBookingId);
+            if (feedback == null)
+            {
+                return NotFound(new ResponseModel<object>(
+                    StatusCodes.Status404NotFound,
+                    ApiCodes.NOT_FOUND,
+                    null,
+                    $"Feedback for Order {orderBookingId} not found."));
+            }
+            return Ok(new ResponseModel<FeedbackResponseDto>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                feedback,
+                "Get feedback by order successfully!"));
+        }
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFeedback(string id)
         {
@@ -65,6 +84,25 @@ namespace EVSRS.API.Controllers
                 ApiCodes.SUCCESS,
                 null,
                 "Delete feedback successfully!"));
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateFeedback(string id, [FromBody] FeedbackRequestDto model)
+        {
+            var updatedFeedback = await _feedbackService.UpdateFeedbackAsync(id, model);
+            if (updatedFeedback == null)
+            {
+                return NotFound(new ResponseModel<object>(
+                    StatusCodes.Status404NotFound,
+                    ApiCodes.NOT_FOUND,
+                    null,
+                    $"Feedback with ID {id} not found."));
+            }
+            return Ok(new ResponseModel<FeedbackResponseDto>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                updatedFeedback,
+                "Update feedback successfully!"));
         }
 
 

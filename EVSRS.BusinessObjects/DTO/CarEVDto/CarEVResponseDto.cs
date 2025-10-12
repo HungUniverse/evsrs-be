@@ -10,11 +10,11 @@ namespace EVSRS.BusinessObjects.DTO.CarEVDto
     {
     public class CarEVResponseDto
     {
-        public string Id { get; set; }
-        public ModelResponseDto Model { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public ModelResponseDto Model { get; set; } 
         public DepotResponseDto Depot { get; set; } 
-        public string OdoMeter { get; set; } 
-        public string BatteryHealthPercentage { get; set; }
+        public string OdoMeter { get; set; } = string.Empty;
+        public string BatteryHealthPercentage { get; set; } = string.Empty;
         
         public string Status { get; set; } 
         public DateTime CreatedAt { get; set; }

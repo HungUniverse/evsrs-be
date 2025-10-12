@@ -14,6 +14,7 @@ using EVSRS.BusinessObjects.DTO.TokenDto;
 using EVSRS.BusinessObjects.DTO.TransactionDto;
 using EVSRS.BusinessObjects.DTO.UserDto;
 using EVSRS.BusinessObjects.Entity;
+using EVSRS.BusinessObjects.DTO.IdentifyDocumentDto;
 
 namespace EVSRS.Services.Mapper
 {
@@ -103,7 +104,10 @@ namespace EVSRS.Services.Mapper
             CreateMap<SettlementItem, SettlementItemRequestDto>().ReverseMap();
             #endregion
 
-
+            #region IdentifyDocument Mapper
+            CreateMap<IdentifyDocument, IdentifyDocumentResponseDto>().ReverseMap();
+            CreateMap<IdentifyDocument, IdentifyDocumentRequestDto>().ReverseMap();
+            #endregion
         }
     }
 }

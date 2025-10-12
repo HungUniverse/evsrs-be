@@ -75,6 +75,18 @@ namespace EVSRS.API.Controllers
             ));
         }
 
+        [HttpGet("search")]
+        public async Task<IActionResult> GetDepotsByLocation([FromQuery] string? province, [FromQuery] string? district, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var depots = await _depotService.GetDepotsByLocationAsync(province, district, page, pageSize);
+            return Ok(new ResponseModel<PaginatedList<DepotResponseDto>>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                depots,
+                "Search depots by location successfully!"
+            ));
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateDepot([FromBody] DepotRequestDto depotCreateDto)
         {
@@ -82,11 +94,12 @@ namespace EVSRS.API.Controllers
             {
                 return BadRequest(ModelState);
             }
-            await _depotService.CreateDepotAsync(depotCreateDto);
-            return StatusCode(StatusCodes.Status201Created, new ResponseModel<string>(StatusCodes.Status201Created, ApiCodes.CREATED, null, "Created depot successfully"));
-
-
-
+            var result = await _depotService.CreateDepotAsync(depotCreateDto);
+            return StatusCode(StatusCodes.Status201Created, new ResponseModel<DepotResponseDto>(
+                StatusCodes.Status201Created, 
+                ApiCodes.CREATED, 
+                result, 
+                "Created depot successfully"));
         }
 
         [HttpDelete("{id}")]
@@ -100,6 +113,26 @@ namespace EVSRS.API.Controllers
                "Delete depot successfully!"
             ));
 
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateDepot(string id, [FromBody] DepotRequestDto depotUpdateDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var updatedDepot = await _depotService.UpdateDepotAsync(id, depotUpdateDto);
+            if (updatedDepot == null)
+            {
+                return NotFound();
+            }
+            return Ok(new ResponseModel<DepotResponseDto>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                updatedDepot,
+                "Update depot successfully!"
+            ));
         }
     }
 }
