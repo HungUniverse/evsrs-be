@@ -65,6 +65,7 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<IHandoverService, HandoverService>();
             services.AddScoped<IReturnService, ReturnService>();
             services.AddScoped<IIdentifyDocumentService, IdentifyDocumentService>();
+            services.AddScoped<IContractService, ContractService>();
 
 
 
