@@ -1,3 +1,4 @@
+using EVSRS.BusinessObjects.Enum;
 using System.ComponentModel.DataAnnotations;
 
 namespace EVSRS.BusinessObjects.DTO.ContractDto;
@@ -20,6 +21,7 @@ public class ContractRequestDto
     public DateTime EndDate { get; set; }
     
     public string? FileUrl { get; set; }
-    
-    public string SignStatus { get; set; } = "PENDING"; // PENDING, SIGNED, CANCELLED
+    public string? SignatureUrl { get; set; }
+
+    public SignStatus SignStatus { get; set; } = SignStatus.PENDING; // PENDING, SIGNED, CANCELLED
 }

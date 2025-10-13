@@ -144,7 +144,7 @@ public class HandoverService : IHandoverService
         return _mapper.Map<ContractResponseDto>(contract);
     }
 
-    public async Task<ContractResponseDto> UpdateContractStatusAsync(string id, string signStatus)
+    public async Task<ContractResponseDto> UpdateContractStatusAsync(string id, SignStatus signStatus)
     {
         var contract = await _unitOfWork.ContractRepository.GetByIdAsync(id);
         _validationService.CheckNotFound(contract, "Contract not found");

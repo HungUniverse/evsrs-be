@@ -1,6 +1,7 @@
 using System;
 using EVSRS.BusinessObjects.DTO.OrderBookingDto;
 using EVSRS.BusinessObjects.DTO.UserDto;
+using EVSRS.BusinessObjects.Enum;
 
 namespace EVSRS.BusinessObjects.DTO.ContractDto;
 
@@ -14,7 +15,8 @@ public class ContractResponseDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string? FileUrl { get; set; }
-    public string SignStatus { get; set; } = string.Empty;
+    public string? SignatureUrl { get; set; }
+    public SignStatus SignStatus { get; set; }
     
     // Navigation properties
     public UserResponseDto? User { get; set; }

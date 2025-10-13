@@ -1,5 +1,6 @@
 using EVSRS.BusinessObjects.DTO.ContractDto;
 using EVSRS.BusinessObjects.DTO.HandoverInspectionDto;
+using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Helper;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Services.Interface;
@@ -160,5 +161,5 @@ public class HandoverController : ControllerBase
 
 public class UpdateContractStatusRequest
 {
-    public string SignStatus { get; set; } = string.Empty;
+    public SignStatus SignStatus { get; set; } = SignStatus.PENDING;
 }
