@@ -47,7 +47,7 @@ namespace EVSRS.Repositories.Repository
 
         public async Task<IdentifyDocument?> GetByUserIdAsync(string userId)
         {
-            var response = await _dbSet.Include(x => x.User).Where(x => x.UserId == userId && !x.IsDeleted).FirstOrDefaultAsync();
+            var response = await _dbSet.Include(x => x.User).Where(x => x.UserId == userId && !x.IsDeleted).OrderByDescending(x => x.CreatedAt).FirstOrDefaultAsync();
             return response;
         }
 
