@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EVSRS.BusinessObjects.DTO.IdentifyDocumentDto;
+using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Implement;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Repositories.Interface;
@@ -90,6 +91,47 @@ namespace EVSRS.Services.Service
             _mapper.Map(identifyDocumentRequestDto, existingIdentifyDocument);
             existingIdentifyDocument.UpdatedAt = DateTime.UtcNow;
             existingIdentifyDocument.UpdatedBy = GetCurrentUserName();
+            await _unitOfWork.IdentifyDocumentRepository.UpdateIdentifyDocumentAsync(existingIdentifyDocument);
+            await _unitOfWork.SaveChangesAsync();
+            
+            var identifyDocumentDto = _mapper.Map<IdentifyDocumentResponseDto>(existingIdentifyDocument);
+            return identifyDocumentDto;
+        }
+
+        public async Task<IdentifyDocumentResponseDto> UpdateIdentifyDocumentStatusAsync(string id, UpdateIdentifyDocumentStatusDto updateStatusDto)
+        {
+            await _validationService.ValidateAndThrowAsync(updateStatusDto);
+            
+            var existingIdentifyDocument = await _unitOfWork.IdentifyDocumentRepository.GetByIdAsync(id);
+            if (existingIdentifyDocument == null)
+            {
+                throw new KeyNotFoundException($"IdentifyDocument with id {id} not found.");
+            }
+
+            // Update status and note
+            existingIdentifyDocument.Status = updateStatusDto.Status;
+            if (!string.IsNullOrEmpty(updateStatusDto.Note))
+            {
+                existingIdentifyDocument.Note = updateStatusDto.Note;
+            }
+
+            // Auto-generate VerifiedBy and VerifiedAt when status is APPROVED or REJECTED
+            if (updateStatusDto.Status == IdentifyDocumentStatus.APPROVED || 
+                updateStatusDto.Status == IdentifyDocumentStatus.REJECTED)
+            {
+                existingIdentifyDocument.VerifiedBy = GetCurrentUserName();
+                existingIdentifyDocument.VerifiedAt = DateTime.UtcNow;
+            }
+            else if (updateStatusDto.Status == IdentifyDocumentStatus.PENDING)
+            {
+                // Reset verification info if status changes back to PENDING
+                existingIdentifyDocument.VerifiedBy = null;
+                existingIdentifyDocument.VerifiedAt = null;
+            }
+
+            existingIdentifyDocument.UpdatedAt = DateTime.UtcNow;
+            existingIdentifyDocument.UpdatedBy = GetCurrentUserName();
+
             await _unitOfWork.IdentifyDocumentRepository.UpdateIdentifyDocumentAsync(existingIdentifyDocument);
             await _unitOfWork.SaveChangesAsync();
             
