@@ -17,8 +17,8 @@ namespace EVSRS.BusinessObjects.DTO.IdentifyDocumentDto
         public string LicenseClass { get; set; } = string.Empty;
         public DateTime? ExpireAt { get; set; }
         public IdentifyDocumentStatus? Status { get; set; } = IdentifyDocumentStatus.PENDING;
-        public string? VerifiedBy { get; set; }
-        public DateTime? VerifiedAt { get; set; }
+        public string? VerifiedBy { get; set; } = null;
+        public DateTime? VerifiedAt { get; set; } = null;
         public string Note { get; set; } = string.Empty;
     }
 }
