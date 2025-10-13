@@ -1,4 +1,5 @@
 ﻿using EVSRS.BusinessObjects.DTO.IdentifyDocumentDto;
+using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,7 @@ namespace EVSRS.Services.Interface
         Task<IdentifyDocumentResponseDto?> GetIdentifyDocumentByUserIdAsync(string userId);
         Task<IdentifyDocumentResponseDto> CreateIdentifyDocumentAsync(IdentifyDocumentRequestDto identifyDocumentRequestDto);
         Task<IdentifyDocumentResponseDto> UpdateIdentifyDocumentAsync(string id, IdentifyDocumentRequestDto identifyDocumentRequestDto);
+        Task<IdentifyDocumentResponseDto> UpdateIdentifyDocumentStatusAsync(string id, UpdateIdentifyDocumentStatusDto updateStatusDto);
         Task DeleteIdentifyDocumentAsync(string id);
     }
 }

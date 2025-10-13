@@ -1,6 +1,8 @@
 ﻿using EVSRS.BusinessObjects.DTO.IdentifyDocumentDto;
+using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Services.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -99,6 +101,31 @@ namespace EVSRS.API.Controllers
                 ));
         }
 
+        [HttpPatch("{id}/status")]
+        [Authorize] // Ensure only authorized users can update status
+        public async Task<IActionResult> UpdateIdentifyDocumentStatus(string id, [FromBody] UpdateIdentifyDocumentStatusDto updateStatusDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { Message = "Invalid data." });
+            }
+
+            try
+            {
+                var result = await _identifyDocumentService.UpdateIdentifyDocumentStatusAsync(id, updateStatusDto);
+                return Ok(new ResponseModel<IdentifyDocumentResponseDto>(
+                    StatusCodes.Status200OK,
+                    ApiCodes.SUCCESS,
+                    result,
+                    "Identify document status updated successfully."
+                ));
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { Message = "Identify document not found." });
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteIdentifyDocument(string id)
         {
@@ -110,8 +137,5 @@ namespace EVSRS.API.Controllers
                 "Identify document deleted successfully."
                 ));
         }
-
-
-
     }
 }
