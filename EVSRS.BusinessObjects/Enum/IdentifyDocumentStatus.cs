@@ -6,5 +6,6 @@ namespace EVSRS.BusinessObjects.Enum
     {
         PENDING,
         APPROVED,
+        REJECTED
     }
 }
