@@ -1,18 +1,20 @@
 using System;
 using EVSRS.BusinessObjects.Base;
+using EVSRS.BusinessObjects.Enum;
 
 namespace EVSRS.BusinessObjects.Entity;
 
 public class Contract: BaseEntity
 {
-    public string UserId { get; set; }
-    public string OrderBookingId { get; set; }
-    public string ContractNumber { get; set; }
+    public string? UserId { get; set; }
+    public string? OrderBookingId { get; set; }
+    public string? ContractNumber { get; set; }
     public DateTime SignedDate { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public string FileUrl { get; set; }
-    public string SignStatus { get; set; }
+    public string? FileUrl { get; set; }
+    public string? SignatureUrl { get; set; }
+    public SignStatus SignStatus { get; set; }
 
     // Navigation properties
     public virtual ApplicationUser Users { get; set; }

@@ -1,5 +1,6 @@
 using EVSRS.BusinessObjects.DBContext;
 using EVSRS.BusinessObjects.Entity;
+using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Implement;
 using EVSRS.Repositories.Interface;
 using Microsoft.AspNetCore.Http;
@@ -38,7 +39,7 @@ public class ContractRepository : GenericRepository<Contract>, IContractReposito
             .FirstOrDefaultAsync(c => c.ContractNumber == contractNumber);
     }
 
-    public async Task<List<Contract>> GetContractsByStatusAsync(string signStatus)
+    public async Task<List<Contract>> GetContractsByStatusAsync(SignStatus signStatus)
     {
         return await _context.Contracts
             .Include(c => c.Users)
