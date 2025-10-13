@@ -2,6 +2,7 @@ using EVSRS.BusinessObjects.DBContext;
 using EVSRS.BusinessObjects.Entity;
 using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Implement;
+using EVSRS.Repositories.Infrastructure;
 using EVSRS.Repositories.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -57,5 +58,11 @@ public class ContractRepository : GenericRepository<Contract>, IContractReposito
             .Where(c => c.CreatedAt >= startDate && c.CreatedAt <= endDate)
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
+    }
+
+    public async Task<PaginatedList<Contract>> GetAllContractsAsync()
+    {
+        var response = await _dbSet.Include(x => x.Users).Include(x => x.OrderBooking).Where(x => !x.IsDeleted).ToListAsync();
+        return PaginatedList<Contract>.Create(response, 1, response.Count);
     }
 }
