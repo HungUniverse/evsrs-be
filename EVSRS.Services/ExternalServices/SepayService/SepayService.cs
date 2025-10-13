@@ -162,8 +162,7 @@ public class SepayService : ISepayService
            bankCode: _sepaySettings.BankCode,
            amount: paymentAmount,
            description: $"{order.Code}",
-           template: "qronly",
-           download: "true");
+           template: "qronly");
 
         return new SepayQrResponse
         {
@@ -172,7 +171,7 @@ public class SepayService : ISepayService
         };
     }
     private string GenerateSepayQrUrl(string accountNumber, string bankCode, decimal? amount, string description,
-            string template, string download)
+            string template)
     {
         string paymentCode = GeneratePaymentCode();
         string fullDescription = $"{paymentCode}{description}";
@@ -184,8 +183,7 @@ public class SepayService : ISepayService
             ["bank"] = bankCode,
             ["amount"] = amount?.ToString("0"),
             ["des"] = fullDescription,
-            ["template"] = template,
-            ["download"] = download
+            ["template"] = template
         };
 
         var queryString = string.Join("&", queryParams
