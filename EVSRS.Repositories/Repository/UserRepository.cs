@@ -1,5 +1,6 @@
 using EVSRS.BusinessObjects.DBContext;
 using EVSRS.BusinessObjects.Entity;
+using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Implement;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Repositories.Interface;
@@ -73,6 +74,22 @@ public class UserRepository : GenericRepository<ApplicationUser>, IUserRepositor
     public async Task UpdateUserAsync(ApplicationUser user)
     {
         await UpdateAsync(user);
+    }
+
+    public async Task<PaginatedList<ApplicationUser>> GetStaffByDepotIdAsync(string depotId, int pageNumber, int pageSize)
+    {
+        var query = _context.Users
+            .Include(u => u.Depot)
+            .Where(u => u.DepotId == depotId && u.Role == Role.STAFF && !u.IsDeleted)
+            .OrderBy(u => u.FullName);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginatedList<ApplicationUser>(items, totalCount, pageNumber, pageSize);
     }
 
     public async Task DeleteUserAsync(ApplicationUser user)

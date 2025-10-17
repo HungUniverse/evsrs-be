@@ -18,6 +18,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? ProfilePicture { get; set; }
         public string? DateOfBirth { get; set; }
         public string? PhoneNumber { get; set; }
+        public string? DepotId { get; set; }
         public bool IsVerify { get; set; } = false;
         
         public virtual ICollection<OTP>? OTPs { get; set; } = new List<OTP>();
@@ -29,6 +30,7 @@ namespace EVSRS.BusinessObjects.Entity
         public virtual ICollection<Feedback>? Feedbacks { get; set; } = new List<Feedback>();
         public virtual ICollection<IdentifyDocument> IdentifyDocuments { get; set; } = new List<IdentifyDocument>();
         public virtual ICollection<OrderBooking>? OrderBookings { get; set; } = [];
+        public Depot? Depot { get; set; }
 
 
     }

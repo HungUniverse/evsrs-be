@@ -127,8 +127,17 @@ public class HandoverService : IHandoverService
 
     public async Task<List<HandoverInspectionResponseDto>> GetHandoverInspectionsByOrderIdAsync(string orderBookingId)
     {
-        var inspections = await _unitOfWork.HandoverInspectionRepository.GetHandoverInspectionsByOrderIdAsync(orderBookingId);
-        return inspections.Select(i => _mapper.Map<HandoverInspectionResponseDto>(i)).ToList();
+        // Only get HANDOVER type inspection, not RETURN type
+        var handoverInspection = await _unitOfWork.HandoverInspectionRepository
+            .GetHandoverInspectionByOrderAndTypeAsync(orderBookingId, "HANDOVER");
+        
+        var result = new List<HandoverInspectionResponseDto>();
+        if (handoverInspection != null)
+        {
+            result.Add(_mapper.Map<HandoverInspectionResponseDto>(handoverInspection));
+        }
+        
+        return result;
     }
 
     public async Task<List<HandoverInspectionResponseDto>> GetHandoverInspectionsByStaffIdAsync(string staffId)
