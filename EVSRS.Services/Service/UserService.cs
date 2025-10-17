@@ -1,10 +1,15 @@
 using AutoMapper;
 using EVSRS.BusinessObjects.DTO.UserDto;
+using EVSRS.BusinessObjects.Entity;
+using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Implement;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Services.Interface;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace EVSRS.Services.Service;
 
@@ -114,6 +119,82 @@ public class UserService : IUserService
         await _unitOfWork.UserRepository.UpdateAsync(existingUser);
         await _unitOfWork.SaveChangesAsync();
 
+    }
+
+    public async Task<UserResponseDto> CreateStaffAsync(CreateStaffRequestDto createStaffRequestDto)
+    {
+        await _validationService.ValidateAndThrowAsync(createStaffRequestDto);
+
+        // Check if depot exists
+        var depot = await _unitOfWork.DepotRepository.GetByIdAsync(createStaffRequestDto.DepotId);
+        _validationService.CheckNotFound(depot, "Depot not found");
+
+        // Check if email already exists
+        var existingUser = await _unitOfWork.UserRepository.GetUserByEmailAsync(createStaffRequestDto.UserEmail);
+        _validationService.CheckBadRequest(existingUser != null, "Email already exists");
+
+        // Check if username already exists
+        var existingUserName = await _unitOfWork.UserRepository.GetUserByUsernameAsync(createStaffRequestDto.UserName);
+        _validationService.CheckBadRequest(existingUserName != null, "Username already exists");
+
+        var newStaff = _mapper.Map<ApplicationUser>(createStaffRequestDto);
+        newStaff.Id = Guid.NewGuid().ToString();
+        newStaff.CreatedBy = GetCurrentUserName();
+        newStaff.CreatedAt = DateTime.UtcNow;
+        newStaff.UpdatedAt = DateTime.UtcNow;
+        newStaff.Role = Role.STAFF;
+        newStaff.IsVerify = true; // Staff accounts are pre-verified
+
+        // Generate temporary password
+        var tempPassword = GenerateTemporaryPassword();
+        var salt = GenerateSalt();
+        newStaff.Salt = salt;
+        newStaff.HashPassword = HashPassword(tempPassword, salt);
+
+        await _unitOfWork.UserRepository.CreateUserAsync(newStaff);
+        await _unitOfWork.SaveChangesAsync();
+
+        // TODO: Send email with temporary password to staff
+
+        var result = await _unitOfWork.UserRepository.GetUserByIdAsync(newStaff.Id);
+        return _mapper.Map<UserResponseDto>(result);
+    }
+
+    public async Task<PaginatedList<UserResponseDto>> GetStaffByDepotIdAsync(string depotId, int pageNumber, int pageSize)
+    {
+        var staffList = await _unitOfWork.UserRepository.GetStaffByDepotIdAsync(depotId, pageNumber, pageSize);
+        var staffDtos = staffList.Items.Select(s => _mapper.Map<UserResponseDto>(s)).ToList();
+        return new PaginatedList<UserResponseDto>(staffDtos, staffList.TotalCount, pageNumber, pageSize);
+    }
+
+    private string GenerateTemporaryPassword()
+    {
+        // Generate a random 8-character password
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new Random();
+        return new string(Enumerable.Repeat(chars, 8)
+            .Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+
+    private string GenerateSalt()
+    {
+        const int saltLength = 32;
+        var salt = new byte[saltLength];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(salt);
+        }
+        return Convert.ToBase64String(salt);
+    }
+
+    private string HashPassword(string password, string salt)
+    {
+        using (var sha256 = SHA256.Create())
+        {
+            var saltedPassword = password + salt;
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(saltedPassword));
+            return Convert.ToBase64String(hashedBytes);
+        }
     }
 
     private string GetCurrentUserName()

@@ -1,6 +1,7 @@
 ﻿using EVSRS.BusinessObjects.DTO.TransactionDto;
 using EVSRS.BusinessObjects.DTO.UserDto;
 using EVSRS.Repositories.Infrastructure;
+using EVSRS.Repositories.Helper;
 using EVSRS.Services.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -109,6 +110,30 @@ namespace EVSRS.API.Controllers
                 ApiCodes.SUCCESS,
                 null,
                 "User updated successfully."
+            ));
+        }
+
+        [HttpPost("staff")]
+        public async Task<IActionResult> CreateStaff([FromBody] CreateStaffRequestDto createStaffRequestDto)
+        {
+            var staff = await _userService.CreateStaffAsync(createStaffRequestDto);
+            return Ok(new ResponseModel<UserResponseDto>(
+                StatusCodes.Status201Created,
+                ApiCodes.SUCCESS,
+                staff,
+                "Staff created successfully!"
+            ));
+        }
+
+        [HttpGet("depot/{depotId}/staff")]
+        public async Task<IActionResult> GetStaffByDepotId(string depotId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var staffList = await _userService.GetStaffByDepotIdAsync(depotId, page, pageSize);
+            return Ok(new ResponseModel<PaginatedList<UserResponseDto>>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                staffList,
+                "Get staff by depot successfully!"
             ));
         }
     }

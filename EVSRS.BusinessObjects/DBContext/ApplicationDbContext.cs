@@ -108,6 +108,13 @@ namespace EVSRS.BusinessObjects.DBContext
                     .HasForeignKey(c => c.UserId)
                     .OnDelete(DeleteBehavior.NoAction);
 
+                // Configure relationship between ApplicationUser and Depot
+                // One Depot has many ApplicationUsers (staff members)
+                options.HasOne(u => u.Depot)
+                    .WithMany(d => d.ApplicationUsers)
+                    .HasForeignKey(u => u.DepotId)
+                    .OnDelete(DeleteBehavior.SetNull); // Set null when depot is deleted
+
             });
 
             modelBuilder.Entity<OrderBooking>(options =>

@@ -14,6 +14,7 @@ public interface IUserRepository : IGenericRepository<ApplicationUser>
     Task<ApplicationUser?> GetUserByEmailAsync(string email);
     Task<ApplicationUser?> GetByEmailPhoneAsync(string email, string phoneNumber);
     Task<ApplicationUser?> GetByPhoneAsync(string phoneNumber);
+    Task<PaginatedList<ApplicationUser>> GetStaffByDepotIdAsync(string depotId, int pageNumber, int pageSize);
     Task CreateUserAsync(ApplicationUser user);
     Task UpdateUserAsync(ApplicationUser user);
     Task DeleteUserAsync(ApplicationUser user);
