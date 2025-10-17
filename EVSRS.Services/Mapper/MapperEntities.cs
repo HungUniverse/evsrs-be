@@ -13,6 +13,7 @@ using EVSRS.BusinessObjects.DTO.ReturnSettlementDto;
 using EVSRS.BusinessObjects.DTO.TokenDto;
 using EVSRS.BusinessObjects.DTO.TransactionDto;
 using EVSRS.BusinessObjects.DTO.UserDto;
+using EVSRS.BusinessObjects.Enum;
 using EVSRS.BusinessObjects.Entity;
 using EVSRS.BusinessObjects.DTO.IdentifyDocumentDto;
 
@@ -36,11 +37,17 @@ namespace EVSRS.Services.Mapper
                 .ForMember(dest => dest.Role,
                     opt => opt.MapFrom(src => src.Role != null ? src.Role : null))
                 .ReverseMap();
+            CreateMap<ApplicationUser, UserRequestDto>().ReverseMap();
             CreateMap<ApplicationUser, RegisterUserRequestDto>();
             CreateMap<RegisterUserRequestDto, ApplicationUser>()
                 .ForMember(dest => dest.HashPassword, opt => opt.Ignore())
                 .ForMember(dest => dest.Salt, opt => opt.Ignore());
             CreateMap<ApplicationUser, SendOTPRequestDto>().ReverseMap();
+            CreateMap<ApplicationUser, CreateStaffRequestDto>().ReverseMap()
+                .ForMember(dest => dest.HashPassword, opt => opt.Ignore())
+                .ForMember(dest => dest.Salt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsVerify, opt => opt.MapFrom(src => false))
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => Role.STAFF));
             // CreateMap<ApplicationUser, UpdateUserRequestDto>().ReverseMap();
             // CreateMap<ApplicationUser, UpdateProfileRequestDto>().ReverseMap();
 

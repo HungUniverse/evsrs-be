@@ -22,5 +22,6 @@ namespace EVSRS.BusinessObjects.Entity
 
         public virtual ICollection<CarEV> Details { get; set; } = new List<CarEV>();
         public virtual ICollection<OrderBooking> OrderBookings { get; set; } =  new List<OrderBooking>();
+        public virtual ICollection<ApplicationUser> ApplicationUsers { get; set; } = new List<ApplicationUser>();
     }
 }

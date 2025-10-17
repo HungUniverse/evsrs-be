@@ -12,7 +12,7 @@ namespace EVSRS.BusinessObjects.Entity
     {
         public string? ModelId { get; set; }
         public string? DepotId { get; set; }
-        public string? OdoMeter { get; set; }
+        public string? LicensePlate { get; set; }
         public string? BatteryHealthPercentage { get; set; }
         public CarEvStatus Status { get; set; }
         public Model? Model { get; set; }

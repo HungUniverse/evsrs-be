@@ -13,5 +13,7 @@ public interface IUserService
     Task UpdateUserAsync(string userId, UserRequestDto updateUserRequestDto);
 
     Task<UserResponseDto> RegisterUserAsync(RegisterUserRequestDto registerUserRequestDto);
+    Task<UserResponseDto> CreateStaffAsync(CreateStaffRequestDto createStaffRequestDto);
+    Task<PaginatedList<UserResponseDto>> GetStaffByDepotIdAsync(string depotId, int pageNumber, int pageSize);
     Task DeleteUserAsync(string userId);
 }

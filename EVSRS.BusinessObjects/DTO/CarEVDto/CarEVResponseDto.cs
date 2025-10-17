@@ -12,8 +12,8 @@ namespace EVSRS.BusinessObjects.DTO.CarEVDto
     {
         public string Id { get; set; } = string.Empty;
         public ModelResponseDto Model { get; set; } 
-        public DepotResponseDto Depot { get; set; } 
-        public string OdoMeter { get; set; } = string.Empty;
+        public DepotResponseDto Depot { get; set; }
+        public string LicensePlate { get; set; } = string.Empty;
         public string BatteryHealthPercentage { get; set; } = string.Empty;
         
         public string Status { get; set; } 
