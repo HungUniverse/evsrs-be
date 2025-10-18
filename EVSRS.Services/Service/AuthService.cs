@@ -413,6 +413,7 @@ public class AuthService : IAuthService
             new Claim("email", user.UserEmail ?? string.Empty),
             new Claim("phone", user.PhoneNumber ?? string.Empty),
             new Claim("role", role),
+            new Claim("depotId", user.DepotId ?? string.Empty),
         };
 
         var keyString = _configuration["JWT:SecretKey"] ?? throw new InvalidOperationException("JWT:SecretKey not found in configuration");
