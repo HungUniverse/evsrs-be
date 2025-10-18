@@ -86,6 +86,7 @@ public class ReturnService : IReturnService
         settlement.UpdatedAt = DateTime.UtcNow;
 
         // Create settlement items
+        settlement.SettlementItems.Clear(); // Clear to avoid duplicates
         foreach (var itemRequest in request.SettlementItems)
         {
             var item = _mapper.Map<SettlementItem>(itemRequest);

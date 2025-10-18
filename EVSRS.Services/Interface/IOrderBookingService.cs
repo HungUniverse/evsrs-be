@@ -22,6 +22,7 @@ namespace EVSRS.Services.Interface
         Task DeleteOrderBookingAsync(string id);
         Task<OrderBookingResponseDto> UpdateOrderStatusAsync(string id, OrderBookingStatus status, PaymentStatus? paymentStatus = null);
         Task<bool> CheckCarAvailabilityAsync(string carId, DateTime startDate, DateTime endDate, string? excludeBookingId = null);
+        
         Task<OrderBookingResponseDto> CheckoutOrderAsync(string id);
         Task<OrderBookingResponseDto> StartOrderAsync(string id);
         Task<OrderBookingResponseDto> ProcessReturnOrderAsync(string id);

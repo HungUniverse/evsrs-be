@@ -106,7 +106,9 @@ namespace EVSRS.Services.Mapper
 
             #region ReturnSettlement Mapper
             CreateMap<ReturnSettlement, ReturnSettlementResponseDto>().ReverseMap();
-            CreateMap<ReturnSettlement, ReturnSettlementRequestDto>().ReverseMap();
+            CreateMap<ReturnSettlementRequestDto, ReturnSettlement>()
+                .ForMember(dest => dest.SettlementItems, opt => opt.Ignore()); // Ignore to prevent duplicate
+            CreateMap<ReturnSettlement, ReturnSettlementRequestDto>();
             CreateMap<SettlementItem, SettlementItemResponseDto>().ReverseMap();
             CreateMap<SettlementItem, SettlementItemRequestDto>().ReverseMap();
             #endregion

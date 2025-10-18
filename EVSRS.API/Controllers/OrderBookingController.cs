@@ -234,6 +234,8 @@ namespace EVSRS.API.Controllers
             ));
         }
 
+       
+
         /// <summary>
         /// Checkout order (start rental)
         /// </summary>

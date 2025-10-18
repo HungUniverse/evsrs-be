@@ -97,6 +97,8 @@ namespace EVSRS.Services.Service
             return await _unitOfWork.OrderRepository.IsCarAvailableAsync(carId, startDate, endDate, excludeBookingId);
         }
 
+  
+
         public async Task<OrderBookingResponseDto> CheckoutOrderAsync(string id)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -223,6 +225,19 @@ namespace EVSRS.Services.Service
             booking.Status = OrderBookingStatus.COMPLETED;
             booking.UpdatedBy = GetCurrentUserName();
             booking.UpdatedAt = DateTime.UtcNow;
+
+            // Update car status back to AVAILABLE when order is completed
+            if (!string.IsNullOrEmpty(booking.CarEVDetailId))
+            {
+                var car = await _unitOfWork.CarEVRepository.GetByIdAsync(booking.CarEVDetailId);
+                if (car != null)
+                {
+                    car.Status = CarEvStatus.AVAILABLE;
+                    car.UpdatedBy = GetCurrentUserName();
+                    car.UpdatedAt = DateTime.UtcNow;
+                    await _unitOfWork.CarEVRepository.UpdateAsync(car);
+                }
+            }
 
             await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
             await _unitOfWork.SaveChangesAsync();
