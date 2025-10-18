@@ -10,6 +10,7 @@ namespace EVSRS.BusinessObjects.Entity
     public class Depot: BaseEntity
     {
         public string? Name { get; set; }
+        
         public string? MapId { get; set; }
         public string? Province { get; set; }
         public string? District { get; set; }

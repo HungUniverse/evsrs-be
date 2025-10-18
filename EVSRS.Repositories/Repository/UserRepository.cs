@@ -31,7 +31,9 @@ public class UserRepository : GenericRepository<ApplicationUser>, IUserRepositor
 
     public async Task<ApplicationUser?> GetUserByIdAsync(string id)
     {
-        var response = await _dbSet.Where(x => !x.IsDeleted && x.Id == id).FirstOrDefaultAsync();
+        var response = await _dbSet.Where(x => !x.IsDeleted && x.Id == id)
+            .Include(x => x.Depot)
+            .FirstOrDefaultAsync();
         return response;
     }
 
@@ -45,6 +47,7 @@ public class UserRepository : GenericRepository<ApplicationUser>, IUserRepositor
     public async Task<ApplicationUser?> GetUserByEmailAsync(string email)
     {
         var response = await _dbSet.Where(x => !x.IsDeleted && x.UserEmail == email)
+            .Include(x => x.Depot)
             .FirstOrDefaultAsync();
         return response;
     }

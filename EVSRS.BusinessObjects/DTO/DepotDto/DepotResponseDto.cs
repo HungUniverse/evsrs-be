@@ -10,6 +10,7 @@ namespace EVSRS.BusinessObjects.DTO.DepotDto
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+        
         public string MapId { get; set; } = string.Empty;
         public string Province { get; set; } = string.Empty;
         public string District { get; set; } = string.Empty;

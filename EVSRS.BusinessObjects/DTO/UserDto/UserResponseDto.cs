@@ -10,9 +10,10 @@ public class UserResponseDto
     public string? UserEmail { get; set; }
     public string? PhoneNumber { get; set; }
     public string? DateOfBirth { get; set; }
+    public string? ProfilePicture { get; set; }
     public string? FullName { get; set; }
-    public string? DepotId { get; set; } // For staff members
-    public DepotResponseDto? Depot { get; set; } // Navigation property
+    public string? DepotId { get; set; }
+    public DepotResponseDto? Depot { get; set; }
     public Role? Role { get; set; }
     public bool IsVerify { get; set; } = false;
     public DateTime CreatedAt { get; set; }
