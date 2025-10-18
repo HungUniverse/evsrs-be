@@ -20,6 +20,7 @@ public class OrderBookingResponseDto
     public DateTime? CheckOutedAt { get; set; }
     public DateTime? ReturnedAt { get; set; }
     public OrderBookingStatus Status { get; set; }
+    public string? Code { get; set; } 
     public string? SubTotal { get; set; }
     public string? Discount { get; set; }
     public string? DepositAmount { get; set; }
