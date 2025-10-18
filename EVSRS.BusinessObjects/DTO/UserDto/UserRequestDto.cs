@@ -20,8 +20,6 @@ namespace EVSRS.BusinessObjects.DTO.UserDto
         public string? ProfilePicture { get; set; }
         public string? DateOfBirth { get; set; }
         public string? PhoneNumber { get; set; }
-        
-        // DepotId is required only for STAFF role
         public string? DepotId { get; set; }
         
         public Role? Role { get; set; }
