@@ -20,22 +20,33 @@ namespace EVSRS.API.Controllers
         public async Task<IActionResult> CreateAmenities([FromBody] AmenitiesRequestDto model)
         {
             await _amenitiesService.CreateAmenities(model);
-            return Ok(new ResponseModel<object>(
+            return StatusCode(StatusCodes.Status201Created, new ResponseModel<object>(
                 StatusCodes.Status201Created,
                 ApiCodes.CREATED,
                 null,
-                "Create amenities successfully!"));
+                "Created amenities successfully!"));
+
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAmenities(string id)
         {
+            var existingAmenities = await _amenitiesService.GetAmenitiesById(id);
+            if (existingAmenities == null)
+            {
+                return NotFound(new ResponseModel<object>(
+                    StatusCodes.Status404NotFound,
+                    ApiCodes.NOT_FOUND,
+                    null,
+                    $"Amenities with ID {id} not found."));
+            }
             await _amenitiesService.DeleteAmenities(id);
             return Ok(new ResponseModel<object>(
                 StatusCodes.Status200OK,
                 ApiCodes.SUCCESS,
                 null,
-                "Delete amenities successfully!"));
+                "Deleted amenities successfully!"));
+
         }
 
         [HttpGet]
@@ -57,13 +68,15 @@ namespace EVSRS.API.Controllers
                 return NotFound(new ResponseModel<object>(
                     StatusCodes.Status404NotFound,
                     ApiCodes.NOT_FOUND,
-                    null,
+                    amenities,
                     $"Amenities with ID {id} not found."));
             }
             return Ok(new ResponseModel<AmenitiesResponseDto>(
                 StatusCodes.Status200OK,
                 ApiCodes.SUCCESS,
-                amenities));
+                amenities
+                
+                ));
         }
 
         [HttpGet("name")]
@@ -75,7 +88,7 @@ namespace EVSRS.API.Controllers
                 return NotFound(new ResponseModel<object>(
                     StatusCodes.Status404NotFound,
                     ApiCodes.NOT_FOUND,
-                    null,
+                    amenities,
                     $"Amenities with name {name} not found."));
             }
             return Ok(new ResponseModel<AmenitiesResponseDto>(
@@ -88,15 +101,22 @@ namespace EVSRS.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAmenities(string id, [FromBody] AmenitiesRequestDto model)
         {
+            var existingAmenities = await _amenitiesService.GetAmenitiesById(id);
+            if (existingAmenities == null)
+            {
+                return NotFound(new ResponseModel<object>(
+                    StatusCodes.Status404NotFound,
+                    ApiCodes.NOT_FOUND,
+                    null,
+                    $"Amenities with ID {id} not found."));
+            }
             await _amenitiesService.UpdateAmenities(id, model);
             return Ok(new ResponseModel<object>(
                 StatusCodes.Status200OK,
                 ApiCodes.SUCCESS,
                 null,
-                "Update amenities successfully!"));
-        }
-
-       
+                "Updated amenities successfully!"));
+        }   
 
     }
 }

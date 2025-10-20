@@ -11,6 +11,7 @@ public interface IUserService
     Task<UserResponseDto> GetUserByPhoneAsync(string phone);
     Task<UserResponseDto> GetUserByUsernameAsync(string username);
     Task UpdateUserAsync(string userId, UserRequestDto updateUserRequestDto);
+    Task UpdateStaffDepotIdAsync(string userId, string depotId);
 
     Task<UserResponseDto> RegisterUserAsync(RegisterUserRequestDto registerUserRequestDto);
     Task<UserResponseDto> CreateStaffAsync(CreateStaffRequestDto createStaffRequestDto);

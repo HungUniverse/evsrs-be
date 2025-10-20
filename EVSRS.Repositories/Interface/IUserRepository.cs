@@ -17,6 +17,7 @@ public interface IUserRepository : IGenericRepository<ApplicationUser>
     Task<PaginatedList<ApplicationUser>> GetStaffByDepotIdAsync(string depotId, int pageNumber, int pageSize);
     Task CreateUserAsync(ApplicationUser user);
     Task UpdateUserAsync(ApplicationUser user);
+    Task UpdateStaffDepotId(string userId, string depotId);
     Task DeleteUserAsync(ApplicationUser user);
 
 }

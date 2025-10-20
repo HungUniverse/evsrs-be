@@ -99,4 +99,16 @@ public class UserRepository : GenericRepository<ApplicationUser>, IUserRepositor
     {
         await DeleteAsync(user);
     }
+
+    public async Task UpdateStaffDepotId(string userId, string depotId)
+    {
+        var staff = await _dbSet.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted && u.Role == Role.STAFF);
+        if (staff != null)
+        {
+            staff.DepotId = depotId;
+            await UpdateAsync(staff);
+        }
+
+
+    }
 }
