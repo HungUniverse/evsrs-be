@@ -201,4 +201,23 @@ public class UserService : IUserService
     {
         return _httpContextAccessor.HttpContext?.User?.FindFirst("name")?.Value ?? "System";
     }
+
+    public async Task UpdateStaffDepotIdAsync(string userId, string depotId)
+    {
+        var existingStaff = await _unitOfWork.UserRepository.GetUserByIdAsync(userId);
+        if (existingStaff == null || existingStaff.Role != Role.STAFF)
+        {
+            throw new KeyNotFoundException($"Staff with ID {userId} not found.");
+        }
+        var depot = await _unitOfWork.DepotRepository.GetByIdAsync(depotId);
+        if (depot == null)
+        {
+            throw new KeyNotFoundException($"Depot with ID {depotId} not found.");
+        }
+        existingStaff.DepotId = depotId;
+        existingStaff.UpdatedAt = DateTime.UtcNow;
+        existingStaff.UpdatedBy = GetCurrentUserName();
+        await _unitOfWork.UserRepository.UpdateAsync(existingStaff);
+        await _unitOfWork.SaveChangesAsync();
+    }
 }

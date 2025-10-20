@@ -83,6 +83,11 @@ namespace EVSRS.API.Controllers
             {
                 return BadRequest(ModelState);
             }
+            var existingModel = await _modelService.GetModelByIdAsync(id);
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
             await _modelService.UpdateModelAsync(id, model);
             return Ok(new ResponseModel<string>(
                 StatusCodes.Status200OK,

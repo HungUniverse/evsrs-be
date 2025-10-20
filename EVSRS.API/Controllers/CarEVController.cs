@@ -38,26 +38,53 @@ namespace EVSRS.API.Controllers
             {
                 return BadRequest(ModelState);
             }
+          
             await _carEVService.CreateCarEVAsync(carEV);
-            return StatusCode(StatusCodes.Status201Created, new ResponseModel<string>(StatusCodes.Status201Created, ApiCodes.CREATED, null, "Created CarEV successfully"));
+            return StatusCode(StatusCodes.Status201Created, new ResponseModel<object>(StatusCodes.Status201Created, ApiCodes.CREATED, null, "Created CarEV successfully"));
 
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCarEV(string id, [FromBody] CarEVRequestDto carEV)
         {
-            var updatedCarEV = await _carEVService.UpdateCarEVAsync(id, carEV);
-            if (updatedCarEV == null)
+            var existingCarEV = await _carEVService.GetCarEVByIdAsync(id);
+            if (existingCarEV == null)
             {
-                return NotFound();
+                return NotFound(new ResponseModel<string>(
+                    StatusCodes.Status404NotFound,
+                    ApiCodes.NOT_FOUND,
+                    null,
+                    $"CarEV with ID {id} not found."
+                ));
             }
-            return Ok(updatedCarEV);
+            await _carEVService.UpdateCarEVAsync(id, carEV);
+            return Ok(new ResponseModel<string>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                null,
+                "CarEV updated successfully."
+            ));
         }
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCarEV(string id)
         {
+            var existingCarEV = await _carEVService.GetCarEVByIdAsync(id);
+            if (existingCarEV == null)
+            {
+                return NotFound(new ResponseModel<string>(
+                    StatusCodes.Status404NotFound,
+                    ApiCodes.NOT_FOUND,
+                    null,
+                    $"CarEV with ID {id} not found."
+                ));
+            }
             await _carEVService.DeleteCarEVAsync(id);
-            return NoContent();
+            return Ok(new ResponseModel<object>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                existingCarEV,
+                "CarEV deleted successfully."
+            ));
         }
     }
 }

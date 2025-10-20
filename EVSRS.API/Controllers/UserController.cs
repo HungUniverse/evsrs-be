@@ -103,7 +103,7 @@ namespace EVSRS.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] UserRequestDto updateUserRequestDto)
         {
-            
+
             await _userService.UpdateUserAsync(id, updateUserRequestDto);
             return Ok(new ResponseModel<string>(
                 StatusCodes.Status200OK,
@@ -134,6 +134,18 @@ namespace EVSRS.API.Controllers
                 ApiCodes.SUCCESS,
                 staffList,
                 "Get staff by depot successfully!"
+            ));
+        }
+
+        [HttpPut("{id}/depot")]
+        public async Task<IActionResult> UpdateStaffDepotId(string id, [FromBody] string depotId)
+        {
+            await _userService.UpdateStaffDepotIdAsync(id, depotId);
+            return Ok(new ResponseModel<string>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                null,
+                "Staff depot updated successfully."
             ));
         }
     }
