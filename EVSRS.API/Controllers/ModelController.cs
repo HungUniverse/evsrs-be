@@ -1,6 +1,8 @@
 ﻿using EVSRS.BusinessObjects.DTO.ModelDto;
+using EVSRS.Repositories.Helper;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Services.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -107,6 +109,32 @@ namespace EVSRS.API.Controllers
                 ApiCodes.SUCCESS,
                 null,
                 "Delete model successfully!"
+            ));
+        }
+
+        [HttpPut("electricity-fee")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> UpdateElectricityFeeForAllModels([FromBody] UpdateElectricityFeeRequestDto request)
+        {
+            var updatedCount = await _modelService.UpdateElectricityFeeForAllModelsAsync(request);
+            return Ok(new ResponseModel<object>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                new { UpdatedModelsCount = updatedCount },
+                $"Updated electricity fee for {updatedCount} models successfully!"
+            ));
+        }
+
+        [HttpPut("{id:Guid}/overage-fee")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> UpdateOverageFee(string id, [FromBody] UpdateOverageFeeRequestDto request)
+        {
+            var result = await _modelService.UpdateOverageFeeAsync(id, request);
+            return Ok(new ResponseModel<ModelResponseDto>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                result,
+                "Update overage fee successfully!"
             ));
         }
 

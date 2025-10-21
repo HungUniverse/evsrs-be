@@ -18,6 +18,8 @@ namespace EVSRS.BusinessObjects.DTO.ModelDto
         public int sale { get; set; }
         public string BatteryCapacityKwh { get; set; } = string.Empty;
         public string Image { get; set; }
+        public string ElectricityFee { get; set; }
+        public string OverageFee { get; set; }
 
         public bool isDeleted { get; set; }
         }

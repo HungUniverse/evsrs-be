@@ -99,6 +99,50 @@ namespace EVSRS.Services.Service
 
         }
 
+        public async Task<int> UpdateElectricityFeeForAllModelsAsync(UpdateElectricityFeeRequestDto request)
+        {
+            await _validationService.ValidateAndThrowAsync(request);
+
+            var paginatedModels = await _unitOfWork.ModelRepository.GetModelListAsync();
+            if (!paginatedModels.Items.Any())
+            {
+                return 0;
+            }
+
+            var updatedCount = 0;
+            var currentUserName = GetCurrentUserName();
+
+            foreach (var model in paginatedModels.Items)
+            {
+                model.ElectricityFee = request.ElectricityFee;
+                model.UpdatedBy = currentUserName;
+                model.UpdatedAt = DateTime.UtcNow;
+                
+                await _unitOfWork.ModelRepository.UpdateModelAsync(model);
+                updatedCount++;
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            return updatedCount;
+        }
+
+        public async Task<ModelResponseDto> UpdateOverageFeeAsync(string id, UpdateOverageFeeRequestDto request)
+        {
+            await _validationService.ValidateAndThrowAsync(request);
+
+            var model = await _unitOfWork.ModelRepository.GetModelByIdAsync(id);
+            _validationService.CheckNotFound(model, "Model not found");
+
+            model!.OverageFee = request.OverageFee;
+            model.UpdatedBy = GetCurrentUserName();
+            model.UpdatedAt = DateTime.UtcNow;
+
+            await _unitOfWork.ModelRepository.UpdateModelAsync(model);
+            await _unitOfWork.SaveChangesAsync();
+
+            return _mapper.Map<ModelResponseDto>(model);
+        }
+
         private string GetCurrentUserName()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst("name")?.Value ?? "System";
