@@ -19,6 +19,8 @@ namespace EVSRS.BusinessObjects.DTO.ModelDto
         public double Price { get; set; }
         public int Sale { get; set; }
         public string Image {get; set; }
+        public string ElectricityFee { get; set; }
+        public string OverageFee { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string CreatedBy { get; set; }
