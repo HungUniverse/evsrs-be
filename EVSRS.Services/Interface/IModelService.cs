@@ -16,5 +16,7 @@ namespace EVSRS.Services.Interface
         Task CreateModelAsync(ModelRequestDto model);
         Task UpdateModelAsync(string id, ModelRequestDto model);
         Task DeleteModelAsync(string id);
+        Task<int> UpdateElectricityFeeForAllModelsAsync(UpdateElectricityFeeRequestDto request);
+        Task<ModelResponseDto> UpdateOverageFeeAsync(string id, UpdateOverageFeeRequestDto request);
     }
 }
