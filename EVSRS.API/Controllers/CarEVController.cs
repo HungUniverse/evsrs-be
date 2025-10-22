@@ -29,8 +29,16 @@ namespace EVSRS.API.Controllers
             {
                 return NotFound();
             }
-            return Ok(carEV);
+            return StatusCode(StatusCodes.Status200OK, new ResponseModel<CarEVResponseDto>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                carEV,
+                "Get CarEV by ID successfully!"
+            ));
         }
+
+        
+
         [HttpPost]
         public async Task<IActionResult> CreateCarEV([FromBody] CarEVRequestDto carEV)
         {
@@ -84,6 +92,18 @@ namespace EVSRS.API.Controllers
                 ApiCodes.SUCCESS,
                 existingCarEV,
                 "CarEV deleted successfully."
+            ));
+        }
+
+        [HttpGet("depot/{depotId}")]
+        public async Task<IActionResult> GetAllCarEVsByDepotId(string depotId)
+        {
+            var carEVs = await _carEVService.GetAllCarEVsByDepotIdAsync(depotId);
+            return Ok(new ResponseModel<List<CarEVResponseDto>>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                carEVs,
+                "Get all CarEVs by depot ID successfully."
             ));
         }
     }

@@ -30,6 +30,8 @@ namespace EVSRS.Repositories.Repository
             await DeleteAsync(carEV);
         }
 
+        
+
         public async Task<CarEV?> GetCarEVByIdAsync(string id)
         {
             var response = await _dbSet.Where(x => !x.IsDeleted && x.Id == id).FirstOrDefaultAsync();
@@ -42,9 +44,19 @@ namespace EVSRS.Repositories.Repository
             return PaginatedList<CarEV>.Create(response, 1, response.Count);
         }
 
+        
+
         public async Task UpdateCarEVAsync(CarEV carEV)
         {
             await UpdateAsync(carEV);
+        }
+
+        public async Task<List<CarEV>> GetCarEVListByDepotIdAsync(string depotId)
+        {
+            return await _dbSet
+                .Where(x => !x.IsDeleted && x.DepotId == depotId)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
         }
     }
 }

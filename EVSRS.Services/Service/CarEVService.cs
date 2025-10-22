@@ -57,6 +57,8 @@ namespace EVSRS.Services.Service
 
         }
 
+        
+
         public async Task<CarEVResponseDto> GetCarEVByIdAsync(string id)
         {
             var carEV = await _unitOfWork.CarEVRepository.GetCarEVByIdAsync(id);
@@ -70,7 +72,7 @@ namespace EVSRS.Services.Service
 
         }
 
-      
+       
 
         public async Task<CarEVResponseDto> UpdateCarEVAsync(string id, CarEVRequestDto carEV)
         {
@@ -87,6 +89,15 @@ namespace EVSRS.Services.Service
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<CarEVResponseDto>(existingCarEV);
 
+        }
+
+        public async Task<List<CarEVResponseDto>> GetAllCarEVsByDepotIdAsync(string depotId)
+        {
+            // Validate depotId
+            _validationService.CheckBadRequest(string.IsNullOrEmpty(depotId), "DepotId is required");
+
+            var carEVs = await _unitOfWork.CarEVRepository.GetCarEVListByDepotIdAsync(depotId);
+            return carEVs.Select(car => _mapper.Map<CarEVResponseDto>(car)).ToList();
         }
 
         private string GetCurrentUserName()
