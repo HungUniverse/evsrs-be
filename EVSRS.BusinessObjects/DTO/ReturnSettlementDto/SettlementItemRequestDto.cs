@@ -16,4 +16,6 @@ public class SettlementItemRequestDto
     public string Total { get; set; } = string.Empty;
     
     public string? Notes { get; set; }
+    
+    public string? Image { get; set; }
 }

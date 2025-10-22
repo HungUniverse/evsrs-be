@@ -15,6 +15,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Discount { get; set; }
         public string? Total { get; set; }
         public string? Notes { get; set; }
+        public string? Image { get; set; }
 
         public ReturnSettlement? ReturnSettlement { get; set; }
     }
