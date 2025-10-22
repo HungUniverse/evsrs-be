@@ -96,15 +96,29 @@ namespace EVSRS.API.Controllers
         }
 
         [HttpGet("depot/{depotId}")]
-        public async Task<IActionResult> GetAllCarEVsByDepotId(string depotId)
+        public async Task<IActionResult> GetCarEVsByDepotId(string depotId)
         {
-            var carEVs = await _carEVService.GetAllCarEVsByDepotIdAsync(depotId);
+            var result = await _carEVService.GetAllCarEVsByDepotIdAsync(depotId);
             return Ok(new ResponseModel<List<CarEVResponseDto>>(
                 StatusCodes.Status200OK,
                 ApiCodes.SUCCESS,
-                carEVs,
-                "Get all CarEVs by depot ID successfully."
+                result,
+                "Get CarEVs by depot successfully!"
             ));
         }
+
+        [HttpGet("depot/{depotId}/paginated")]
+        public async Task<IActionResult> GetCarEVsByDepotIdPaginated(string depotId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            var result = await _carEVService.GetCarEVsByDepotIdAsync(depotId, pageNumber, pageSize);
+            return Ok(new ResponseModel<PaginatedList<CarEVResponseDto>>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                result,
+                "Get CarEVs by depot with pagination successfully!"
+            ));
+        }
+
+      
     }
 }

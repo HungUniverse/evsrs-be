@@ -88,17 +88,29 @@ namespace EVSRS.Services.Service
             await _unitOfWork.CarEVRepository.UpdateCarEVAsync(existingCarEV);
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<CarEVResponseDto>(existingCarEV);
-
         }
 
         public async Task<List<CarEVResponseDto>> GetAllCarEVsByDepotIdAsync(string depotId)
         {
-            // Validate depotId
-            _validationService.CheckBadRequest(string.IsNullOrEmpty(depotId), "DepotId is required");
-
-            var carEVs = await _unitOfWork.CarEVRepository.GetCarEVListByDepotIdAsync(depotId);
-            return carEVs.Select(car => _mapper.Map<CarEVResponseDto>(car)).ToList();
+            var carEVs = await _unitOfWork.CarEVRepository.GetAllCarEVsByDepotIdAsync(depotId);
+            return carEVs.Select(c => _mapper.Map<CarEVResponseDto>(c)).ToList();
         }
+
+        public async Task<PaginatedList<CarEVResponseDto>> GetCarEVsByDepotIdAsync(string depotId, int pageNumber, int pageSize)
+        {
+            var paginatedCarEVs = await _unitOfWork.CarEVRepository.GetCarEVsByDepotIdAsync(depotId, pageNumber, pageSize);
+            
+            var carEVDtos = paginatedCarEVs.Items.Select(c => _mapper.Map<CarEVResponseDto>(c)).ToList();
+            
+            return new PaginatedList<CarEVResponseDto>(
+                carEVDtos, 
+                paginatedCarEVs.TotalCount, 
+                paginatedCarEVs.PageNumber, 
+                paginatedCarEVs.PageSize
+            );
+        }
+
+       
 
         private string GetCurrentUserName()
         {

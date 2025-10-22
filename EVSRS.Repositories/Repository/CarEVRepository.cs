@@ -44,6 +44,27 @@ namespace EVSRS.Repositories.Repository
             return PaginatedList<CarEV>.Create(response, 1, response.Count);
         }
 
+        public async Task<List<CarEV>> GetAllCarEVsByDepotIdAsync(string depotId)
+        {
+            return await _context.CarEVs
+                .Where(c => c.DepotId == depotId && !c.IsDeleted)
+                .ToListAsync();
+        }
+
+        public async Task<PaginatedList<CarEV>> GetCarEVsByDepotIdAsync(string depotId, int pageNumber, int pageSize)
+        {
+            var query = _context.CarEVs
+                .Include(c => c.Model)
+                    .ThenInclude(m => m.CarManufacture)
+                .Include(c => c.Model)
+                    .ThenInclude(m => m.Amenities)
+                .Include(c => c.Depot)
+                .Where(c => c.DepotId == depotId && !c.IsDeleted)
+                .OrderBy(c => c.CreatedAt);
+
+            return await PaginatedList<CarEV>.CreateAsync(query, pageNumber, pageSize);
+        }
+
         
 
         public async Task UpdateCarEVAsync(CarEV carEV)
@@ -51,12 +72,6 @@ namespace EVSRS.Repositories.Repository
             await UpdateAsync(carEV);
         }
 
-        public async Task<List<CarEV>> GetCarEVListByDepotIdAsync(string depotId)
-        {
-            return await _dbSet
-                .Where(x => !x.IsDeleted && x.DepotId == depotId)
-                .OrderByDescending(x => x.CreatedAt)
-                .ToListAsync();
-        }
+        
     }
 }

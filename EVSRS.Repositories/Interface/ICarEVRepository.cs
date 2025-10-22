@@ -13,12 +13,13 @@ namespace EVSRS.Repositories.Interface
     {
         Task<PaginatedList<CarEV>> GetCarEVList();
         Task<CarEV?> GetCarEVByIdAsync(string id);
-        
+        Task<List<CarEV>> GetAllCarEVsByDepotIdAsync(string depotId);
+        Task<PaginatedList<CarEV>> GetCarEVsByDepotIdAsync(string depotId, int pageNumber, int pageSize);
         Task CreateCarEVAsync(CarEV carEV);
         Task UpdateCarEVAsync(CarEV carEV);
         Task DeleteCarEVAsync(CarEV carEV);
-        Task<List<CarEV>> GetCarEVListByDepotIdAsync(string depotId);
-        
+       
+
 
     }
 }
