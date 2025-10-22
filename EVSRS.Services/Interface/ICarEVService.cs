@@ -12,10 +12,11 @@ namespace EVSRS.Services.Interface
     {
         Task<PaginatedList<CarEVResponseDto>> GetAllCarEVsAsync(int pageNumber, int pageSize);
         Task<CarEVResponseDto> GetCarEVByIdAsync(string id);
-        
+        Task<List<CarEVResponseDto>> GetAllCarEVsByDepotIdAsync(string depotId);
+        Task<PaginatedList<CarEVResponseDto>> GetCarEVsByDepotIdAsync(string depotId, int pageNumber, int pageSize);
         Task CreateCarEVAsync(CarEVRequestDto carEV);
         Task<CarEVResponseDto> UpdateCarEVAsync(string id, CarEVRequestDto carEV);
         Task DeleteCarEVAsync(string id);
-        Task<List<CarEVResponseDto>> GetAllCarEVsByDepotIdAsync(string depotId);
+       
     }
 }
