@@ -11,6 +11,7 @@ public class SettlementItemResponseDto
     public string? Discount { get; set; }
     public string? Total { get; set; }
     public string? Notes { get; set; }
+    public string? Image { get; set; }
     
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
