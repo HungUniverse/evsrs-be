@@ -16,5 +16,6 @@ namespace EVSRS.Services.Interface
         Task CreateCarEVAsync(CarEVRequestDto carEV);
         Task<CarEVResponseDto> UpdateCarEVAsync(string id, CarEVRequestDto carEV);
         Task DeleteCarEVAsync(string id);
+        Task<List<CarEVResponseDto>> GetAllCarEVsByDepotIdAsync(string depotId);
     }
 }
