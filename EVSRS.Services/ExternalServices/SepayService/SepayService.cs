@@ -10,6 +10,7 @@ using EVSRS.Repositories.Infrastructure;
 using EVSRS.Services.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace EVSRS.Services.ExternalServices.SepayService;
 
@@ -20,25 +21,40 @@ public class SepayService : ISepayService
     private readonly IMapper _mapper;
     private readonly IValidationService _validationService;
     private readonly ITransactionService _transactionService;
+    private readonly ILogger<SepayService> _logger;
 
     public SepayService(
         IUnitOfWork unitOfWork,
+        IOptions<SepaySettings> sepaySettings,
         IMapper mapper,
         IValidationService validationService,
         ITransactionService transactionService,
-        IOptions<SepaySettings> sepaySettings)
+        ILogger<SepayService> logger
+    )
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _validationService = validationService;
         _transactionService = transactionService;
         _sepaySettings = sepaySettings.Value;
+        _logger = logger;
     }
 
     public async Task ProcessPaymentWebhookAsync(SepayWebhookPayload payload, string authHeader)
     {
+        _logger.LogInformation("SePay webhook received. Auth header: {AuthHeader}", authHeader);
+        _logger.LogInformation("Expected API key format: Apikey {{ApiKey}}");
+        _logger.LogInformation("Configured SePay API key: {ApiKey}", _sepaySettings.ApiKey?.Substring(0, Math.Min(10, _sepaySettings.ApiKey.Length)) + "...");
+        
+        // Debug: Log full SePay settings to ensure they're loaded correctly
+        _logger.LogInformation("SePay Settings - ApiKey: {HasApiKey}, BaseUri: {BaseUri}, AccountNumber: {AccountNumber}", 
+            !string.IsNullOrEmpty(_sepaySettings.ApiKey), 
+            _sepaySettings.ApiBaseUri, 
+            _sepaySettings.AccountNumber);
+
         if (!ValidateAuthHeader(authHeader))
         {
+            _logger.LogError("API key validation failed. Received header: {AuthHeader}", authHeader);
             throw new ErrorException(StatusCodes.Status401Unauthorized, ApiCodes.UNAUTHORIZED, "Invalid API key");
         }
 
@@ -227,7 +243,39 @@ public class SepayService : ISepayService
 
     private bool ValidateAuthHeader(string authHeader)
     {
-        return authHeader == $"Apikey {_sepaySettings.ApiKey}";
+        _logger.LogDebug("Validating auth header: {AuthHeader}", authHeader);
+        
+        // Handle null or empty auth header
+        if (string.IsNullOrEmpty(authHeader))
+        {
+            _logger.LogWarning("Auth header is null or empty");
+            return false;
+        }
+
+        var expectedHeader = $"Apikey {_sepaySettings.ApiKey}";
+        _logger.LogDebug("Expected header: {ExpectedHeader}", expectedHeader);
+        
+        // Try multiple possible formats that SePay might use
+        var possibleFormats = new[]
+        {
+            $"Apikey {_sepaySettings.ApiKey}",    // Current format
+            $"ApiKey {_sepaySettings.ApiKey}",    // Alternative capitalization
+            $"Bearer {_sepaySettings.ApiKey}",    // Bearer format
+            _sepaySettings.ApiKey,                // Just the key itself
+            $"API-KEY {_sepaySettings.ApiKey}",   // Another possible format
+        };
+
+        foreach (var format in possibleFormats)
+        {
+            if (authHeader.Equals(format, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Auth header validation successful with format: {Format}", format.Substring(0, Math.Min(20, format.Length)) + "...");
+                return true;
+            }
+        }
+
+        _logger.LogWarning("Auth header validation failed. None of the expected formats matched.");
+        return false;
     }
 
     private string ExtractOrderCodeFromContent(string content)
