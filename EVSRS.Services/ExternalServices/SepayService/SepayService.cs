@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using AutoMapper;
 using EVSRS.BusinessObjects.DTO.SepayDto;
+using EVSRS.BusinessObjects.DTO.TransactionDto;
 using EVSRS.BusinessObjects.Entity;
 using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Helper;
@@ -89,9 +90,8 @@ public class SepayService : ISepayService
 
         if (order == null) return;
 
-        // Create transaction record (simplified for now)
-        // await _transactionService.CreateTransactionAsync(payload, order.Id, order.Code);
-        // var txn = await _unitOfWork.TransactionRepository.GetLatestTransactionByOrderIdAsync(order.Id);
+        // Create transaction record
+        await CreateTransactionFromWebhook(payload, order.Id, order.Code);
 
         if (order.User == null && !string.IsNullOrEmpty(order.UserId))
         {
@@ -336,6 +336,17 @@ public class SepayService : ISepayService
                         return orderMatch.Value;
                     }
                 }
+
+                // Special handling for TF codes that might contain embedded BK codes
+                if (pattern == @"TF\w+" && match.Value.Contains("BK"))
+                {
+                    var embeddedBkMatch = Regex.Match(match.Value, @"BK\d{8,14}");
+                    if (embeddedBkMatch.Success)
+                    {
+                        _logger.LogDebug("Extracted embedded BK code from TF code: {OrderCode}", embeddedBkMatch.Value);
+                        return embeddedBkMatch.Value;
+                    }
+                }
                 
                 return match.Value;
             }
@@ -352,11 +363,16 @@ public class SepayService : ISepayService
         // First try to find by order code (direct match)
         if (codeToFind.StartsWith("BK") || codeToFind.StartsWith("ORD"))
         {
+            _logger.LogInformation("Searching for order by order code: {OrderCode}", codeToFind);
             var orderByCode = await _unitOfWork.OrderRepository.GetByCodeAsync(codeToFind);
             if (orderByCode != null)
             {
-                _logger.LogInformation("Found order by order code: {OrderCode}", codeToFind);
+                _logger.LogInformation("Found order by order code: {OrderCode} -> Order ID: {OrderId}", codeToFind, orderByCode.Id);
                 return orderByCode;
+            }
+            else
+            {
+                _logger.LogWarning("No order found with code: {OrderCode}", codeToFind);
             }
         }
 
@@ -370,12 +386,28 @@ public class SepayService : ISepayService
             var order = await FindOrderByAmountAndTimestamp((decimal)payload.transferAmount, payload.transactionDate);
             if (order != null)
             {
-                _logger.LogInformation("Found order by amount and timestamp: {OrderCode}", order.Code);
+                _logger.LogInformation("Found order by amount and timestamp: {OrderCode} -> Order ID: {OrderId}", order.Code, order.Id);
                 return order;
+            }
+            else
+            {
+                _logger.LogWarning("No order found by amount {Amount} and timestamp {TransactionDate}", 
+                    payload.transferAmount, payload.transactionDate);
             }
         }
         
-        _logger.LogWarning("Could not find order for code: {Code}", codeToFind);
+        _logger.LogError("Could not find order for code: {Code}, trying all pending orders as last resort", codeToFind);
+        
+        // Last resort: Get all pending orders and log them for debugging
+        var pendingOrders = await GetRecentPendingOrders();
+        _logger.LogInformation("Found {Count} total pending orders for debugging:", pendingOrders.Count);
+        
+        foreach (var pendingOrder in pendingOrders.Take(5)) // Log first 5 for debugging
+        {
+            _logger.LogInformation("Pending Order: Code={Code}, Amount={Amount}, DepositAmount={DepositAmount}, Status={Status}", 
+                pendingOrder.Code, pendingOrder.TotalAmount, pendingOrder.DepositAmount, pendingOrder.PaymentStatus);
+        }
+        
         return null;
     }
 
@@ -467,22 +499,50 @@ public class SepayService : ISepayService
 
     private async Task<List<OrderBooking>> GetRecentPendingOrders()
     {
-        // This is a temporary solution - get recent orders that are pending payment
-        // In a real implementation, you'd want proper payment code tracking
         try
         {
-            // Get orders from the last 24 hours that are pending or partially paid
-            var recent = DateTime.UtcNow.AddHours(-24);
-            
-            // Since we don't have a direct method, we'll need to add one to the repository
-            // For now, return empty list and rely on direct order code matching
-            _logger.LogWarning("GetRecentPendingOrders not fully implemented - requires repository enhancement");
-            return new List<OrderBooking>();
+            _logger.LogDebug("Getting recent pending orders");
+            var pendingOrders = await _unitOfWork.OrderRepository.GetPendingPaymentOrderBookingsAsync();
+            _logger.LogInformation("Found {Count} pending payment orders", pendingOrders.Count);
+            return pendingOrders;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting recent pending orders");
             return new List<OrderBooking>();
+        }
+    }
+
+    private async Task CreateTransactionFromWebhook(SepayWebhookPayload payload, string orderId, string? orderCode)
+    {
+        try
+        {
+            _logger.LogInformation("Creating transaction from webhook for order {OrderId}", orderId);
+            
+            var transactionRequest = new TransactionRequestDto
+            {
+                OrderBookingId = orderId,
+                SepayId = payload.id.ToString(),
+                Gateway = payload.gateway,
+                TransactionDate = DateTime.TryParse(payload.transactionDate, out var transDate) ? transDate : DateTime.UtcNow,
+                AccountNumber = payload.accountNumber,
+                Code = orderCode,
+                Content = payload.content,
+                TransferType = payload.transferType,
+                TranferAmount = payload.transferAmount.ToString(),
+                Accumulated = payload.accumulated.ToString(),
+                SubAccount = payload.subAccount,
+                ReferenceCode = payload.referenceCode,
+                Description = payload.description
+            };
+
+            await _transactionService.CreateTransactionAsync(transactionRequest);
+            _logger.LogInformation("Transaction created successfully for order {OrderId}", orderId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating transaction for order {OrderId}", orderId);
+            // Don't throw here - transaction creation failure shouldn't stop payment processing
         }
     }
 }
