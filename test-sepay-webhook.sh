@@ -12,8 +12,8 @@ echo "Using API Key: ${SEPAY_API_KEY:0:10}..."
 
 # Test payload - adjust the content to match your order format
 TEST_PAYLOAD='{
-  "content": "ORD1234567 - Payment received",
-  "amount": 100000,
+  "content": "BK20251024332 - Payment received",
+  "amount": 17100,
   "description": "Test payment",
   "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)'"
 }'

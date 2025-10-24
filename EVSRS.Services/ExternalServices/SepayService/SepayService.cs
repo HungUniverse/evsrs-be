@@ -293,8 +293,16 @@ public class SepayService : ISepayService
 
     private string ExtractOrderCodeFromContent(string content)
     {
-        var match = Regex.Match(content, @"ORD\d{7}");
-        return match.Success ? match.Value : null;
+        // Try BK pattern first (current system)
+        var bkMatch = Regex.Match(content, @"BK\d{12}");
+        if (bkMatch.Success)
+        {
+            return bkMatch.Value;
+        }
+        
+        // Fallback to legacy ORD pattern
+        var ordMatch = Regex.Match(content, @"ORD\d{7}");
+        return ordMatch.Success ? ordMatch.Value : null;
     }
 
     private string? ExtractPaymentCodeFromContent(string content)
@@ -304,10 +312,11 @@ public class SepayService : ISepayService
         // Try multiple patterns to extract payment/order codes
         var patterns = new[]
         {
-            @"ORD\d{7}",        // Order code pattern like ORD1234567 (highest priority)
-            @"TF\w+ORD\d{7}",   // Full pattern: payment code + order code
+            @"BK\d{12}",        // Order code pattern like BK202510241089 (highest priority)
+            @"TF\w+BK\d{12}",   // Full pattern: payment code + order code
+            @"BK\d{8,14}",      // Flexible BK pattern (8-14 digits)
             @"TF\w+",           // Payment code pattern like TF6654849BK202510247208
-            @"\b[A-Z]{2,3}\d{7}\b" // General order code pattern (2-3 letters + 7 digits)
+            @"ORD\d{7}",        // Legacy order code pattern (if still used)
         };
 
         foreach (var pattern in patterns)
@@ -317,10 +326,10 @@ public class SepayService : ISepayService
             {
                 _logger.LogDebug("Found code using pattern '{Pattern}': {Code}", pattern, match.Value);
                 
-                // If we found the combined pattern (TF...ORD...), extract just the order part
-                if (pattern == @"TF\w+ORD\d{7}")
+                // If we found the combined pattern (TF...BK...), extract just the order part
+                if (pattern == @"TF\w+BK\d{12}")
                 {
-                    var orderMatch = Regex.Match(match.Value, @"ORD\d{7}");
+                    var orderMatch = Regex.Match(match.Value, @"BK\d{12}");
                     if (orderMatch.Success)
                     {
                         _logger.LogDebug("Extracted order code from combined pattern: {OrderCode}", orderMatch.Value);
@@ -341,7 +350,7 @@ public class SepayService : ISepayService
         _logger.LogDebug("Finding order by code: {Code}", codeToFind);
 
         // First try to find by order code (direct match)
-        if (codeToFind.StartsWith("ORD"))
+        if (codeToFind.StartsWith("BK") || codeToFind.StartsWith("ORD"))
         {
             var orderByCode = await _unitOfWork.OrderRepository.GetByCodeAsync(codeToFind);
             if (orderByCode != null)
