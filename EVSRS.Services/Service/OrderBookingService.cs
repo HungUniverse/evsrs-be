@@ -307,7 +307,13 @@ namespace EVSRS.Services.Service
 
             // Calculate costs
             var totalCost = await CalculateBookingCostAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
-            var depositAmount = totalCost * 0.3m; // 30% deposit
+            var depositFee = await _unitOfWork.SystemConfigRepository.GetSystemConfigByKeyAsync("DEPOSIT_FEE_PERCENTAGE");
+            decimal depositPercent = 30m;
+            if (depositFee != null && !string.IsNullOrWhiteSpace(depositFee.Value) && decimal.TryParse(depositFee.Value, out var parsedPercent))
+            {
+                depositPercent = parsedPercent;
+            }
+            var depositAmount = totalCost * depositPercent / 100m;
             var remainingAmount = totalCost - depositAmount;
 
             var booking = _mapper.Map<OrderBooking>(request);
@@ -358,7 +364,7 @@ namespace EVSRS.Services.Service
             }
 
             var result = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(booking.Id);
-            qrResponse.OrderBooking = _mapper.Map<OrderBookingResponseDto>(result);
+        qrResponse.OrderBooking = _mapper.Map<OrderBookingResponseDto>(result);
 
             return qrResponse;
         }
@@ -522,9 +528,12 @@ namespace EVSRS.Services.Service
             return _httpContextAccessor.HttpContext?.User?.FindFirst("userId")?.Value ?? string.Empty;
         }
 
+        private static readonly Random _random = new Random();
         private string GenerateBookingCode()
         {
-            return $"BK{DateTime.Now:yyyyMMdd}{Random.Shared.Next(1000, 9999)}";
+            string prefix = "ORD";
+            string randomPart = _random.Next(1000000, 9999999).ToString();
+            return $"{prefix}{randomPart}";
         }
     }
 }

@@ -39,6 +39,7 @@ namespace EVSRS.BusinessObjects.DBContext
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Contract> Contracts { get; set; }
         public DbSet<ApplicationUserToken> ApplicationUserTokens { get; set; }
+        public DbSet<SystemConfig> SystemConfigs { get; set; }
 
 
 
@@ -63,6 +64,7 @@ namespace EVSRS.BusinessObjects.DBContext
             modelBuilder.Entity<Transaction>().ToTable("Transaction");
             modelBuilder.Entity<Contract>().ToTable("Contract");
             modelBuilder.Entity<ApplicationUserToken>().ToTable("ApplicationUserToken");
+            modelBuilder.Entity<SystemConfig>().ToTable("SystemConfig");
             #endregion
 
             #region Configure Fluent Api

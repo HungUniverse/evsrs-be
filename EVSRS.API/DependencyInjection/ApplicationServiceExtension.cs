@@ -43,6 +43,7 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<IReturnSettlementRepository, ReturnSettlementRepository>();
             services.AddScoped<IContractRepository, ContractRepository>();
             services.AddScoped<IIdentifyDocumentRepository, IdentifyDocumentRepository>();
+            services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 
         }
         public static void AddServices(this IServiceCollection services)
@@ -66,6 +67,7 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<IReturnService, ReturnService>();
             services.AddScoped<IIdentifyDocumentService, IdentifyDocumentService>();
             services.AddScoped<IContractService, ContractService>();
+            services.AddScoped<ISystemConfigService, SystemConfigService>();
 
 
 
