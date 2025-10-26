@@ -44,14 +44,11 @@ public class SepayService : ISepayService
 
     public async Task ProcessPaymentWebhookAsync(SepayWebhookPayload payload, string authHeader)
     {
-        _logger.LogInformation("SePay webhook received. Auth header: {AuthHeader}", authHeader);
-        _logger.LogInformation("Expected API key format: Apikey {{ApiKey}}");
-        _logger.LogInformation("Configured SePay API key: {ApiKey}", _sepaySettings.ApiKey?.Substring(0, Math.Min(10, _sepaySettings.ApiKey.Length)) + "...");
-        
+
         // Debug: Log full SePay settings to ensure they're loaded correctly
-        _logger.LogInformation("SePay Settings - ApiKey: {HasApiKey}, BaseUri: {BaseUri}, AccountNumber: {AccountNumber}", 
-            !string.IsNullOrEmpty(_sepaySettings.ApiKey), 
-            _sepaySettings.ApiBaseUri, 
+        _logger.LogInformation("SePay Settings - ApiKey: {HasApiKey}, BaseUri: {BaseUri}, AccountNumber: {AccountNumber}",
+            !string.IsNullOrEmpty(_sepaySettings.ApiKey),
+            _sepaySettings.ApiBaseUri,
             _sepaySettings.AccountNumber);
 
         if (!ValidateAuthHeader(authHeader))
@@ -63,7 +60,7 @@ public class SepayService : ISepayService
         var paymentCodeOrOrderCode = ExtractPaymentCodeFromContent(payload.content);
         _logger.LogInformation("Payment content: {Content}", payload.content);
         _logger.LogInformation("Extracted payment code: {PaymentCode}", paymentCodeOrOrderCode);
-        
+
         if (string.IsNullOrEmpty(paymentCodeOrOrderCode))
         {
             _logger.LogError("No payment code found in payment content: {Content}", payload.content);
@@ -72,8 +69,7 @@ public class SepayService : ISepayService
         }
 
         // Try to find order by payment code or order code
-        var order = await FindOrderByPaymentCodeOrOrderCode(paymentCodeOrOrderCode, payload);
-        
+        var order = await _unitOfWork.OrderRepository.GetByCodeAsync(paymentCodeOrOrderCode);
         if (order == null)
         {
             _logger.LogError("No order found for payment code: {PaymentCode}", paymentCodeOrOrderCode);
@@ -130,7 +126,7 @@ public class SepayService : ISepayService
         else
         {
             // Thanh toán full
-            if (order.Type == OrderType.WARRANTY)
+            if (order.Type == OrderType.RENTAL)
             {
                 order.Status = OrderBookingStatus.CONFIRMED;
                 order.PaymentStatus = PaymentStatus.PAID_FULL;
@@ -256,167 +252,47 @@ public class SepayService : ISepayService
 
     private bool ValidateAuthHeader(string authHeader)
     {
-        _logger.LogDebug("Validating auth header: {AuthHeader}", authHeader);
-        
-        // Handle null or empty auth header
-        if (string.IsNullOrEmpty(authHeader))
-        {
-            _logger.LogWarning("Auth header is null or empty");
-            return false;
-        }
-
-        var expectedHeader = $"Apikey {_sepaySettings.ApiKey}";
-        _logger.LogDebug("Expected header: {ExpectedHeader}", expectedHeader);
-        
-        // Try multiple possible formats that SePay might use
-        var possibleFormats = new[]
-        {
-            $"Apikey {_sepaySettings.ApiKey}",    // Current format
-            $"ApiKey {_sepaySettings.ApiKey}",    // Alternative capitalization
-            $"Bearer {_sepaySettings.ApiKey}",    // Bearer format
-            _sepaySettings.ApiKey,                // Just the key itself
-            $"API-KEY {_sepaySettings.ApiKey}",   // Another possible format
-        };
-
-        foreach (var format in possibleFormats)
-        {
-            if (authHeader.Equals(format, StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogInformation("Auth header validation successful with format: {Format}", format.Substring(0, Math.Min(20, format.Length)) + "...");
-                return true;
-            }
-        }
-
-        _logger.LogWarning("Auth header validation failed. None of the expected formats matched.");
-        return false;
+        return authHeader == $"ApiKey {_sepaySettings.ApiKey}";
     }
 
-    private string ExtractOrderCodeFromContent(string content)
-    {
-        // Try BK pattern first (current system)
-        var bkMatch = Regex.Match(content, @"BK\d{12}");
-        if (bkMatch.Success)
-        {
-            return bkMatch.Value;
-        }
-        
-        // Fallback to legacy ORD pattern
-        var ordMatch = Regex.Match(content, @"ORD\d{7}");
-        return ordMatch.Success ? ordMatch.Value : null;
-    }
 
     private string? ExtractPaymentCodeFromContent(string content)
     {
-        _logger.LogDebug("Extracting payment code from content: {Content}", content);
-        
-        // Try multiple patterns to extract payment/order codes
-        var patterns = new[]
-        {
-            @"BK\d{12}",        // Order code pattern like BK202510241089 (highest priority)
-            @"TF\w+BK\d{12}",   // Full pattern: payment code + order code
-            @"BK\d{8,14}",      // Flexible BK pattern (8-14 digits)
-            @"TF\w+",           // Payment code pattern like TF6654849BK202510247208
-            @"ORD\d{7}",        // Legacy order code pattern (if still used)
-        };
-
-        foreach (var pattern in patterns)
-        {
-            var match = Regex.Match(content, pattern);
-            if (match.Success)
-            {
-                _logger.LogDebug("Found code using pattern '{Pattern}': {Code}", pattern, match.Value);
-                
-                // If we found the combined pattern (TF...BK...), extract just the order part
-                if (pattern == @"TF\w+BK\d{12}")
-                {
-                    var orderMatch = Regex.Match(match.Value, @"BK\d{12}");
-                    if (orderMatch.Success)
-                    {
-                        _logger.LogDebug("Extracted order code from combined pattern: {OrderCode}", orderMatch.Value);
-                        return orderMatch.Value;
-                    }
-                }
-
-                // Special handling for TF codes that might contain embedded BK codes
-                if (pattern == @"TF\w+" && match.Value.Contains("BK"))
-                {
-                    var embeddedBkMatch = Regex.Match(match.Value, @"BK\d{8,14}");
-                    if (embeddedBkMatch.Success)
-                    {
-                        _logger.LogDebug("Extracted embedded BK code from TF code: {OrderCode}", embeddedBkMatch.Value);
-                        return embeddedBkMatch.Value;
-                    }
-                }
-                
-                return match.Value;
-            }
-        }
-
-        _logger.LogWarning("No payment/order code found in content: {Content}", content);
-        return null;
+        var match = Regex.Match(content, @"ORD\d{7}");
+        return match.Success ? match.Value : null;
     }
 
-    private async Task<OrderBooking?> FindOrderByPaymentCodeOrOrderCode(string codeToFind, SepayWebhookPayload payload)
-    {
-        _logger.LogDebug("Finding order by code: {Code}", codeToFind);
 
-        // First try to find by order code (direct match)
-        if (codeToFind.StartsWith("BK") || codeToFind.StartsWith("ORD"))
-        {
-            _logger.LogInformation("Searching for order by order code: {OrderCode}", codeToFind);
-            var orderByCode = await _unitOfWork.OrderRepository.GetByCodeAsync(codeToFind);
-            if (orderByCode != null)
-            {
-                _logger.LogInformation("Found order by order code: {OrderCode} -> Order ID: {OrderId}", codeToFind, orderByCode.Id);
-                return orderByCode;
-            }
-            else
-            {
-                _logger.LogWarning("No order found with code: {OrderCode}", codeToFind);
-            }
-        }
 
-        // If it's a payment code (TF...) or we couldn't find by order code,
-        // try to find by amount and recent timestamp
-        if (codeToFind.StartsWith("TF") || string.IsNullOrEmpty(codeToFind))
-        {
-            _logger.LogInformation("Searching for order by amount and timestamp. PaymentCode: {PaymentCode}, Amount: {Amount}", 
-                codeToFind, payload.transferAmount);
-            
-            var order = await FindOrderByAmountAndTimestamp((decimal)payload.transferAmount, payload.transactionDate);
-            if (order != null)
-            {
-                _logger.LogInformation("Found order by amount and timestamp: {OrderCode} -> Order ID: {OrderId}", order.Code, order.Id);
-                return order;
-            }
-            else
-            {
-                _logger.LogWarning("No order found by amount {Amount} and timestamp {TransactionDate}", 
-                    payload.transferAmount, payload.transactionDate);
-            }
-        }
-        
-        _logger.LogError("Could not find order for code: {Code}, trying all pending orders as last resort", codeToFind);
-        
-        // Last resort: Get all pending orders and log them for debugging
-        var pendingOrders = await GetRecentPendingOrders();
-        _logger.LogInformation("Found {Count} total pending orders for debugging:", pendingOrders.Count);
-        
-        foreach (var pendingOrder in pendingOrders.Take(5)) // Log first 5 for debugging
-        {
-            _logger.LogInformation("Pending Order: Code={Code}, Amount={Amount}, DepositAmount={DepositAmount}, Status={Status}", 
-                pendingOrder.Code, pendingOrder.TotalAmount, pendingOrder.DepositAmount, pendingOrder.PaymentStatus);
-        }
-        
-        return null;
-    }
+
+    // private async Task<OrderBooking?> FindOrderByPaymentCodeOrOrderCode(string codeToFind, SepayWebhookPayload payload)
+    // {
+    //     _logger.LogDebug("Finding order by code: {Code}", codeToFind);
+
+    //     // First try to find by order code (direct match)
+    //     if (codeToFind.StartsWith("BK") || codeToFind.StartsWith("ORD"))
+    //     {
+    //         _logger.LogInformation("Searching for order by order code: {OrderCode}", codeToFind);
+    //         var orderByCode = await _unitOfWork.OrderRepository.GetByCodeAsync(codeToFind);
+    //         if (orderByCode != null)
+    //         {
+    //             _logger.LogInformation("Found order by order code: {OrderCode} -> Order ID: {OrderId}", codeToFind, orderByCode.Id);
+    //             return orderByCode;
+    //         }
+    //         else
+    //         {
+    //             _logger.LogWarning("No order found with code: {OrderCode}", codeToFind);
+    //         }
+    //     }
+    //     return null;
+    // }
 
     private async Task<OrderBooking?> FindOrderByAmountAndTimestamp(decimal amount, string? transactionDate)
     {
         try
         {
             _logger.LogDebug("Finding order by amount: {Amount} and date: {Date}", amount, transactionDate);
-            
+
             // Parse transaction date if available
             DateTime searchDate = DateTime.UtcNow;
             if (!string.IsNullOrEmpty(transactionDate))
@@ -430,23 +306,23 @@ public class SepayService : ISepayService
             // Search for orders within a time window (±2 hours) with matching amount
             var startTime = searchDate.AddHours(-2);
             var endTime = searchDate.AddHours(2);
-            
-            _logger.LogDebug("Searching orders between {StartTime} and {EndTime} with amount {Amount}", 
+
+            _logger.LogDebug("Searching orders between {StartTime} and {EndTime} with amount {Amount}",
                 startTime, endTime, amount);
 
             // TODO: This requires a method in OrderRepository to search by amount and date range
             // For now, we'll implement a basic search
-            
+
             // As a temporary workaround, we could get all recent pending orders
             // and filter by amount (this is not efficient for production)
             var recentOrders = await GetRecentPendingOrders();
-            
+
             foreach (var order in recentOrders)
             {
                 // Check if amounts match (considering deposit vs full payment)
                 if (await DoesAmountMatch(order, amount))
                 {
-                    _logger.LogInformation("Found matching order by amount: {OrderCode}, Amount: {Amount}", 
+                    _logger.LogInformation("Found matching order by amount: {OrderCode}, Amount: {Amount}",
                         order.Code, amount);
                     return order;
                 }
@@ -472,7 +348,7 @@ public class SepayService : ISepayService
                 {
                     return Math.Abs(paymentAmount - depositAmount) < 1000; // Allow small difference (VND)
                 }
-                
+
                 if (decimal.TryParse(order.TotalAmount, out var totalAmount))
                 {
                     var calculatedDeposit = totalAmount * 0.3m;
@@ -518,7 +394,7 @@ public class SepayService : ISepayService
         try
         {
             _logger.LogInformation("Creating transaction from webhook for order {OrderId}", orderId);
-            
+
             var transactionRequest = new TransactionRequestDto
             {
                 OrderBookingId = orderId,

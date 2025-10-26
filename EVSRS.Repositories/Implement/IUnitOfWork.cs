@@ -20,6 +20,7 @@ namespace EVSRS.Repositories.Implement
         IReturnSettlementRepository ReturnSettlementRepository { get; }
         IContractRepository ContractRepository { get; }
         IIdentifyDocumentRepository IdentifyDocumentRepository { get; }
+        ISystemConfigRepository SystemConfigRepository { get; }
 
         int SaveChanges();
         Task<int> SaveChangesAsync();

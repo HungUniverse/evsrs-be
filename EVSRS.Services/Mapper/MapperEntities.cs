@@ -10,6 +10,7 @@ using EVSRS.BusinessObjects.DTO.HandoverInspectionDto;
 using EVSRS.BusinessObjects.DTO.OrderBookingDto;
 using EVSRS.BusinessObjects.DTO.ModelDto;
 using EVSRS.BusinessObjects.DTO.ReturnSettlementDto;
+using EVSRS.BusinessObjects.DTO.SystemConfigDto;
 using EVSRS.BusinessObjects.DTO.TokenDto;
 using EVSRS.BusinessObjects.DTO.TransactionDto;
 using EVSRS.BusinessObjects.DTO.UserDto;
@@ -116,6 +117,11 @@ namespace EVSRS.Services.Mapper
             #region IdentifyDocument Mapper
             CreateMap<IdentifyDocument, IdentifyDocumentResponseDto>().ReverseMap();
             CreateMap<IdentifyDocument, IdentifyDocumentRequestDto>().ReverseMap();
+            #endregion
+
+            #region SystemConfig Mapper
+            CreateMap<SystemConfig, SystemConfigResponseDto>().ReverseMap();
+            CreateMap<SystemConfig, SystemConfigRequestDto>().ReverseMap();
             #endregion
         }
     }
