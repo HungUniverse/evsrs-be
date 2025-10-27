@@ -15,6 +15,9 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Discount { get; set; }
         public string? Total { get; set; }
         public string? Notes { get; set; }
+        public string? PaymentStatus { get; set; } = "PENDING"; // PENDING, PAID, WAIVED
+        public string? PaymentMethod { get; set; } // CASH, SEPAY, CARD
+        public DateTime? PaymentDate { get; set; }
 
         public OrderBooking? OrderBooking { get; set; }
         public virtual ICollection<SettlementItem> SettlementItems { get; set; } = new List<SettlementItem>();

@@ -45,21 +45,16 @@ public class SepayService : ISepayService
     public async Task ProcessPaymentWebhookAsync(SepayWebhookPayload payload, string authHeader)
     {
 
-        // Debug: Log full SePay settings to ensure they're loaded correctly
-        _logger.LogInformation("SePay Settings - ApiKey: {HasApiKey}, BaseUri: {BaseUri}, AccountNumber: {AccountNumber}",
-            !string.IsNullOrEmpty(_sepaySettings.ApiKey),
-            _sepaySettings.ApiBaseUri,
-            _sepaySettings.AccountNumber);
+        
 
         if (!ValidateAuthHeader(authHeader))
         {
-            _logger.LogError("API key validation failed. Received header: {AuthHeader}", authHeader);
             throw new ErrorException(StatusCodes.Status401Unauthorized, ApiCodes.UNAUTHORIZED, "Invalid API key");
         }
 
+
         var paymentCodeOrOrderCode = ExtractPaymentCodeFromContent(payload.content);
-        _logger.LogInformation("Payment content: {Content}", payload.content);
-        _logger.LogInformation("Extracted payment code: {PaymentCode}", paymentCodeOrOrderCode);
+        var isRemainingPayment = payload.content.Contains("REMAINING");
 
         if (string.IsNullOrEmpty(paymentCodeOrOrderCode))
         {
@@ -68,7 +63,6 @@ public class SepayService : ISepayService
                 "No payment code found in payment content");
         }
 
-        // Try to find order by payment code or order code
         var order = await _unitOfWork.OrderRepository.GetByCodeAsync(paymentCodeOrOrderCode);
         if (order == null)
         {
@@ -87,7 +81,7 @@ public class SepayService : ISepayService
         if (order == null) return;
 
         // Create transaction record
-        await CreateTransactionFromWebhook(payload, order.Id, order.Code);
+        await CreateTransactionFromWebhook(payload, order.Id, order.Code, order.UserId);
 
         if (order.User == null && !string.IsNullOrEmpty(order.UserId))
         {
@@ -96,7 +90,7 @@ public class SepayService : ISepayService
 
         if (order.PaymentType == PaymentType.DEPOSIT)
         {
-            if (order.PaymentStatus == PaymentStatus.PENDING)
+            if (order.PaymentStatus == PaymentStatus.PENDING && !isRemainingPayment)
             {
                 // Lần đầu thanh toán (cọc)
                 order.Status = OrderBookingStatus.CONFIRMED;
@@ -109,10 +103,10 @@ public class SepayService : ISepayService
 
                 // TODO: Send payment receipt and notification
             }
-            else if (order.PaymentStatus == PaymentStatus.PAID_DEPOSIT)
+            else if (order.PaymentStatus == PaymentStatus.PAID_DEPOSIT && isRemainingPayment)
             {
                 // Thanh toán phần còn lại
-                order.Status = OrderBookingStatus.CONFIRMED; // Ready for checkout
+                order.Status = OrderBookingStatus.READY_FOR_CHECKOUT; // Ready for checkout
                 order.PaymentStatus = PaymentStatus.PAID_DEPOSIT_COMPLETED;
                 order.UpdatedAt = DateTime.UtcNow;
                 order.UpdatedBy = "SepayWebhook";
@@ -195,6 +189,67 @@ public class SepayService : ISepayService
             OrderBooking = null // This will be populated by the calling service
         };
     }
+
+    public async Task<SepayQrResponse> CreateRemainingPaymentQrAsync(string orderId)
+    {
+        var order = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(orderId);
+        _validationService.CheckNotFound(order, $"Order with ID {orderId} not found");
+
+        if (order == null)
+        {
+            return new SepayQrResponse { QrUrl = "" };
+        }
+
+        // Validate order is in correct status for remaining payment
+        _validationService.CheckBadRequest(
+            order.PaymentStatus != PaymentStatus.PAID_DEPOSIT,
+            "Order must be in PAID_DEPOSIT status to generate remaining payment QR"
+        );
+
+        _validationService.CheckBadRequest(
+            order.PaymentType != PaymentType.DEPOSIT,
+            "Order must be deposit type to have remaining payment"
+        );
+
+        // Calculate remaining amount
+        decimal remainingAmount = 0;
+        if (!string.IsNullOrEmpty(order.RemainingAmount))
+        {
+            if (!decimal.TryParse(order.RemainingAmount, out remainingAmount))
+            {
+                // Fallback calculation
+                var totalAmount = decimal.Parse(order.TotalAmount ?? "0");
+                var depositAmount = decimal.Parse(order.DepositAmount ?? "0");
+                remainingAmount = totalAmount - depositAmount;
+            }
+        }
+        else
+        {
+            // Fallback calculation
+            var totalAmount = decimal.Parse(order.TotalAmount ?? "0");
+            var depositAmount = decimal.Parse(order.DepositAmount ?? "0");
+            remainingAmount = totalAmount - depositAmount;
+        }
+
+        _validationService.CheckBadRequest(
+            remainingAmount <= 0,
+            "No remaining amount to pay"
+        );
+
+        // Generate Sepay QR URL for remaining payment
+        var qrUrl = GenerateSepayQrUrl(
+           accountNumber: _sepaySettings.AccountNumber,
+           bankCode: _sepaySettings.BankCode,
+           amount: remainingAmount,
+           description: $"{order.Code}REMAINING", // Add suffix to distinguish from deposit payment
+           template: "qronly");
+
+        return new SepayQrResponse
+        {
+            QrUrl = qrUrl,
+            OrderBooking = null // This will be populated by the calling service
+        };
+    }
     private string GenerateSepayQrUrl(string accountNumber, string bankCode, decimal? amount, string description,
             string template)
     {
@@ -252,14 +307,98 @@ public class SepayService : ISepayService
 
     private bool ValidateAuthHeader(string authHeader)
     {
-        return authHeader == $"ApiKey {_sepaySettings.ApiKey}";
+        if (string.IsNullOrEmpty(authHeader) || string.IsNullOrEmpty(_sepaySettings.ApiKey))
+        {
+            _logger.LogWarning("Auth header or API key is empty. AuthHeader: {AuthHeader}, HasApiKey: {HasApiKey}", 
+                authHeader, !string.IsNullOrEmpty(_sepaySettings.ApiKey));
+            return false;
+        }
+
+        // Log for debugging
+        _logger.LogInformation("Validating auth header. Expected API Key: {ExpectedApiKey}, Received: {ReceivedHeader}", 
+            _sepaySettings.ApiKey, authHeader);
+
+        // Handle different possible formats
+        var possibleFormats = new[]
+        {
+            $"ApiKey {_sepaySettings.ApiKey}",      // Original format
+            $"Bearer {_sepaySettings.ApiKey}",      // Bearer format (common)
+            _sepaySettings.ApiKey,                  // Direct API key
+            $"Token {_sepaySettings.ApiKey}",       // Token format
+        };
+
+        foreach (var format in possibleFormats)
+        {
+            if (string.Equals(authHeader, format, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Auth header validation successful with format: {Format}", format);
+                return true;
+            }
+        }
+
+        _logger.LogWarning("Auth header validation failed. None of the expected formats matched.");
+        return false;
     }
 
 
     private string? ExtractPaymentCodeFromContent(string content)
     {
-        var match = Regex.Match(content, @"ORD\d{7}");
-        return match.Success ? match.Value : null;
+        // Look for order code with optional suffix (like ORD1234567-REMAINING)
+        var match = Regex.Match(content, @"ORD\d{7}(?:-\w+)?");
+        if (match.Success)
+        {
+            // Remove suffix if present to get the base order code
+            var orderCode = match.Value;
+            if (orderCode.Contains("-"))
+            {
+                orderCode = orderCode.Split('-')[0];
+            }
+            return orderCode;
+        }
+        return null;
+    }
+
+    private DateTime ParseTransactionDateToUtc(string? transactionDateString)
+    {
+        if (string.IsNullOrEmpty(transactionDateString))
+        {
+            _logger.LogWarning("Transaction date is null or empty, using current UTC time");
+            return DateTime.UtcNow;
+        }
+
+        try
+        {
+            if (DateTime.TryParse(transactionDateString, out var parsedDate))
+            {
+                // If the parsed date doesn't have timezone info, treat it as UTC
+                if (parsedDate.Kind == DateTimeKind.Unspecified)
+                {
+                    _logger.LogDebug("Converting unspecified datetime {Date} to UTC", parsedDate);
+                    return DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
+                }
+                // If it's already UTC, return as-is
+                else if (parsedDate.Kind == DateTimeKind.Utc)
+                {
+                    return parsedDate;
+                }
+                // If it's local time, convert to UTC
+                else
+                {
+                    _logger.LogDebug("Converting local datetime {Date} to UTC", parsedDate);
+                    return parsedDate.ToUniversalTime();
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Failed to parse transaction date: {DateString}, using current UTC time", transactionDateString);
+                return DateTime.UtcNow;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error parsing transaction date: {DateString}, using current UTC time", transactionDateString);
+            return DateTime.UtcNow;
+        }
     }
 
 
@@ -389,7 +528,7 @@ public class SepayService : ISepayService
         }
     }
 
-    private async Task CreateTransactionFromWebhook(SepayWebhookPayload payload, string orderId, string? orderCode)
+    private async Task CreateTransactionFromWebhook(SepayWebhookPayload payload, string orderId, string? orderCode, string? userId)
     {
         try
         {
@@ -398,9 +537,10 @@ public class SepayService : ISepayService
             var transactionRequest = new TransactionRequestDto
             {
                 OrderBookingId = orderId,
+                UserId = userId,
                 SepayId = payload.id.ToString(),
                 Gateway = payload.gateway,
-                TransactionDate = DateTime.TryParse(payload.transactionDate, out var transDate) ? transDate : DateTime.UtcNow,
+                TransactionDate = ParseTransactionDateToUtc(payload.transactionDate),
                 AccountNumber = payload.accountNumber,
                 Code = orderCode,
                 Content = payload.content,
