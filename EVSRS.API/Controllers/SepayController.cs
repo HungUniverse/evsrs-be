@@ -84,5 +84,21 @@ namespace EVSRS.API.Controllers
             "QR code generated successfully"
         ));
     }
+
+    /// <summary>
+    /// Generate QR code for remaining payment after deposit
+    /// </summary>
+    [HttpGet("generate-remaining-qr/{orderId}")]
+    public async Task<IActionResult> GenerateRemainingPaymentQr(string orderId)
+    {
+        var qrResponse = await _sepayService.CreateRemainingPaymentQrAsync(orderId);
+
+        return Ok(new ResponseModel<SepayQrResponse>(
+            StatusCodes.Status201Created,
+            ApiCodes.SUCCESS,
+            qrResponse,
+            "Remaining payment QR code generated successfully"
+        ));
+    }
     }
 }

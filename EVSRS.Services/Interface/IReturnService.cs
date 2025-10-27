@@ -1,5 +1,6 @@
 using EVSRS.BusinessObjects.DTO.ReturnSettlementDto;
 using EVSRS.BusinessObjects.DTO.HandoverInspectionDto;
+using EVSRS.BusinessObjects.DTO.OrderBookingDto;
 
 namespace EVSRS.Services.Interface;
 
@@ -13,4 +14,9 @@ public interface IReturnService
     Task<List<ReturnSettlementResponseDto>> GetReturnSettlementsByDateRangeAsync(DateTime startDate, DateTime endDate);
     Task<HandoverInspectionResponseDto> GetReturnInspectionByOrderIdAsync(string orderBookingId);
     Task DeleteReturnSettlementAsync(string id);
+    
+    // New methods for complete return flow
+    Task<OrderBookingResponseDto> CompleteReturnProcessAsync(CompleteReturnRequestDto request);
+    Task<ReturnSettlementResponseDto> ProcessReturnSettlementPaymentAsync(ReturnSettlementPaymentRequestDto request);
+    Task<string> GenerateSepayQrForReturnSettlementAsync(string returnSettlementId);
 }

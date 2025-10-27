@@ -206,10 +206,60 @@ namespace EVSRS.BusinessObjects.DBContext
             // Configure many-to-many relationship between Depot and OrderBooking
             // Removed as OrderBooking now has direct foreign key to Depot
             #endregion
+
+            #region Configure DateTime to UTC
+            // Configure all DateTime properties to be stored as UTC in PostgreSQL
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+                            v => v.ToUniversalTime(),
+                            v => DateTime.SpecifyKind(v, DateTimeKind.Utc)));
+                    }
+                }
+            }
+            #endregion
             
             // Seed initial data
             SeedData.Seed(modelBuilder);
 
+        }
+
+        public override int SaveChanges()
+        {
+            EnsureUtcDateTime();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            EnsureUtcDateTime();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void EnsureUtcDateTime()
+        {
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+            foreach (var entry in entries)
+            {
+                foreach (var property in entry.Properties)
+                {
+                    if (property.Metadata.ClrType == typeof(DateTime) || property.Metadata.ClrType == typeof(DateTime?))
+                    {
+                        if (property.CurrentValue is DateTime dateTime && dateTime.Kind != DateTimeKind.Utc)
+                        {
+                            property.CurrentValue = dateTime.Kind == DateTimeKind.Unspecified 
+                                ? DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)
+                                : dateTime.ToUniversalTime();
+                        }
+                    }
+                }
+            }
         }
 
     }
