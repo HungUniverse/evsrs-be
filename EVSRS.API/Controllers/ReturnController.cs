@@ -1,5 +1,6 @@
 using EVSRS.BusinessObjects.DTO.HandoverInspectionDto;
 using EVSRS.BusinessObjects.DTO.ReturnSettlementDto;
+using EVSRS.BusinessObjects.DTO.OrderBookingDto;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -146,6 +147,51 @@ public class ReturnController : ControllerBase
             ApiCodes.SUCCESS,
             null,
             "Return settlement deleted successfully"
+        ));
+    }
+
+    /// <summary>
+    /// Complete return process - change order from IN_USE to RETURNED
+    /// </summary>
+    [HttpPost("complete")]
+    public async Task<IActionResult> CompleteReturnProcess([FromBody] CompleteReturnRequestDto request)
+    {
+        var result = await _returnService.CompleteReturnProcessAsync(request);
+        return Ok(new ResponseModel<OrderBookingResponseDto>(
+            StatusCodes.Status200OK,
+            ApiCodes.SUCCESS,
+            result,
+            "Return process completed successfully"
+        ));
+    }
+
+    /// <summary>
+    /// Process payment for return settlement
+    /// </summary>
+    [HttpPost("settlement/payment")]
+    public async Task<IActionResult> ProcessReturnSettlementPayment([FromBody] ReturnSettlementPaymentRequestDto request)
+    {
+        var result = await _returnService.ProcessReturnSettlementPaymentAsync(request);
+        return Ok(new ResponseModel<ReturnSettlementResponseDto>(
+            StatusCodes.Status200OK,
+            ApiCodes.SUCCESS,
+            result,
+            "Return settlement payment processed successfully"
+        ));
+    }
+
+    /// <summary>
+    /// Generate SePay QR code for return settlement payment
+    /// </summary>
+    [HttpPost("settlement/{id}/sepay-qr")]
+    public async Task<IActionResult> GenerateSepayQrForReturnSettlement(string id)
+    {
+        var result = await _returnService.GenerateSepayQrForReturnSettlementAsync(id);
+        return Ok(new ResponseModel<string>(
+            StatusCodes.Status200OK,
+            ApiCodes.SUCCESS,
+            result,
+            "SePay QR code generated successfully"
         ));
     }
 }

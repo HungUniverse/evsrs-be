@@ -11,6 +11,9 @@ public class ReturnSettlementResponseDto
     public string? Discount { get; set; }
     public string? Total { get; set; }
     public string? Notes { get; set; }
+    public string? PaymentStatus { get; set; } = "PENDING";
+    public string? PaymentMethod { get; set; }
+    public DateTime? PaymentDate { get; set; }
     
     public List<SettlementItemResponseDto> SettlementItems { get; set; } = new List<SettlementItemResponseDto>();
     

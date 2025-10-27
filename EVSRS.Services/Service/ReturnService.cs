@@ -1,11 +1,13 @@
 using AutoMapper;
 using EVSRS.BusinessObjects.DTO.HandoverInspectionDto;
 using EVSRS.BusinessObjects.DTO.ReturnSettlementDto;
+using EVSRS.BusinessObjects.DTO.OrderBookingDto;
 using EVSRS.BusinessObjects.Entity;
 using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Implement;
 using EVSRS.Repositories.Infrastructure;
 using EVSRS.Services.Interface;
+using EVSRS.Services.ExternalServices.SepayService;
 using Microsoft.AspNetCore.Http;
 
 namespace EVSRS.Services.Service;
@@ -16,17 +18,20 @@ public class ReturnService : IReturnService
     private readonly IMapper _mapper;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IValidationService _validationService;
+    private readonly ISepayService _sepayService;
 
     public ReturnService(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
-        IValidationService validationService)
+        IValidationService validationService,
+        ISepayService sepayService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _httpContextAccessor = httpContextAccessor;
         _validationService = validationService;
+        _sepayService = sepayService;
     }
 
     public async Task<HandoverInspectionResponseDto> CreateReturnInspectionAsync(HandoverInspectionRequestDto request)
@@ -169,6 +174,115 @@ public class ReturnService : IReturnService
 
         await _unitOfWork.ReturnSettlementRepository.DeleteAsync(settlement!);
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<OrderBookingResponseDto> CompleteReturnProcessAsync(CompleteReturnRequestDto request)
+    {
+        await _validationService.ValidateAndThrowAsync(request);
+
+        var orderBooking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(request.OrderBookingId);
+        _validationService.CheckNotFound(orderBooking, "Order booking not found");
+
+        // Validate order is in IN_USE status
+        _validationService.CheckBadRequest(
+            orderBooking?.Status != OrderBookingStatus.IN_USE,
+            "Order must be in IN_USE status to complete return"
+        );
+
+        // Check if return inspection exists
+        var returnInspection = await _unitOfWork.HandoverInspectionRepository
+            .GetHandoverInspectionByOrderAndTypeAsync(request.OrderBookingId, "RETURN");
+        _validationService.CheckNotFound(returnInspection, "Return inspection must be completed first");
+
+        // Update order status to RETURNED
+        orderBooking!.Status = OrderBookingStatus.RETURNED;
+        orderBooking.UpdatedAt = DateTime.UtcNow;
+        orderBooking.UpdatedBy = GetCurrentUserName();
+
+        // Update car status back to AVAILABLE
+        if (orderBooking.CarEvs != null)
+        {
+            orderBooking.CarEvs.Status = CarEvStatus.AVAILABLE;
+            orderBooking.CarEvs.UpdatedAt = DateTime.UtcNow;
+            orderBooking.CarEvs.UpdatedBy = GetCurrentUserName();
+            await _unitOfWork.CarEVRepository.UpdateCarEVAsync(orderBooking.CarEvs);
+        }
+
+        await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(orderBooking);
+        await _unitOfWork.SaveChangesAsync();
+
+        return _mapper.Map<OrderBookingResponseDto>(orderBooking);
+    }
+
+    public async Task<ReturnSettlementResponseDto> ProcessReturnSettlementPaymentAsync(ReturnSettlementPaymentRequestDto request)
+    {
+        await _validationService.ValidateAndThrowAsync(request);
+
+        var settlement = await _unitOfWork.ReturnSettlementRepository.GetReturnSettlementWithItemsAsync(request.ReturnSettlementId);
+        _validationService.CheckNotFound(settlement, "Return settlement not found");
+
+        // Validate payment status
+        _validationService.CheckBadRequest(
+            settlement?.PaymentStatus == "PAID",
+            "Return settlement is already paid"
+        );
+
+        // Update payment information
+        settlement!.PaymentStatus = "PAID";
+        settlement.PaymentMethod = request.PaymentMethod;
+        settlement.PaymentDate = DateTime.UtcNow;
+        settlement.UpdatedAt = DateTime.UtcNow;
+        settlement.UpdatedBy = GetCurrentUserName();
+
+        if (!string.IsNullOrEmpty(request.Notes))
+        {
+            settlement.Notes = string.IsNullOrEmpty(settlement.Notes) 
+                ? request.Notes 
+                : $"{settlement.Notes}\n\nPayment Notes: {request.Notes}";
+        }
+
+        await _unitOfWork.ReturnSettlementRepository.UpdateAsync(settlement);
+
+        // If settlement is paid, mark order as COMPLETED
+        if (settlement.OrderBooking != null)
+        {
+            var orderBooking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(settlement.OrderBookingId!);
+            if (orderBooking?.Status == OrderBookingStatus.RETURNED)
+            {
+                orderBooking.Status = OrderBookingStatus.COMPLETED;
+                orderBooking.UpdatedAt = DateTime.UtcNow;
+                orderBooking.UpdatedBy = GetCurrentUserName();
+                await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(orderBooking);
+            }
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return _mapper.Map<ReturnSettlementResponseDto>(settlement);
+    }
+
+    public async Task<string> GenerateSepayQrForReturnSettlementAsync(string returnSettlementId)
+    {
+        var settlement = await _unitOfWork.ReturnSettlementRepository.GetReturnSettlementWithItemsAsync(returnSettlementId);
+        _validationService.CheckNotFound(settlement, "Return settlement not found");
+
+        _validationService.CheckBadRequest(
+            settlement?.PaymentStatus == "PAID",
+            "Return settlement is already paid"
+        );
+
+        _validationService.CheckBadRequest(
+            string.IsNullOrEmpty(settlement?.Total) || decimal.Parse(settlement.Total) <= 0,
+            "Invalid settlement total amount"
+        );
+
+        // Create a temporary order-like code for settlement payment
+        var settlementCode = $"SETTLEMENT_{returnSettlementId[..8]}";
+        
+        // For now, return the settlement code - this would integrate with SePay API
+        // You can extend this to call actual SePay QR generation service
+        
+        return settlementCode;
     }
 
     private string GetCurrentUserName()
