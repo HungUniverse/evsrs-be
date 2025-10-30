@@ -12,8 +12,8 @@ namespace EVSRS.Services.Interface
     {
         Task<PaginatedList<TransactionResponseDto>> GetAllTransactionsAsync(int pageNumber, int pageSize);
         Task<TransactionResponseDto> GetTransactionByIdAsync(string id);
-        Task<TransactionResponseDto> GetTransactionByBookingIdAsync(string bookingId);
-        Task<TransactionResponseDto> GetTransactionByUserIdAsync(string userId);
+        Task<List<TransactionResponseDto>> GetTransactionsByUserIdAsync(string userId);
+        Task<List<TransactionResponseDto>> GetTransactionsByOrderIdAsync(string orderId);
         Task CreateTransactionAsync(TransactionRequestDto transaction);
         Task UpdateTransactionAsync(string id, TransactionRequestDto transactionRequestDto);
         Task DeleteTransactionAsync(string id);
