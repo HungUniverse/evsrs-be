@@ -14,12 +14,12 @@ namespace EVSRS.Repositories.Interface
     {
         Task<PaginatedList<Transaction>> GetTransactionList();
         Task<Transaction?> GetTransactionByIdAsync(string id);
-        Task<Transaction?> GetTransactionByBookingIdAsync(string bookingId);
-        Task<Transaction?> GetTransactionByUserIdAsync(string userId);
+        Task <List<Transaction>> GetTransactionsByUserIdAsync(string userId);
+        Task<List<Transaction>> GetTransactionsByOrderIdAsync(string orderId);
         Task CreateTransactionAsync(Transaction transaction);
         Task UpdateTransactionAsync(Transaction transaction);
         Task DeleteTransactionAsync(Transaction transaction);
-        Task<Transaction?> GetLatestTransactionByOrderIdAsync(string orderId);
+        
 
     }
 }

@@ -30,6 +30,8 @@ namespace EVSRS.Repositories.Repository
             await DeleteAsync(transaction);
         }
 
+        
+
         public async Task<Transaction?> GetTransactionByBookingIdAsync(string bookingId)
         {
             var response = await _dbSet.Where(x => !x.IsDeleted && x.OrderBookingId == bookingId).FirstOrDefaultAsync();
@@ -42,25 +44,24 @@ namespace EVSRS.Repositories.Repository
             return response;
         }
 
-        public async Task<Transaction?> GetTransactionByUserIdAsync(string userId)
-        {
-            var response = await _dbSet.Where(x => !x.IsDeleted && x.UserId == userId).FirstOrDefaultAsync();
-            return response;
-        }
-
-        public async Task<Transaction?> GetLatestTransactionByOrderIdAsync(string orderId)
-        {
-            var response = await _dbSet
-                .Where(x => !x.IsDeleted && x.OrderBookingId == orderId)
-                .OrderByDescending(x => x.CreatedAt)
-                .FirstOrDefaultAsync();
-            return response;
-        }
+       
 
         public async Task<PaginatedList<Transaction>> GetTransactionList()
         {
             var respone = await _dbSet.ToListAsync();
             return PaginatedList<Transaction>.Create(respone, 1, respone.Count);
+        }
+
+        public async Task<List<Transaction>> GetTransactionsByOrderIdAsync(string orderId)
+        {
+            var response = await _dbSet.Where(x => !x.IsDeleted && x.OrderBookingId == orderId).ToListAsync();
+            return response;
+        }
+
+        public async Task<List<Transaction>> GetTransactionsByUserIdAsync(string userId)
+        {
+            var response = await _dbSet.Where(x => !x.IsDeleted && x.UserId == userId).ToListAsync();
+            return response;
         }
 
         public async Task UpdateTransactionAsync(Transaction transaction)
