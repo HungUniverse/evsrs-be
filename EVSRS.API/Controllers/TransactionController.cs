@@ -51,45 +51,27 @@ namespace EVSRS.API.Controllers
             ));
         }
 
-        [HttpGet("booking/{bookingId}")]
-        public async Task<IActionResult> GetTransactionByBookingId(string bookingId)
+        [HttpGet("order/{orderId}")]
+        public async Task<IActionResult> GetTransactionsByOrderId(string orderId)
         {
-            var transaction = await _TransactionService.GetTransactionByBookingIdAsync(bookingId);
-            if (transaction == null)
-            {
-                return NotFound(new ResponseModel<string>(
-                    StatusCodes.Status404NotFound,
-                    ApiCodes.NOT_FOUND,
-                    null,
-                    "Transaction not found."
-                ));
-            }
-            return Ok(new ResponseModel<TransactionResponseDto>(
+            var transactions = await _TransactionService.GetTransactionsByOrderIdAsync(orderId);
+            return Ok(new ResponseModel<List<TransactionResponseDto>>(
                 StatusCodes.Status200OK,
                 ApiCodes.SUCCESS,
-                transaction,
-                "Get transaction successfully!"
+                transactions,
+                "Get transactions by order ID successfully!"
             ));
         }
 
         [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetTransactionByUserId(string userId)
+        public async Task<IActionResult> GetTransactionsByUserId(string userId)
         {
-            var transaction = await _TransactionService.GetTransactionByUserIdAsync(userId);
-            if (transaction == null)
-            {
-                return NotFound(new ResponseModel<string>(
-                    StatusCodes.Status404NotFound,
-                    ApiCodes.NOT_FOUND,
-                    null,
-                    "Transaction not found."
-                ));
-            }
-            return Ok(new ResponseModel<TransactionResponseDto>(
+            var transactions = await _TransactionService.GetTransactionsByUserIdAsync(userId);
+            return Ok(new ResponseModel<List<TransactionResponseDto>>(
                 StatusCodes.Status200OK,
                 ApiCodes.SUCCESS,
-                transaction,
-                "Get transaction successfully!"
+                transactions,
+                "Get transactions by user ID successfully!"
             ));
         }
 

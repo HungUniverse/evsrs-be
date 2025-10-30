@@ -62,17 +62,7 @@ namespace EVSRS.Services.Service
 
         }
 
-        public async Task<TransactionResponseDto> GetTransactionByBookingIdAsync(string bookingId)
-        {
-            await _validationService.ValidateAndThrowAsync(bookingId);
-            var transaction = await _unitOfWork.TransactionRepository.GetTransactionByBookingIdAsync(bookingId);
-            if (transaction == null)
-            {
-                throw new KeyNotFoundException($"Transaction with booking id {bookingId} not found.");
-            }
-            var transactionDto = _mapper.Map<TransactionResponseDto>(transaction);
-            return transactionDto;
-        }
+      
 
         public async Task<TransactionResponseDto> GetTransactionByIdAsync(string id)
         {
@@ -86,16 +76,18 @@ namespace EVSRS.Services.Service
             return transactionDto;
         }
 
-        public async Task<TransactionResponseDto> GetTransactionByUserIdAsync(string userId)
+        public async Task<List<TransactionResponseDto>> GetTransactionsByOrderIdAsync(string orderId)
         {
-            await _validationService.ValidateAndThrowAsync(userId);
-            var transaction = await _unitOfWork.TransactionRepository.GetTransactionByUserIdAsync(userId);
-            if (transaction == null)
-            {
-                throw new KeyNotFoundException($"Transaction with user id {userId} not found.");
-            }
-            var transactionDto = _mapper.Map<TransactionResponseDto>(transaction);
-            return transactionDto;
+            var transactions = await _unitOfWork.TransactionRepository.GetTransactionsByOrderIdAsync(orderId);
+            var transactionDtos = transactions.Select(t => _mapper.Map<TransactionResponseDto>(t)).ToList();
+            return transactionDtos;
+        }
+
+        public async Task<List<TransactionResponseDto>> GetTransactionsByUserIdAsync(string userId)
+        {
+            var transactions = await _unitOfWork.TransactionRepository.GetTransactionsByUserIdAsync(userId);
+            var transactionDtos = transactions.Select(t => _mapper.Map<TransactionResponseDto>(t)).ToList();
+            return transactionDtos;
         }
 
         public async Task UpdateTransactionAsync(string id, TransactionRequestDto transactionRequestDto)
