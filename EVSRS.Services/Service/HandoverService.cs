@@ -41,8 +41,8 @@ public class HandoverService : IHandoverService
         var orderBooking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(request.OrderBookingId);
         _validationService.CheckNotFound(orderBooking, "Order booking not found");
         _validationService.CheckBadRequest(
-            orderBooking?.Status != OrderBookingStatus.CONFIRMED,
-            "Order must be in CONFIRMED status to create contract"
+            orderBooking?.Status != OrderBookingStatus.READY_FOR_CHECKOUT,
+            "Order must be in READY_FOR_CHECKOUT status to create contract"
         );
 
         var contract = _mapper.Map<Contract>(request);
@@ -76,8 +76,8 @@ public class HandoverService : IHandoverService
         if (request.Type == "HANDOVER")
         {
             _validationService.CheckBadRequest(
-                orderBooking?.Status != OrderBookingStatus.CONFIRMED,
-                "Order must be in CONFIRMED status for handover"
+                orderBooking?.Status != OrderBookingStatus.READY_FOR_CHECKOUT,
+                "Order must be in READY_FOR_CHECKOUT status for handover"
             );
         }
         else if (request.Type == "RETURN")
