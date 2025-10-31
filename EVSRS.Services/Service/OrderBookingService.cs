@@ -105,8 +105,8 @@ namespace EVSRS.Services.Service
             _validationService.CheckNotFound(booking, $"Order booking with ID {id} not found");
 
             _validationService.CheckBadRequest(
-                booking.Status != OrderBookingStatus.CONFIRMED,
-                "Only confirmed bookings can be checked out"
+                booking.Status != OrderBookingStatus.READY_FOR_CHECKOUT,
+                "Only bookings in READY_FOR_CHECKOUT status can be checked out"
             );
 
             _validationService.CheckBadRequest(
