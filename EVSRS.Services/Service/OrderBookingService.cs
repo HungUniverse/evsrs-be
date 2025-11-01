@@ -45,17 +45,26 @@ namespace EVSRS.Services.Service
             var car = await _unitOfWork.CarEVRepository.GetCarEVByIdAsync(carId);
             _validationService.CheckNotFound(car, $"Car with ID {carId} not found");
 
-            var model = await _unitOfWork.ModelRepository.GetModelByIdAsync(car.ModelId);
+            var model = await _unitOfWork.ModelRepository.GetModelByIdAsync(car!.ModelId!);
             _validationService.CheckNotFound(model, $"Car model not found");
 
-            var days = (endDate - startDate).Days;
-            if (days <= 0) days = 1; // Minimum 1 day
-
-            var totalCost = (decimal)(model.Price ?? 0) * days;
-            var discount = (decimal)(model.Sale ?? 0) / 100;
-            var discountAmount = totalCost * discount;
+            // Tính số giờ thuê - làm tròn lên nếu có phút lẻ
+            var duration = endDate - startDate;
+            var totalHours = (int)Math.Ceiling(duration.TotalHours);
+            if (totalHours <= 0) totalHours = 1; // Tối thiểu 1 giờ
             
-            return totalCost - discountAmount;
+            // Ví dụ: 17:10 - 16:00 = 1 giờ 10 phút -> làm tròn thành 2 giờ
+
+            // Giá thuê theo ngày và giảm giá
+            var dailyPrice = (decimal)(model!.Price ?? 0);
+            var discount = (decimal)(model.Sale ?? 0) / 100;
+            var discountedDailyPrice = dailyPrice * (1 - discount);
+
+            // Tính giá thuê theo giờ: (giá_ngày_sau_giảm_giá / 24) * số_giờ
+            var hourlyRate = discountedDailyPrice / 24;
+            var totalCost = hourlyRate * totalHours;
+
+            return totalCost;
         }
 
         public async Task<OrderBookingResponseDto> CancelOrderAsync(string id, string reason)
