@@ -44,17 +44,14 @@ public class SepayService : ISepayService
 
     public async Task ProcessPaymentWebhookAsync(SepayWebhookPayload payload, string authHeader)
     {
-
-        
-
         if (!ValidateAuthHeader(authHeader))
         {
             throw new ErrorException(StatusCodes.Status401Unauthorized, ApiCodes.UNAUTHORIZED, "Invalid API key");
         }
 
-
         var paymentCodeOrOrderCode = ExtractPaymentCodeFromContent(payload.content);
         var isRemainingPayment = payload.content.Contains("REMAINING");
+        var isSettlementPayment = payload.content.Contains("SETTLEMENT_");
 
         if (string.IsNullOrEmpty(paymentCodeOrOrderCode))
         {
@@ -63,6 +60,14 @@ public class SepayService : ISepayService
                 "No payment code found in payment content");
         }
 
+        // Handle settlement payment
+        if (isSettlementPayment)
+        {
+            await ProcessSettlementPayment(payload, paymentCodeOrOrderCode);
+            return;
+        }
+
+        // Handle regular order payment
         var order = await _unitOfWork.OrderRepository.GetByCodeAsync(paymentCodeOrOrderCode);
         if (order == null)
         {
@@ -559,6 +564,137 @@ public class SepayService : ISepayService
         {
             _logger.LogError(ex, "Error creating transaction for order {OrderId}", orderId);
             // Don't throw here - transaction creation failure shouldn't stop payment processing
+        }
+    }
+
+    public async Task<SepayQrResponse> CreateSettlementPaymentQrAsync(CreateSettlementPaymentQrRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("Creating SePay QR for settlement payment {SettlementId}", request.SettlementId);
+
+            // Generate Sepay QR URL using existing method
+            var qrUrl = GenerateSepayQrUrl(
+                accountNumber: _sepaySettings.AccountNumber,
+                bankCode: _sepaySettings.BankCode,
+                amount: request.Amount,
+                description: $"{request.SettlementCode} - {request.Description}",
+                template: "qronly");
+
+            _logger.LogInformation("SePay QR URL for settlement {SettlementId}: {Url}", 
+                request.SettlementId, qrUrl);
+
+            return new SepayQrResponse
+            {
+                QrUrl = qrUrl,
+                OrderBooking = null // Settlement payment, not tied to original order
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating SePay QR for settlement {SettlementId}", request.SettlementId);
+            throw new ErrorException(StatusCodes.Status500InternalServerError, 
+                ApiCodes.INTERNAL_SERVER_ERROR, "Failed to create payment QR code");
+        }
+    }
+
+    private async Task ProcessSettlementPayment(SepayWebhookPayload payload, string settlementCode)
+    {
+        _logger.LogInformation("Processing settlement payment for code: {SettlementCode}", settlementCode);
+
+        try
+        {
+            // Extract settlement ID from code (format: SETTLEMENT_XXXXXXXX)
+            var settlementIdPart = settlementCode.Replace("SETTLEMENT_", "");
+            
+            // Find settlement by partial ID match
+            var settlement = await FindSettlementByCode(settlementIdPart);
+            if (settlement == null)
+            {
+                _logger.LogError("Settlement not found for code: {SettlementCode}", settlementCode);
+                throw new ErrorException(StatusCodes.Status404NotFound, ApiCodes.NOT_FOUND, 
+                    "Settlement not found");
+            }
+
+            // Check if settlement is already paid
+            if (settlement.PaymentStatus == "PAID")
+            {
+                _logger.LogWarning("Settlement {SettlementId} is already paid", settlement.Id);
+                return;
+            }
+
+            // Update settlement payment status
+            settlement.PaymentStatus = "PAID";
+            settlement.PaymentMethod = "SEPAY";
+            settlement.PaymentDate = ParseTransactionDateToUtc(payload.transactionDate);
+            settlement.UpdatedAt = DateTime.UtcNow;
+            settlement.UpdatedBy = "SepayWebhook";
+
+            await _unitOfWork.ReturnSettlementRepository.UpdateAsync(settlement);
+
+            // Create transaction record for settlement payment
+            await CreateSettlementTransactionRecord(payload, settlement);
+
+            // Complete the order if settlement is paid
+            if (settlement.OrderBooking != null)
+            {
+                var orderBooking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(settlement.OrderBookingId!);
+                if (orderBooking?.Status == OrderBookingStatus.RETURNED)
+                {
+                    orderBooking.Status = OrderBookingStatus.COMPLETED;
+                    orderBooking.UpdatedAt = DateTime.UtcNow;
+                    orderBooking.UpdatedBy = "SepayWebhook";
+                    await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(orderBooking);
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Settlement payment processed successfully for {SettlementId}", settlement.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing settlement payment for code: {SettlementCode}", settlementCode);
+            throw;
+        }
+    }
+
+    private async Task<ReturnSettlement?> FindSettlementByCode(string partialId)
+    {
+        // This is a simplified implementation - you might need to add a proper repository method
+        var settlements = await _unitOfWork.ReturnSettlementRepository.GetReturnSettlementsByDateRangeAsync(
+            DateTime.UtcNow.AddDays(-30), DateTime.UtcNow);
+        
+        return settlements.FirstOrDefault(s => s.Id.StartsWith(partialId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task CreateSettlementTransactionRecord(SepayWebhookPayload payload, ReturnSettlement settlement)
+    {
+        try
+        {
+            var transactionRequest = new TransactionRequestDto
+            {
+                OrderBookingId = settlement.OrderBookingId,
+                UserId = settlement.OrderBooking?.UserId,
+                SepayId = payload.id.ToString(),
+                Gateway = payload.gateway,
+                TransactionDate = ParseTransactionDateToUtc(payload.transactionDate),
+                AccountNumber = payload.accountNumber,
+                Code = $"SETTLEMENT_{settlement.Id[..8]}",
+                Content = payload.content,
+                TransferType = payload.transferType,
+                TranferAmount = payload.transferAmount.ToString(),
+                Accumulated = payload.accumulated.ToString(),
+                SubAccount = payload.subAccount,
+                ReferenceCode = payload.referenceCode,
+                Description = $"Settlement payment for {settlement.OrderBookingId}"
+            };
+
+            await _transactionService.CreateTransactionAsync(transactionRequest);
+            _logger.LogInformation("Settlement transaction created successfully for {SettlementId}", settlement.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating settlement transaction for {SettlementId}", settlement.Id);
         }
     }
 }
