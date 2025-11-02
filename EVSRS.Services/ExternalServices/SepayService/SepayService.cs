@@ -49,22 +49,29 @@ public class SepayService : ISepayService
             throw new ErrorException(StatusCodes.Status401Unauthorized, ApiCodes.UNAUTHORIZED, "Invalid API key");
         }
 
-        var paymentCodeOrOrderCode = ExtractPaymentCodeFromContent(payload.content);
         var isRemainingPayment = payload.content.Contains("REMAINING");
-        var isSettlementPayment = payload.content.Contains("SETTLEMENT_");
+        var isSettlementPayment = payload.content.Contains("SETTLEMENT");
 
+        // Handle settlement payment
+        if (isSettlementPayment)
+        {
+            var settlementCode = ExtractSettlementCodeFromContent(payload.content);
+            if (string.IsNullOrEmpty(settlementCode))
+            {
+                _logger.LogError("No settlement code found in payment content: {Content}", payload.content);
+                throw new ErrorException(StatusCodes.Status400BadRequest, ApiCodes.INVALID_INPUT,
+                    "No settlement code found in payment content");
+            }
+            await ProcessSettlementPayment(payload, settlementCode);
+            return;
+        }
+
+        var paymentCodeOrOrderCode = ExtractPaymentCodeFromContent(payload.content);
         if (string.IsNullOrEmpty(paymentCodeOrOrderCode))
         {
             _logger.LogError("No payment code found in payment content: {Content}", payload.content);
             throw new ErrorException(StatusCodes.Status400BadRequest, ApiCodes.INVALID_INPUT,
                 "No payment code found in payment content");
-        }
-
-        // Handle settlement payment
-        if (isSettlementPayment)
-        {
-            await ProcessSettlementPayment(payload, paymentCodeOrOrderCode);
-            return;
         }
 
         // Handle regular order payment
@@ -363,6 +370,17 @@ public class SepayService : ISepayService
         return null;
     }
 
+    private string? ExtractSettlementCodeFromContent(string content)
+    {
+        // Look for settlement code pattern (like SETTLEMENT3832D50F or SETTLEMENT_3832D50F)
+        var match = Regex.Match(content, @"SETTLEMENT_?([A-F0-9]{8})", RegexOptions.IgnoreCase);
+        if (match.Success)
+        {
+            return match.Groups[1].Value; // Return just the ID part (e.g., "3832D50F")
+        }
+        return null;
+    }
+
     private DateTime ParseTransactionDateToUtc(string? transactionDateString)
     {
         if (string.IsNullOrEmpty(transactionDateString))
@@ -604,11 +622,9 @@ public class SepayService : ISepayService
 
         try
         {
-            // Extract settlement ID from code (format: SETTLEMENT_XXXXXXXX)
-            var settlementIdPart = settlementCode.Replace("SETTLEMENT_", "");
-            
+            // settlementCode is already the ID part (e.g., "3832D50F")
             // Find settlement by partial ID match
-            var settlement = await FindSettlementByCode(settlementIdPart);
+            var settlement = await FindSettlementByCode(settlementCode);
             if (settlement == null)
             {
                 _logger.LogError("Settlement not found for code: {SettlementCode}", settlementCode);

@@ -181,6 +181,21 @@ public class ReturnController : ControllerBase
     }
 
     /// <summary>
+    /// Check payment status of return settlement
+    /// </summary>
+    [HttpGet("settlement/{id}/payment-status")]
+    public async Task<IActionResult> CheckReturnSettlementPaymentStatus(string id)
+    {
+        var result = await _returnService.GetReturnSettlementPaymentStatusAsync(id);
+        return Ok(new ResponseModel<ReturnSettlementPaymentStatusDto>(
+            StatusCodes.Status200OK,
+            ApiCodes.SUCCESS,
+            result,
+            "Return settlement payment status retrieved successfully"
+        ));
+    }
+
+    /// <summary>
     /// Generate SePay QR code for return settlement payment
     /// </summary>
     [HttpPost("settlement/{id}/sepay-qr")]

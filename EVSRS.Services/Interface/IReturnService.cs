@@ -19,4 +19,5 @@ public interface IReturnService
     Task<OrderBookingResponseDto> CompleteReturnProcessAsync(CompleteReturnRequestDto request);
     Task<ReturnSettlementResponseDto> ProcessReturnSettlementPaymentAsync(ReturnSettlementPaymentRequestDto request);
     Task<string> GenerateSepayQrForReturnSettlementAsync(string returnSettlementId);
+    Task<ReturnSettlementPaymentStatusDto> GetReturnSettlementPaymentStatusAsync(string returnSettlementId);
 }
