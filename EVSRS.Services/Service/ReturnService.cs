@@ -298,6 +298,59 @@ public class ReturnService : IReturnService
         return sepayQrResponse.QrUrl;
     }
 
+    public async Task<ReturnSettlementPaymentStatusDto> GetReturnSettlementPaymentStatusAsync(string returnSettlementId)
+    {
+        // Get settlement by ID
+        var settlement = await _unitOfWork.ReturnSettlementRepository.GetByIdAsync(returnSettlementId);
+        _validationService.CheckNotFound(settlement, "Return settlement not found");
+
+        // Get order booking for additional context
+        var orderBooking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(settlement!.OrderBookingId!);
+        
+        // Get user info for context
+        var user = orderBooking?.UserId != null 
+            ? await _unitOfWork.UserRepository.GetByIdAsync(orderBooking.UserId) 
+            : null;
+
+        // Calculate if payment is overdue (e.g., 7 days after settlement creation)
+        var paymentDueDate = settlement.CreatedAt.AddDays(7);
+        var isPaymentOverdue = settlement.PaymentStatus != "PAID" && DateTime.UtcNow > paymentDueDate;
+        
+        // Generate QR code URL if payment is still pending
+        string? qrCodeUrl = null;
+        if (settlement.PaymentStatus == "PENDING" && !string.IsNullOrEmpty(settlement.Total) && decimal.Parse(settlement.Total) > 0)
+        {
+            try
+            {
+                qrCodeUrl = await GenerateSepayQrForReturnSettlementAsync(returnSettlementId);
+            }
+            catch (Exception)
+            {
+                // If QR generation fails, continue without QR (it's optional for status check)
+                qrCodeUrl = null;
+            }
+        }
+
+        return new ReturnSettlementPaymentStatusDto
+        {
+            Id = settlement.Id,
+            OrderBookingId = settlement.OrderBookingId!,
+            PaymentStatus = settlement.PaymentStatus ?? "PENDING",
+            PaymentMethod = settlement.PaymentMethod,
+            PaymentDate = settlement.PaymentDate,
+            Total = settlement.Total,
+            IsPaymentRequired = !string.IsNullOrEmpty(settlement.Total) && decimal.Parse(settlement.Total) > 0,
+            IsPaymentOverdue = isPaymentOverdue,
+            PaymentDueDate = paymentDueDate,
+            QrCodeUrl = qrCodeUrl,
+            CreatedAt = settlement.CreatedAt,
+            UpdatedAt = settlement.UpdatedAt,
+            OrderCode = orderBooking?.Code,
+            CustomerName = user?.FullName,
+            CustomerPhone = user?.PhoneNumber
+        };
+    }
+
     private string GetCurrentUserName()
     {
         return _httpContextAccessor.HttpContext?.User?.FindFirst("name")?.Value ?? "System";
