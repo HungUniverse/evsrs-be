@@ -2,6 +2,7 @@ using AutoMapper;
 using EVSRS.BusinessObjects.DTO.HandoverInspectionDto;
 using EVSRS.BusinessObjects.DTO.ReturnSettlementDto;
 using EVSRS.BusinessObjects.DTO.OrderBookingDto;
+using EVSRS.BusinessObjects.DTO.SepayDto;
 using EVSRS.BusinessObjects.Entity;
 using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Implement;
@@ -276,13 +277,25 @@ public class ReturnService : IReturnService
             "Invalid settlement total amount"
         );
 
-        // Create a temporary order-like code for settlement payment
-        var settlementCode = $"SETTLEMENT_{returnSettlementId[..8]}";
+        // Get order booking for user info
+        var orderBooking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(settlement!.OrderBookingId!);
+        _validationService.CheckNotFound(orderBooking, "Order booking not found");
+
+        // Create a unique settlement payment code
+        var settlementCode = $"SETTLEMENT_{returnSettlementId[..8].ToUpper()}";
         
-        // For now, return the settlement code - this would integrate with SePay API
-        // You can extend this to call actual SePay QR generation service
-        
-        return settlementCode;
+        // Call SePay service to create QR with settlement details
+        var sepayQrResponse = await _sepayService.CreateSettlementPaymentQrAsync(new CreateSettlementPaymentQrRequest
+        {
+            SettlementId = returnSettlementId,
+            SettlementCode = settlementCode,
+            Amount = decimal.Parse(settlement.Total!),
+            Description = $"Additional fees payment for order {orderBooking?.Code ?? "Unknown"}",
+            OrderBookingId = settlement.OrderBookingId!,
+            UserId = orderBooking?.UserId
+        });
+
+        return sepayQrResponse.QrUrl;
     }
 
     private string GetCurrentUserName()
