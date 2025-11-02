@@ -37,6 +37,7 @@ namespace EVSRS.BusinessObjects.Datas
             {
                 rng.GetBytes(saltBytes);
             }
+
             return Convert.ToBase64String(saltBytes);
         }
 
@@ -50,133 +51,129 @@ namespace EVSRS.BusinessObjects.Datas
         private static void SeedUsers(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<ApplicationUser>().HasData(new ApplicationUser
-            {
-                Id = "f0f59b2db7044564a06c8528d34059cd",
-                UserName = "admin",
-                FullName = "Admin User",
-                UserEmail = "admin@evsrs.com",
-                PhoneNumber = "0123456789",
-                Role = Role.ADMIN,
-                HashPassword = "0/55m5D78ID6aDW3ILaAIJIsrN4NPcmz0/sMHGjUtwU=",
-                Salt = "+RpeKZpefqvzh9xPeparBlx3tFEb6uzJO6Zr27+Tlpg=",
-                IsVerify = true,
-                CreatedBy = "System",
-                UpdatedBy = "System",
-                CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-                UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-                IsDeleted = false
-            },
-
-            new ApplicationUser
-            {
-                Id = "19b2df0e909049aa87baf829782c5535",
-                UserName = "user",
-                FullName = "Regular User",
-                UserEmail = "user@evsrs.com",
-                PhoneNumber = "0987654321",
-                Role = Role.USER,
-                HashPassword = "FVDdFAj2L27v8bcDdbWoppGuZHlQv449dJ71M0qHetc=",
-                Salt = "B2QFgJToQP84qc2YL6cW7fpE6J1RzfcXmGTnV02mLRY=",
-                IsVerify = true,
-                CreatedBy = "System",
-                UpdatedBy = "System",
-                CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-                UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-                IsDeleted = false
-            },
-        new ApplicationUser
-        {
-            Id = "01a61fae-5bd3-4c9e-8103-251cd9c6e580",
-            UserName = "staff002",
-            FullName = "Staff 2",
-            UserEmail = "staff2@evsrs.com",
-            PhoneNumber = "0987654321",
-            Role = Role.STAFF,
-            HashPassword = "n/pNVwOrtkUWECIFROo7YxGv8TnuiCQTR8CTi4G1dy8=",
-            Salt = "2fqlWU3s47q+hb9tVG7ULmR6PhvDiLzaEV9x+lELThg==",
-            DepotId = "8664ebff6e944c38a801ddc357f9dac0",
-            IsVerify = true,
-            CreatedBy = "System",
-            UpdatedBy = "System",
-            CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-            UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-            IsDeleted = false
-        },
-
-        new ApplicationUser
-        {
-            Id = "97de3ca5c503497da8cf658945f70214",
-            UserName = "staffHCMTanBinh",
-            FullName = "Staff HCM TanBinh",
-            UserEmail = "staff@evsrs.com",
-            PhoneNumber = "0987654321",
-            Role = Role.STAFF,
-            HashPassword = "SfZ7xDUh0p5nOY18GXHU6nWJYixYs1Fzk5jdPxhRr1Y=",
-            Salt = "WUtN6KXtIRJYE4shDQQPuPLCHjAuCGUWIpUZOPpI3Ts=",
-            DepotId = "1ca81b37db0042c5b74092575026fcc9",
-            IsVerify = true,
-            CreatedBy = "System",
-            UpdatedBy = "System",
-            CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-            UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-            IsDeleted = false
-        },
-
-        new ApplicationUser
-        {
-            Id = "ba5baf1a345845be85c8e5212e31e913",
-            FullName = "Staff HCM Q1",
-            UserName = "staffHCMQ1",
-            UserEmail = "staffhcmq1@evsrs.com",
-            PhoneNumber = "0987654321",
-            Role = Role.STAFF,
-            HashPassword = "VvNu3hUF0sL8zOMCk27C2hRchPBqf3kDLTTcoY5hZoY=",
-            Salt = "8/GW0z/NNLSI8VaWjDKZrS9xUjKndOniLuWlxGauCJI=",
-            DepotId = "86114896990e4fab8b341a581e2ca551",
-            IsVerify = true,
-            CreatedBy = "System",
-            UpdatedBy = "System",
-            CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-            UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-            IsDeleted = false
-        },
-        new ApplicationUser
-        {
-            Id = "e3c14310-36a4-496c-83cf-2e3919841aac",
-            FullName = "Staff HCM Q1",
-            UserName = "staff003",
-            UserEmail = "staff3@evsrs.com",
-            PhoneNumber = "0987654321",
-            Role = Role.STAFF,
-            HashPassword = "FPrBvhJ9dplQIuf57MgUJq1y6s8N+hsXctngWjFxP1k=",
-            Salt = "TkD48+y8lIrgXjBQEgL9+nClk2nzRdersi37QVkGwb0=",
-            DepotId = "ad971561785446d1a018d5881a307d56",
-            IsVerify = true,
-            CreatedBy = "System",
-            UpdatedBy = "System",
-            CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-            UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-            IsDeleted = false
-        },
-        new ApplicationUser
-        {
-            Id = "80b25fb0d63d404787ba42543679b0f3",
-            FullName = "staffHNBaDinh",
-            UserName = "staffHNBaDinh",
-            UserEmail = "staffhnbadinh@evsrs.com",
-            PhoneNumber = "0987654321",
-            Role = Role.STAFF,
-            HashPassword = "RTIhSYuwI8Y0YcxfewST00b+qEugqwoLjD9Y0EzeRCY=",
-            Salt = "98S7iffGHg33P3MpY0ix5DnptTbNuFz3wQf1yRU0dy0=",
-            DepotId = "1393d516aeb84e2bace0eed3f18f8df9",
-            IsVerify = true,
-            CreatedBy = "System",
-            UpdatedBy = "System",
-            CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-            UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
-            IsDeleted = false
-        });
-
+                {
+                    Id = "f0f59b2db7044564a06c8528d34059cd",
+                    UserName = "admin",
+                    FullName = "Admin User",
+                    UserEmail = "admin@evsrs.com",
+                    PhoneNumber = "0123456789",
+                    Role = Role.ADMIN,
+                    HashPassword = "0/55m5D78ID6aDW3ILaAIJIsrN4NPcmz0/sMHGjUtwU=",
+                    Salt = "+RpeKZpefqvzh9xPeparBlx3tFEb6uzJO6Zr27+Tlpg=",
+                    IsVerify = true,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    IsDeleted = false
+                },
+                new ApplicationUser
+                {
+                    Id = "19b2df0e909049aa87baf829782c5535",
+                    UserName = "user",
+                    FullName = "Regular User",
+                    UserEmail = "user@evsrs.com",
+                    PhoneNumber = "0987654321",
+                    Role = Role.USER,
+                    HashPassword = "FVDdFAj2L27v8bcDdbWoppGuZHlQv449dJ71M0qHetc=",
+                    Salt = "B2QFgJToQP84qc2YL6cW7fpE6J1RzfcXmGTnV02mLRY=",
+                    IsVerify = true,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    IsDeleted = false
+                },
+                new ApplicationUser
+                {
+                    Id = "01a61fae-5bd3-4c9e-8103-251cd9c6e580",
+                    UserName = "staff002",
+                    FullName = "Staff 2",
+                    UserEmail = "staff2@evsrs.com",
+                    PhoneNumber = "0987654321",
+                    Role = Role.STAFF,
+                    HashPassword = "n/pNVwOrtkUWECIFROo7YxGv8TnuiCQTR8CTi4G1dy8=",
+                    Salt = "2fqlWU3s47q+hb9tVG7ULmR6PhvDiLzaEV9x+lELThg==",
+                    DepotId = "8664ebff6e944c38a801ddc357f9dac0",
+                    IsVerify = true,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    IsDeleted = false
+                },
+                new ApplicationUser
+                {
+                    Id = "97de3ca5c503497da8cf658945f70214",
+                    UserName = "staffHCMTanBinh",
+                    FullName = "Staff HCM TanBinh",
+                    UserEmail = "staff@evsrs.com",
+                    PhoneNumber = "0987654321",
+                    Role = Role.STAFF,
+                    HashPassword = "SfZ7xDUh0p5nOY18GXHU6nWJYixYs1Fzk5jdPxhRr1Y=",
+                    Salt = "WUtN6KXtIRJYE4shDQQPuPLCHjAuCGUWIpUZOPpI3Ts=",
+                    DepotId = "1ca81b37db0042c5b74092575026fcc9",
+                    IsVerify = true,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    IsDeleted = false
+                },
+                new ApplicationUser
+                {
+                    Id = "ba5baf1a345845be85c8e5212e31e913",
+                    FullName = "Staff HCM Q1",
+                    UserName = "staffHCMQ1",
+                    UserEmail = "staffhcmq1@evsrs.com",
+                    PhoneNumber = "0987654321",
+                    Role = Role.STAFF,
+                    HashPassword = "VvNu3hUF0sL8zOMCk27C2hRchPBqf3kDLTTcoY5hZoY=",
+                    Salt = "8/GW0z/NNLSI8VaWjDKZrS9xUjKndOniLuWlxGauCJI=",
+                    DepotId = "86114896990e4fab8b341a581e2ca551",
+                    IsVerify = true,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    IsDeleted = false
+                },
+                new ApplicationUser
+                {
+                    Id = "e3c14310-36a4-496c-83cf-2e3919841aac",
+                    FullName = "Staff HCM Q1",
+                    UserName = "staff003",
+                    UserEmail = "staff3@evsrs.com",
+                    PhoneNumber = "0987654321",
+                    Role = Role.STAFF,
+                    HashPassword = "FPrBvhJ9dplQIuf57MgUJq1y6s8N+hsXctngWjFxP1k=",
+                    Salt = "TkD48+y8lIrgXjBQEgL9+nClk2nzRdersi37QVkGwb0=",
+                    DepotId = "ad971561785446d1a018d5881a307d56",
+                    IsVerify = true,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    IsDeleted = false
+                },
+                new ApplicationUser
+                {
+                    Id = "80b25fb0d63d404787ba42543679b0f3",
+                    FullName = "staffHNBaDinh",
+                    UserName = "staffHNBaDinh",
+                    UserEmail = "staffhnbadinh@evsrs.com",
+                    PhoneNumber = "0987654321",
+                    Role = Role.STAFF,
+                    HashPassword = "RTIhSYuwI8Y0YcxfewST00b+qEugqwoLjD9Y0EzeRCY=",
+                    Salt = "98S7iffGHg33P3MpY0ix5DnptTbNuFz3wQf1yRU0dy0=",
+                    DepotId = "1393d516aeb84e2bace0eed3f18f8df9",
+                    IsVerify = true,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 9, 2, 6, 28, 11, 442, DateTimeKind.Utc),
+                    IsDeleted = false
+                });
         }
 
         private static void SeedCarManufactures(ModelBuilder modelBuilder)
@@ -536,7 +533,8 @@ namespace EVSRS.BusinessObjects.Datas
                     RangeKm = "400",
                     LimiteDailyKm = "200",
                     Seats = "4",
-                    Image = "https://hips.hearstapps.com/hmg-prod/images/2025-mercedes-benz-gla-class-101-67212f16b8417.jpg?crop=0.671xw:0.565xh;0.244xw,0.435xh&resize=2048:*",
+                    Image =
+                        "https://hips.hearstapps.com/hmg-prod/images/2025-mercedes-benz-gla-class-101-67212f16b8417.jpg?crop=0.671xw:0.565xh;0.244xw,0.435xh&resize=2048:*",
                     Price = 55000.0,
                     Sale = 12,
                     CreatedBy = "System",
@@ -554,7 +552,8 @@ namespace EVSRS.BusinessObjects.Datas
                     RangeKm = "350",
                     LimiteDailyKm = "200",
                     Seats = "4",
-                    Image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQX7EL3fLZcWdBdVRfcTXsW2o2OFklPTRN7Hg&s",
+                    Image =
+                        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQX7EL3fLZcWdBdVRfcTXsW2o2OFklPTRN7Hg&s",
                     Price = 50000.0,
                     Sale = 0,
                     CreatedAt = new DateTime(2025, 10, 17, 0, 49, 43, 620, DateTimeKind.Utc),
@@ -571,7 +570,8 @@ namespace EVSRS.BusinessObjects.Datas
                     RangeKm = "400",
                     LimiteDailyKm = "190",
                     Seats = "5",
-                    Image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7RG2d648UTyaXXMo36cRGy2rOA2Xms1hCdQ&s",
+                    Image =
+                        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7RG2d648UTyaXXMo36cRGy2rOA2Xms1hCdQ&s",
                     Price = 55000.0,
                     Sale = 8,
                     CreatedAt = new DateTime(2025, 10, 17, 0, 49, 43, 620, DateTimeKind.Utc),
@@ -588,7 +588,8 @@ namespace EVSRS.BusinessObjects.Datas
                     RangeKm = "350",
                     LimiteDailyKm = "200",
                     Seats = "7",
-                    Image = "https://hips.hearstapps.com/hmg-prod/images/2026-tesla-model-y-long-range-awd-121-688bc237a2711.jpg?crop=0.615xw:0.519xh;0.0865xw,0.365xh&resize=1200:*",
+                    Image =
+                        "https://hips.hearstapps.com/hmg-prod/images/2026-tesla-model-y-long-range-awd-121-688bc237a2711.jpg?crop=0.615xw:0.519xh;0.0865xw,0.365xh&resize=1200:*",
                     Price = 60000.0,
                     Sale = 5,
                     CreatedAt = new DateTime(2025, 10, 17, 0, 49, 43, 620, DateTimeKind.Utc),
@@ -605,7 +606,8 @@ namespace EVSRS.BusinessObjects.Datas
                     RangeKm = "350",
                     LimiteDailyKm = "180",
                     Seats = "5",
-                    Image = "https://hips.hearstapps.com/hmg-prod/images/2023-vinfast-vf8-9283-64638ba8c149b.jpg?crop=0.641xw:0.543xh;0.114xw,0.346xh&resize=2048:*",
+                    Image =
+                        "https://hips.hearstapps.com/hmg-prod/images/2023-vinfast-vf8-9283-64638ba8c149b.jpg?crop=0.641xw:0.543xh;0.114xw,0.346xh&resize=2048:*",
                     Price = 45000.0,
                     Sale = 10,
                     CreatedAt = new DateTime(2025, 10, 17, 0, 49, 43, 620, DateTimeKind.Utc),
@@ -614,7 +616,6 @@ namespace EVSRS.BusinessObjects.Datas
                 });
         }
 
-       
 
         private static void SeedCarEVs(ModelBuilder modelBuilder)
         {
@@ -1213,8 +1214,25 @@ namespace EVSRS.BusinessObjects.Datas
                     UpdatedAt = new DateTime(2025, 10, 21, 7, 28, 37, 503, DateTimeKind.Utc),
                     IsDeleted = false
                 }
-                );
+            );
+        }
+
+        private static void SeedSystemConfig(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<SystemConfig>().HasData(
+                new SystemConfig
+                {
+                    Id = "5595fc17323c48a89f2583de3de9c51a",
+                    Key = "DEPOSIT_FEE_PERCENTAGE",
+                    Value = "30m",
+                    ConfigType = ConfigType.General,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 10, 21, 7, 28, 37, 503, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 10, 21, 7, 28, 37, 503, DateTimeKind.Utc),   
+                    IsDeleted = false
+                }
+            );
         }
     }
 }
-
