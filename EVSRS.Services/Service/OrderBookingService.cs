@@ -77,8 +77,43 @@ namespace EVSRS.Services.Service
                 "Only pending or confirmed bookings can be cancelled"
             );
 
-            booking.Status = OrderBookingStatus.CANCELLED;
-            booking.Note = $"{booking.Note}\nCancellation reason: {reason}";
+            // Calculate refund according to rules:
+            // 1) Cancel within 24 hours from booking.CreatedAt => refund full deposit (assumed DepositAmount stores 30% of order)
+            // 2) Cancel after 24 hours but before StartAt => refund half deposit (15% of order)
+            // 3) Cancel after StartAt => no refund
+            decimal depositAmount = 0m;
+            if (!string.IsNullOrEmpty(booking.DepositAmount))
+            {
+                decimal.TryParse(booking.DepositAmount, out depositAmount);
+            }
+
+            decimal refundAmount = 0m;
+            var now = DateTime.UtcNow;
+
+            if (booking.StartAt.HasValue && now > booking.StartAt.Value)
+            {
+                // no refund after vehicle pickup
+                refundAmount = 0m;
+            }
+            else
+            {
+                var hoursSinceBooking = (now - booking.CreatedAt).TotalHours;
+                if (hoursSinceBooking <= 24)
+                {
+                    refundAmount = depositAmount; // full deposit
+                }
+                else
+                {
+                    refundAmount = depositAmount / 2m; // half deposit
+                }
+            }
+
+            // Mark order as waiting for refund so admin can manually process the transfer and then set to CANCELLED
+            booking.Status = OrderBookingStatus.REFUND_PENDING;
+
+            var customerName = booking.User?.FullName ?? "(Offline/Unknown)";
+            var customerPhone = booking.User?.PhoneNumber ?? "(Unknown)";
+            booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nRefundAmount: {refundAmount:C}\nCustomer: {customerName} - {customerPhone}";
             booking.UpdatedBy = GetCurrentUserName();
             booking.UpdatedAt = DateTime.UtcNow;
 
@@ -89,6 +124,68 @@ namespace EVSRS.Services.Service
                 car.Status = CarEvStatus.AVAILABLE;
                 await _unitOfWork.CarEVRepository.UpdateCarEVAsync(car);
             }
+
+            await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
+            await _unitOfWork.SaveChangesAsync();
+
+            var resultDto = _mapper.Map<OrderBookingResponseDto>(booking);
+            // Populate computed refund amount on returned DTO (not persisted)
+            resultDto.RefundAmount = refundAmount;
+            return resultDto;
+        }
+
+        public async Task<PaginatedList<OrderBookingResponseDto>> GetRefundPendingOrdersAsync(int pageNumber, int pageSize)
+        {
+            var bookings = await _unitOfWork.OrderRepository.GetOrderBookingListAsync(pageNumber, pageSize);
+            var pending = bookings.Items.Where(b => b.Status == OrderBookingStatus.REFUND_PENDING).ToList();
+            var dtos = pending.Select(b => _mapper.Map<OrderBookingResponseDto>(b)).ToList();
+            // compute and populate refund amount for admin display
+            for (int i = 0; i < pending.Count; i++)
+            {
+                try
+                {
+                    dtos[i].RefundAmount = ComputeRefundAmount(pending[i]);
+                }
+                catch
+                {
+                    // If any unexpected issue occurs, leave RefundAmount null to avoid breaking the listing
+                    dtos[i].RefundAmount = null;
+                }
+            }
+
+            return new PaginatedList<OrderBookingResponseDto>(dtos, pending.Count, pageNumber, pageSize);
+        }
+
+        public async Task<OrderBookingResponseDto> ConfirmRefundAsync(string id, decimal? refundedAmount = null, string? adminNote = null)
+        {
+            var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
+            _validationService.CheckNotFound(booking, $"Order booking with ID {id} not found");
+
+            _validationService.CheckBadRequest(
+                booking.Status != OrderBookingStatus.REFUND_PENDING,
+                "Only bookings in REFUND_PENDING status can be confirmed for refund"
+            );
+
+            // Update status/payment
+            booking.Status = OrderBookingStatus.CANCELLED;
+            booking.PaymentStatus = PaymentStatus.REFUNDED;
+
+            // Append admin confirmation info to note
+            var noteBuilder = new StringBuilder(booking.Note ?? string.Empty);
+            noteBuilder.AppendLine();
+            noteBuilder.AppendLine($"Admin confirmed refund at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} by {GetCurrentUserName()}.");
+            if (refundedAmount.HasValue)
+            {
+                noteBuilder.AppendLine($"Refunded Amount: {refundedAmount.Value:C}");
+            }
+            if (!string.IsNullOrWhiteSpace(adminNote))
+            {
+                noteBuilder.AppendLine($"Admin note: {adminNote}");
+            }
+            booking.Note = noteBuilder.ToString();
+
+            booking.UpdatedBy = GetCurrentUserName();
+            booking.UpdatedAt = DateTime.UtcNow;
 
             await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
             await _unitOfWork.SaveChangesAsync();
@@ -543,6 +640,32 @@ namespace EVSRS.Services.Service
             string prefix = "ORD";
             string randomPart = _random.Next(1000000, 9999999).ToString();
             return $"{prefix}{randomPart}";
+        }
+
+        // Compute refund amount according to the cancellation rules (no persistence)
+        private decimal ComputeRefundAmount(OrderBooking booking)
+        {
+            if (booking == null) return 0m;
+
+            decimal depositAmount = 0m;
+            if (!string.IsNullOrEmpty(booking.DepositAmount))
+            {
+                decimal.TryParse(booking.DepositAmount, out depositAmount);
+            }
+
+            var now = DateTime.UtcNow;
+            if (booking.StartAt.HasValue && now > booking.StartAt.Value)
+            {
+                return 0m;
+            }
+
+            var hoursSinceBooking = (now - booking.CreatedAt).TotalHours;
+            if (hoursSinceBooking <= 24)
+            {
+                return depositAmount; // full deposit
+            }
+
+            return depositAmount / 2m; // half deposit
         }
     }
 }

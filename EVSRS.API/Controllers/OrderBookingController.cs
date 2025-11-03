@@ -333,6 +333,38 @@ namespace EVSRS.API.Controllers
         }
 
         /// <summary>
+        /// Get refund-pending orders for admin
+        /// </summary>
+        [HttpGet("admin/refunds")]
+        [Authorize]
+        public async Task<IActionResult> GetRefundPendingOrders(int pageNumber = 1, int pageSize = 10)
+        {
+            var result = await _orderBookingService.GetRefundPendingOrdersAsync(pageNumber, pageSize);
+            return Ok(new ResponseModel<PaginatedList<OrderBookingResponseDto>>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                result,
+                "Refund pending orders retrieved successfully"
+            ));
+        }
+
+        /// <summary>
+        /// Admin confirm refund and set order to CANCELLED
+        /// </summary>
+        [HttpPost("admin/{id}/confirm-refund")]
+        [Authorize]
+        public async Task<IActionResult> ConfirmRefund(string id, [FromBody] ConfirmRefundRequest request)
+        {
+            var result = await _orderBookingService.ConfirmRefundAsync(id, request.RefundedAmount, request.AdminNote);
+            return Ok(new ResponseModel<OrderBookingResponseDto>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                result,
+                "Refund confirmed and order cancelled successfully"
+            ));
+        }
+
+        /// <summary>
         /// Delete order booking
         /// </summary>
         [HttpDelete("{id}")]
@@ -358,5 +390,11 @@ namespace EVSRS.API.Controllers
     public class CancelOrderRequest
     {
         public string Reason { get; set; } = string.Empty;
+    }
+
+    public class ConfirmRefundRequest
+    {
+        public decimal? RefundedAmount { get; set; }
+        public string? AdminNote { get; set; }
     }
 }
