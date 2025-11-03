@@ -1,4 +1,5 @@
 using EVSRS.BusinessObjects.DTO.OrderBookingDto;
+using EVSRS.BusinessObjects.DTO.SepayDto;
 using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Helper;
 using EVSRS.Repositories.Infrastructure;
@@ -142,16 +143,15 @@ namespace EVSRS.API.Controllers
         /// </summary>
         [HttpPost("offline")]
         [Authorize]
-        public async Task<IActionResult> CreateOfflineOrderBooking([FromBody] OrderBookingRequestDto request)
+        public async Task<IActionResult> CreateOfflineOrderBooking([FromBody] OrderBookingOfflineRequestDto request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            request.IsOfflineBooking = true;
             var result = await _orderBookingService.CreateOfflineOrderBookingAsync(request);
-            return Created("", new ResponseModel<OrderBookingResponseDto>(
+            return Created("", new ResponseModel<SepayQrResponse>(
                 StatusCodes.Status201Created,
                 ApiCodes.SUCCESS,
                 result,

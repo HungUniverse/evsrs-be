@@ -113,6 +113,35 @@ namespace EVSRS.Services.Mapper
             #region OrderBooking Mapper
             CreateMap<OrderBooking, OrderBookingResponseDto>().ReverseMap();
             CreateMap<OrderBooking, OrderBookingRequestDto>().ReverseMap();
+            CreateMap<OrderBookingOfflineRequestDto, OrderBooking>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Code, opt => opt.Ignore())
+                .ForMember(dest => dest.DepotId, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.PaymentType, opt => opt.Ignore())
+                .ForMember(dest => dest.PaymentStatus, opt => opt.Ignore())
+                .ForMember(dest => dest.SubTotal, opt => opt.Ignore())
+                .ForMember(dest => dest.TotalAmount, opt => opt.Ignore())
+                .ForMember(dest => dest.DepositAmount, opt => opt.Ignore())
+                .ForMember(dest => dest.RemainingAmount, opt => opt.Ignore())
+                .ForMember(dest => dest.CheckOutedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ReturnedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Discount, opt => opt.Ignore())
+                .ForMember(dest => dest.ShippingFee, opt => opt.Ignore())
+                .ForMember(dest => dest.RemainingBalance, opt => opt.Ignore())
+                .ForMember(dest => dest.Type, opt => opt.Ignore())
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.Feedbacks, opt => opt.Ignore())
+                .ForMember(dest => dest.Transactions, opt => opt.Ignore())
+                .ForMember(dest => dest.HandoverInspections, opt => opt.Ignore())
+                .ForMember(dest => dest.Contracts, opt => opt.Ignore())
+                .ForMember(dest => dest.ReturnSettlement, opt => opt.Ignore())
+                .ForMember(dest => dest.CarEvs, opt => opt.Ignore())
+                .ForMember(dest => dest.Depot, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             #endregion
 
             #region HandoverInspection Mapper

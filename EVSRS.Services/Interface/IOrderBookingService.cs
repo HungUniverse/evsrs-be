@@ -17,7 +17,7 @@ namespace EVSRS.Services.Interface
         Task<List<OrderBookingResponseDto>> GetOrderBookingsByUserIdAsync(string userId);
         Task<List<OrderBookingResponseDto>> GetOrderBookingsByDepotIdAsync(string depotId);
         Task<SepayQrResponse> CreateOrderBookingAsync(OrderBookingRequestDto request);
-        Task<OrderBookingResponseDto> CreateOfflineOrderBookingAsync(OrderBookingRequestDto request);
+        Task<SepayQrResponse> CreateOfflineOrderBookingAsync(OrderBookingOfflineRequestDto request);
         Task UpdateOrderBookingAsync(string id, OrderBookingRequestDto request);
         Task DeleteOrderBookingAsync(string id);
         Task<OrderBookingResponseDto> UpdateOrderStatusAsync(string id, OrderBookingStatus status, PaymentStatus? paymentStatus = null);
