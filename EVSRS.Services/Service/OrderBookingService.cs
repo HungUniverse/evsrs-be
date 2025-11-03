@@ -73,8 +73,8 @@ namespace EVSRS.Services.Service
             _validationService.CheckNotFound(booking, $"Order booking with ID {id} not found");
 
             _validationService.CheckBadRequest(
-                booking.Status != OrderBookingStatus.PENDING && booking.Status != OrderBookingStatus.CONFIRMED && booking.Status != OrderBookingStatus.READY_FOR_CHECKOUT,
-                "Only pending, confirmed or ready_for_checkout bookings can be cancelled"
+                booking.Status != OrderBookingStatus.PENDING && booking.Status != OrderBookingStatus.CONFIRMED,
+                "Only pending or confirmed bookings can be cancelled"
             );
 
             // Calculate refund according to rules:
