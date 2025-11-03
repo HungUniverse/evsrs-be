@@ -73,47 +73,71 @@ namespace EVSRS.Services.Service
             _validationService.CheckNotFound(booking, $"Order booking with ID {id} not found");
 
             _validationService.CheckBadRequest(
-                booking.Status != OrderBookingStatus.PENDING && booking.Status != OrderBookingStatus.CONFIRMED,
-                "Only pending or confirmed bookings can be cancelled"
+                booking.Status != OrderBookingStatus.PENDING && booking.Status != OrderBookingStatus.CONFIRMED && booking.Status != OrderBookingStatus.READY_FOR_CHECKOUT,
+                "Only pending, confirmed or ready_for_checkout bookings can be cancelled"
             );
 
-            // Calculate refund according to rules:
-            // 1) Cancel within 24 hours from booking.CreatedAt => refund full deposit (assumed DepositAmount stores 30% of order)
-            // 2) Cancel after 24 hours but before StartAt => refund half deposit (15% of order)
-            // 3) Cancel after StartAt => no refund
-            decimal depositAmount = 0m;
-            if (!string.IsNullOrEmpty(booking.DepositAmount))
-            {
-                decimal.TryParse(booking.DepositAmount, out depositAmount);
-            }
+            // Check if payment has been made
+            bool hasBeenPaid = booking.PaymentStatus == PaymentStatus.PAID_DEPOSIT ||
+                               booking.PaymentStatus == PaymentStatus.PAID_FULL ||
+                               booking.PaymentStatus == PaymentStatus.PAID_DEPOSIT_COMPLETED;
 
             decimal refundAmount = 0m;
-            var now = DateTime.UtcNow;
-
-            if (booking.StartAt.HasValue && now > booking.StartAt.Value)
+            
+            if (!hasBeenPaid)
             {
-                // no refund after vehicle pickup
+                // Not paid yet → Cancel directly, no refund needed
+                booking.Status = OrderBookingStatus.CANCELLED;
                 refundAmount = 0m;
+                
+                var noteBuilder = new StringBuilder(booking.Note ?? string.Empty);
+                noteBuilder.AppendLine($"Cancelled before payment - Reason: {reason}");
+                booking.Note = noteBuilder.ToString();
             }
             else
             {
-                var hoursSinceBooking = (now - booking.CreatedAt).TotalHours;
-                if (hoursSinceBooking <= 24)
+                // Already paid → Calculate refund and wait for admin processing
+                decimal depositAmount = 0m;
+                if (!string.IsNullOrEmpty(booking.DepositAmount))
                 {
-                    refundAmount = depositAmount; // full deposit
+                    decimal.TryParse(booking.DepositAmount, out depositAmount);
+                }
+
+                var now = DateTime.UtcNow;
+                if (booking.StartAt.HasValue && now > booking.StartAt.Value)
+                {
+                    // no refund after vehicle pickup
+                    refundAmount = 0m;
                 }
                 else
                 {
-                    refundAmount = depositAmount / 2m; // half deposit
+                    var hoursSinceBooking = (now - booking.CreatedAt).TotalHours;
+                    if (hoursSinceBooking <= 24)
+                    {
+                        refundAmount = depositAmount; // full deposit
+                    }
+                    else
+                    {
+                        refundAmount = depositAmount / 2m; // half deposit
+                    }
+                }
+
+                if (refundAmount > 0)
+                {
+                    // Need refund → Wait for admin processing
+                    booking.Status = OrderBookingStatus.REFUND_PENDING;
+                    var customerName = booking.User?.FullName ?? "(Offline/Unknown)";
+                    var customerPhone = booking.User?.PhoneNumber ?? "(Unknown)";
+                    booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nRefundAmount: {refundAmount:C}\nCustomer: {customerName} - {customerPhone}";
+                }
+                else
+                {
+                    // Already paid but no refund (cancelled after pickup time) → Cancel directly
+                    booking.Status = OrderBookingStatus.CANCELLED;
+                    booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nNo refund (cancelled after pickup time)";
                 }
             }
 
-            // Mark order as waiting for refund so admin can manually process the transfer and then set to CANCELLED
-            booking.Status = OrderBookingStatus.REFUND_PENDING;
-
-            var customerName = booking.User?.FullName ?? "(Offline/Unknown)";
-            var customerPhone = booking.User?.PhoneNumber ?? "(Unknown)";
-            booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nRefundAmount: {refundAmount:C}\nCustomer: {customerName} - {customerPhone}";
             booking.UpdatedBy = GetCurrentUserName();
             booking.UpdatedAt = DateTime.UtcNow;
 
@@ -493,6 +517,34 @@ namespace EVSRS.Services.Service
         {
             var bookings = await _unitOfWork.OrderRepository.GetOrderBookingListAsync(pageNumber, pageSize);
             var bookingDtos = bookings.Items.Select(b => _mapper.Map<OrderBookingResponseDto>(b)).ToList();
+            
+            // Compute and populate refund amount for orders that can be refunded or have been refunded
+            var refundableStatuses = new[] { 
+                OrderBookingStatus.PENDING,           // Can cancel → show potential refund
+                OrderBookingStatus.CONFIRMED,         // Can cancel → show potential refund  
+                OrderBookingStatus.READY_FOR_CHECKOUT,// Can cancel → show potential refund
+                OrderBookingStatus.REFUND_PENDING,    // Waiting for refund → show refund amount
+                OrderBookingStatus.CANCELLED          // Already cancelled → show refunded amount
+            };
+            
+            var bookingsList = bookings.Items.ToList();
+            for (int i = 0; i < bookingsList.Count; i++)
+            {
+                if (bookingsList[i].Status.HasValue && refundableStatuses.Contains(bookingsList[i].Status.Value))
+                {
+                    try
+                    {
+                        bookingDtos[i].RefundAmount = ComputeRefundAmount(bookingsList[i]);
+                    }
+                    catch
+                    {
+                        // If any unexpected issue occurs, leave RefundAmount null to avoid breaking the listing
+                        bookingDtos[i].RefundAmount = null;
+                    }
+                }
+                // Other statuses (COMPLETED, IN_USE, CHECKED_OUT) → RefundAmount = null
+            }
+            
             return new PaginatedList<OrderBookingResponseDto>(bookingDtos, bookings.TotalCount, pageNumber, pageSize);
         }
 
