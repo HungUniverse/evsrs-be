@@ -27,9 +27,9 @@ namespace EVSRS.Services.Service
         private readonly IServiceProvider _serviceProvider;
 
         public OrderBookingService(
-            IUnitOfWork unitOfWork, 
-            IMapper mapper, 
-            IHttpContextAccessor httpContextAccessor, 
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
             IValidationService validationService,
             IServiceProvider serviceProvider)
         {
@@ -52,7 +52,7 @@ namespace EVSRS.Services.Service
             var duration = endDate - startDate;
             var totalHours = (int)Math.Ceiling(duration.TotalHours);
             if (totalHours <= 0) totalHours = 1; // Tối thiểu 1 giờ
-            
+
             // Ví dụ: 17:10 - 16:00 = 1 giờ 10 phút -> làm tròn thành 2 giờ
 
             // Giá thuê theo ngày và giảm giá
@@ -64,7 +64,8 @@ namespace EVSRS.Services.Service
             var hourlyRate = discountedDailyPrice / 24;
             var totalCost = hourlyRate * totalHours;
 
-            return totalCost;
+            // Làm tròn đến 2 chữ số thập phân (tiền tệ)
+            return Math.Round(totalCost, 2, MidpointRounding.AwayFromZero);
         }
 
         public async Task<OrderBookingResponseDto> CancelOrderAsync(string id, string reason)
@@ -83,13 +84,13 @@ namespace EVSRS.Services.Service
                                booking.PaymentStatus == PaymentStatus.PAID_DEPOSIT_COMPLETED;
 
             decimal refundAmount = 0m;
-            
+
             if (!hasBeenPaid)
             {
                 // Not paid yet → Cancel directly, no refund needed
                 booking.Status = OrderBookingStatus.CANCELLED;
                 refundAmount = 0m;
-                
+
                 var noteBuilder = new StringBuilder(booking.Note ?? string.Empty);
                 noteBuilder.AppendLine($"Cancelled before payment - Reason: {reason}");
                 booking.Note = noteBuilder.ToString();
@@ -227,7 +228,7 @@ namespace EVSRS.Services.Service
             return await _unitOfWork.OrderRepository.IsCarAvailableAsync(carId, startDate, endDate, excludeBookingId);
         }
 
-  
+
 
         public async Task<OrderBookingResponseDto> CheckoutOrderAsync(string id)
         {
@@ -247,7 +248,7 @@ namespace EVSRS.Services.Service
             // Check if handover inspection exists
             var handoverInspection = await _unitOfWork.HandoverInspectionRepository
                 .GetHandoverInspectionByOrderAndTypeAsync(id, "HANDOVER");
-            _validationService.CheckBadRequest(handoverInspection == null, 
+            _validationService.CheckBadRequest(handoverInspection == null,
                 "Handover inspection must be completed before checkout");
 
             booking.Status = OrderBookingStatus.CHECKED_OUT;
@@ -313,7 +314,7 @@ namespace EVSRS.Services.Service
             // Check if return inspection exists
             var returnInspection = await _unitOfWork.HandoverInspectionRepository
                 .GetHandoverInspectionByOrderAndTypeAsync(id, "RETURN");
-            _validationService.CheckBadRequest(returnInspection == null, 
+            _validationService.CheckBadRequest(returnInspection == null,
                 "Return inspection must be completed before processing return");
 
             booking.Status = OrderBookingStatus.RETURNED;
@@ -375,9 +376,17 @@ namespace EVSRS.Services.Service
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
 
-        public async Task<OrderBookingResponseDto> CreateOfflineOrderBookingAsync(OrderBookingRequestDto request)
+        public async Task<SepayQrResponse> CreateOfflineOrderBookingAsync(OrderBookingOfflineRequestDto request)
         {
             await _validationService.ValidateAndThrowAsync(request);
+
+            // Get current staff's depot ID
+            var currentUserId = GetCurrentUserId();
+            _validationService.CheckBadRequest(string.IsNullOrEmpty(currentUserId), "Staff must be logged in to create offline booking");
+
+            var currentStaff = await _unitOfWork.UserRepository.GetUserByIdAsync(currentUserId);
+            _validationService.CheckNotFound(currentStaff, "Current staff not found");
+            _validationService.CheckBadRequest(string.IsNullOrEmpty(currentStaff?.DepotId), "Staff must be assigned to a depot");
 
             // Validate car availability
             var isAvailable = await CheckCarAvailabilityAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
@@ -385,28 +394,23 @@ namespace EVSRS.Services.Service
 
             // Calculate costs
             var totalCost = await CalculateBookingCostAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
-            var depositAmount = totalCost * 0.3m; // 30% deposit
-            var remainingAmount = totalCost - depositAmount;
 
             var booking = _mapper.Map<OrderBooking>(request);
             booking.Id = Guid.NewGuid().ToString();
             booking.Code = GenerateBookingCode(); // Generate unique booking code
-            booking.UserId = null; // Offline booking doesn't have user
-            booking.Status = OrderBookingStatus.PENDING;
+            booking.UserId = request.UserId;
+            booking.DepotId = currentStaff!.DepotId; // Set depot ID from current staff
+            booking.CarEVDetailId = request.CarEVDetailId;
+            booking.Status = OrderBookingStatus.CONFIRMED;
+            booking.PaymentType = PaymentType.FULL;
             booking.PaymentStatus = PaymentStatus.PENDING;
             booking.SubTotal = totalCost.ToString();
             booking.TotalAmount = totalCost.ToString();
-            booking.DepositAmount = request.PaymentType == PaymentType.DEPOSIT ? depositAmount.ToString() : totalCost.ToString();
-            booking.RemainingAmount = request.PaymentType == PaymentType.DEPOSIT ? remainingAmount.ToString() : "0";
             booking.CreatedBy = GetCurrentUserName();
             booking.CreatedAt = DateTime.UtcNow;
             booking.UpdatedAt = DateTime.UtcNow;
 
-            // Store customer info in note for offline booking
-            if (request.IsOfflineBooking)
-            {
-                booking.Note = $"Offline Booking - Customer: {request.CustomerName}, Phone: {request.CustomerPhone}, Email: {request.CustomerEmail}, Address: {request.CustomerAddress}. {request.Note}";
-            }
+
 
             await _unitOfWork.OrderRepository.CreateOrderBookingAsync(booking);
 
@@ -419,9 +423,32 @@ namespace EVSRS.Services.Service
             }
 
             await _unitOfWork.SaveChangesAsync();
+            var qrResponse = new SepayQrResponse();
+            if (request.PaymentMethod == PaymentMethod.BANKING)
+            {
+                try
+                {
+                    using (var scope = _serviceProvider.CreateScope())
+                    {
+                        var sepayService = scope.ServiceProvider.GetRequiredService<ISepayService>();
+                        qrResponse = await sepayService.CreatePaymentQrAsync(booking.Id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail the booking creation
+                    // QR can be generated later if needed
+                    Console.WriteLine($"Failed to generate QR URL: {ex.Message}");
+                    qrResponse.QrUrl = "";
+                }
+            }
 
             var result = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(booking.Id);
-            return _mapper.Map<OrderBookingResponseDto>(result);
+            qrResponse.OrderBooking = _mapper.Map<OrderBookingResponseDto>(result);
+
+            return qrResponse;
+
+
         }
 
         public async Task<SepayQrResponse> CreateOrderBookingAsync(OrderBookingRequestDto request)
@@ -494,7 +521,7 @@ namespace EVSRS.Services.Service
             }
 
             var result = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(booking.Id);
-        qrResponse.OrderBooking = _mapper.Map<OrderBookingResponseDto>(result);
+            qrResponse.OrderBooking = _mapper.Map<OrderBookingResponseDto>(result);
 
             return qrResponse;
         }
@@ -517,16 +544,16 @@ namespace EVSRS.Services.Service
         {
             var bookings = await _unitOfWork.OrderRepository.GetOrderBookingListAsync(pageNumber, pageSize);
             var bookingDtos = bookings.Items.Select(b => _mapper.Map<OrderBookingResponseDto>(b)).ToList();
-            
+
             // Compute and populate refund amount for orders that can be refunded or have been refunded
-            var refundableStatuses = new[] { 
+            var refundableStatuses = new[] {
                 OrderBookingStatus.PENDING,           // Can cancel → show potential refund
                 OrderBookingStatus.CONFIRMED,         // Can cancel → show potential refund  
                 OrderBookingStatus.READY_FOR_CHECKOUT,// Can cancel → show potential refund
                 OrderBookingStatus.REFUND_PENDING,    // Waiting for refund → show refund amount
                 OrderBookingStatus.CANCELLED          // Already cancelled → show refunded amount
             };
-            
+
             var bookingsList = bookings.Items.ToList();
             for (int i = 0; i < bookingsList.Count; i++)
             {
@@ -544,7 +571,7 @@ namespace EVSRS.Services.Service
                 }
                 // Other statuses (COMPLETED, IN_USE, CHECKED_OUT) → RefundAmount = null
             }
-            
+
             return new PaginatedList<OrderBookingResponseDto>(bookingDtos, bookings.TotalCount, pageNumber, pageSize);
         }
 
