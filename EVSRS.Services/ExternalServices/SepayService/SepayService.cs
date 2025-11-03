@@ -134,7 +134,7 @@ public class SepayService : ISepayService
             // Thanh toán full
             if (order.Type == OrderType.RENTAL)
             {
-                order.Status = OrderBookingStatus.CONFIRMED;
+                order.Status = OrderBookingStatus.READY_FOR_CHECKOUT; // Ready for checkout after full payment
                 order.PaymentStatus = PaymentStatus.PAID_FULL;
                 order.UpdatedAt = DateTime.UtcNow;
                 order.UpdatedBy = "SepayWebhook";
@@ -147,7 +147,7 @@ public class SepayService : ISepayService
             }
 
             // Regular full payment
-            order.Status = OrderBookingStatus.CONFIRMED;
+            order.Status = OrderBookingStatus.READY_FOR_CHECKOUT; // Ready for checkout after full payment
             order.PaymentStatus = PaymentStatus.PAID_FULL;
             order.UpdatedAt = DateTime.UtcNow;
             order.UpdatedBy = "SepayWebhook";
