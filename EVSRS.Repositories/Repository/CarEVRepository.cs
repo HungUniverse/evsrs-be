@@ -34,20 +34,41 @@ namespace EVSRS.Repositories.Repository
 
         public async Task<CarEV?> GetCarEVByIdAsync(string id)
         {
-            var response = await _dbSet.Where(x => !x.IsDeleted && x.Id == id).FirstOrDefaultAsync();
+            var response = await _dbSet
+                .Include(c => c.Model)
+                    .ThenInclude(m => m.CarManufacture)
+                .Include(c => c.Model)
+                    .ThenInclude(m => m.Amenities)
+                .Include(c => c.Depot)
+                .Where(x => !x.IsDeleted && x.Id == id)
+                .FirstOrDefaultAsync();
             return response;
         }
 
         public async Task<PaginatedList<CarEV>> GetCarEVList()
         {
-            var response = await _dbSet.Include(c => c.Model).Include(c => c.Depot).Where(x => !x.IsDeleted).ToListAsync();
+            var response = await _dbSet
+                .Include(c => c.Model)
+                    .ThenInclude(m => m.CarManufacture)
+                .Include(c => c.Model)
+                    .ThenInclude(m => m.Amenities)
+                .Include(c => c.Depot)
+                .Where(x => !x.IsDeleted)
+                .OrderBy(c => c.CreatedAt)
+                .ToListAsync();
             return PaginatedList<CarEV>.Create(response, 1, response.Count);
         }
 
         public async Task<List<CarEV>> GetAllCarEVsByDepotIdAsync(string depotId)
         {
-            return await _context.CarEVs
+            return await _dbSet
+                .Include(c => c.Model)
+                    .ThenInclude(m => m.CarManufacture)
+                .Include(c => c.Model)
+                    .ThenInclude(m => m.Amenities)
+                .Include(c => c.Depot)
                 .Where(c => c.DepotId == depotId && !c.IsDeleted)
+                .OrderBy(c => c.CreatedAt)
                 .ToListAsync();
         }
 
