@@ -15,4 +15,5 @@ public interface IAuthService
     Task<TokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto model);
     Task CompleteRegisterAsync(RegisterUserRequestDto model);
     Task<TokenResponseDto> SignInWithGoogleJwtAsync(string jwtToken, string? notificationToken = null);
+    Task<RegisterUserAtDepotResponseDto> RegisterUserAtDepotAsync(RegisterUserAtDepotRequestDto request);
 }
