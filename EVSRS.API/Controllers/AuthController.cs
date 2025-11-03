@@ -61,7 +61,7 @@ namespace EVSRS.API.Controllers
                 "Login successfully!"
             ));
         }
-         [HttpPost("login-google")]
+        [HttpPost("login-google")]
         public async Task<IActionResult> LoginGoogle([FromBody] GoogleLoginRequestDto request)
         {
             var tokenResponse =
@@ -112,6 +112,18 @@ namespace EVSRS.API.Controllers
                 ApiCodes.SUCCESS,
                 null,
                 "OTP verification successful!"
+            ));
+        }
+
+        [HttpPost("register-at-depot")]
+        public async Task<IActionResult> RegisterAtDepot([FromBody] RegisterUserAtDepotRequestDto model)
+        {
+            var response = await _authService.RegisterUserAtDepotAsync(model);
+            return Ok(new ResponseModel<RegisterUserAtDepotResponseDto>(
+                StatusCodes.Status201Created,
+                ApiCodes.CREATED,
+                response,
+                "User registered at depot successfully!"
             ));
         }
     }
