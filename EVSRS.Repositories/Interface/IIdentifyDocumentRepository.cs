@@ -19,7 +19,5 @@ namespace EVSRS.Repositories.Interface
         Task UpdateIdentifyDocumentAsync(IdentifyDocument identifyDocument);
         Task DeleteIdentifyDocumentAsync(IdentifyDocument identifyDocument);
        
-
-
     }
 }

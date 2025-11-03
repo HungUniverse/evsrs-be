@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using AutoMapper;
 using EVSRS.BusinessObjects.DTO.AuthDto;
+using EVSRS.BusinessObjects.DTO.IdentifyDocumentDto;
 using EVSRS.BusinessObjects.DTO.TokenDto;
 using EVSRS.BusinessObjects.DTO.UserDto;
 using EVSRS.BusinessObjects.Entity;
@@ -26,15 +27,17 @@ public class AuthService : IAuthService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IEmailSenderSevice _emailSenderService;
+    private readonly IIdentifyDocumentService _identifyDocumentService;
     private readonly IMapper _mapper;
     private readonly IValidationService _validationService;
-    public AuthService(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IValidationService validationService, IEmailSenderSevice emailSenderService, IMapper mapper)
+    public AuthService(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IValidationService validationService, IEmailSenderSevice emailSenderService, IIdentifyDocumentService identifyDocumentService, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _httpContextAccessor = httpContextAccessor;
         _configuration = configuration;
         _validationService = validationService;
         _emailSenderService = emailSenderService;
+        _identifyDocumentService = identifyDocumentService;
         _mapper = mapper;
     }
     public async Task CompleteRegisterAsync(RegisterUserRequestDto model)
@@ -357,7 +360,7 @@ public class AuthService : IAuthService
 
         await _unitOfWork.SaveChangesAsync();
 
-    
+
 
         var userRole = user.Role.ToString();
 
@@ -471,5 +474,56 @@ public class AuthService : IAuthService
 
         await _unitOfWork.TokenRepository.CreateTokenAsync(tokenEntity);
         await _unitOfWork.SaveChangesAsync();
+    }
+    public async Task<RegisterUserAtDepotResponseDto> RegisterUserAtDepotAsync(RegisterUserAtDepotRequestDto request)
+    {
+        await _validationService.ValidateAndThrowAsync(request);
+
+        var existingUser = await _unitOfWork.UserRepository.GetByEmailPhoneAsync(request.UserEmail, request.PhoneNumber);
+        if (existingUser != null)
+        {
+            throw new InvalidOperationException("Email or phone number has already been registered!");
+        }
+
+        var user = _mapper.Map<ApplicationUser>(request);
+        var salt = HashHelper.GenerateSalt();
+        var hashPassword = HashHelper.HashPassword(request.Password, salt);
+        var emailParts = request.UserEmail.Split(new[] { '@' }, 2);
+        user.HashPassword = hashPassword;
+        user.Salt = salt;
+        user.FullName = request.FullName;
+        user.UserName = emailParts[0];
+        user.PhoneNumber = request.PhoneNumber;
+        user.IsVerify = true;
+        user.CreatedBy = "DepotRegistration";
+
+        var defaultRole = Role.USER;
+        user.Role = defaultRole;
+
+        await _unitOfWork.UserRepository.CreateUserAsync(user);
+
+        await _identifyDocumentService.CreateIdentifyDocumentAsync(new IdentifyDocumentRequestDto
+        {
+            UserId = user.Id,
+            FrontImage = request.FrontImage,
+            BackImage = request.BackImage,
+            CountryCode = request.CountryCode,
+            NumberMasked = request.NumberMasked,
+            LicenseClass = request.LicenseClass,
+            ExpireAt = request.ExpireAt,
+            Status = IdentifyDocumentStatus.APPROVED,
+            VerifiedBy = "DepotRegistration",
+            VerifiedAt = DateTime.UtcNow
+        });
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return new RegisterUserAtDepotResponseDto
+        {
+            UserId = user.Id,
+            UserEmail = user.UserEmail,
+            FullName = user.FullName,
+            PhoneNumber = user.PhoneNumber
+        };
     }
 }

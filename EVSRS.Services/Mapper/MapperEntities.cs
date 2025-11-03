@@ -14,6 +14,7 @@ using EVSRS.BusinessObjects.DTO.SystemConfigDto;
 using EVSRS.BusinessObjects.DTO.TokenDto;
 using EVSRS.BusinessObjects.DTO.TransactionDto;
 using EVSRS.BusinessObjects.DTO.UserDto;
+using EVSRS.BusinessObjects.DTO.AuthDto;
 using EVSRS.BusinessObjects.Enum;
 using EVSRS.BusinessObjects.Entity;
 using EVSRS.BusinessObjects.DTO.IdentifyDocumentDto;
@@ -49,6 +50,25 @@ namespace EVSRS.Services.Mapper
                 .ForMember(dest => dest.Salt, opt => opt.Ignore())
                 .ForMember(dest => dest.IsVerify, opt => opt.MapFrom(src => false))
                 .ForMember(dest => dest.Role, opt => opt.MapFrom(src => Role.STAFF));
+            CreateMap<RegisterUserAtDepotRequestDto, ApplicationUser>()
+                .ForMember(dest => dest.HashPassword, opt => opt.Ignore())
+                .ForMember(dest => dest.Salt, opt => opt.Ignore())
+                .ForMember(dest => dest.UserName, opt => opt.Ignore())
+                .ForMember(dest => dest.IsVerify, opt => opt.Ignore())
+                .ForMember(dest => dest.Role, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+                .ForMember(dest => dest.DepotId, opt => opt.Ignore())
+                .ForMember(dest => dest.ProfilePicture, opt => opt.Ignore())
+                .ForMember(dest => dest.DateOfBirth, opt => opt.Ignore())
+                .ForMember(dest => dest.OTPs, opt => opt.Ignore())
+                .ForMember(dest => dest.UserTokens, opt => opt.Ignore())
+                .ForMember(dest => dest.Notifications, opt => opt.Ignore())
+                .ForMember(dest => dest.Transactions, opt => opt.Ignore())
+                .ForMember(dest => dest.Contracts, opt => opt.Ignore())
+                .ForMember(dest => dest.Feedbacks, opt => opt.Ignore())
+                .ForMember(dest => dest.IdentifyDocuments, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderBookings, opt => opt.Ignore())
+                .ForMember(dest => dest.Depot, opt => opt.Ignore());
             // CreateMap<ApplicationUser, UpdateUserRequestDto>().ReverseMap();
             // CreateMap<ApplicationUser, UpdateProfileRequestDto>().ReverseMap();
 
