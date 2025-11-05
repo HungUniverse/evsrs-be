@@ -379,6 +379,22 @@ namespace EVSRS.API.Controllers
                 "Order booking deleted successfully"
             ));
         }
+
+        /// <summary>
+        /// Admin endpoint to manually trigger cancellation of expired unpaid orders
+        /// </summary>
+        [HttpPost("admin/cancel-expired-orders")]
+        [Authorize] // Chỉ admin
+        public async Task<IActionResult> CancelExpiredOrders()
+        {
+            await _orderBookingService.CancelExpiredUnpaidOrdersAsync();
+            return Ok(new ResponseModel<object>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                null,
+                "Expired orders processed successfully"
+            ));
+        }
     }
 
     public class UpdateOrderStatusRequest

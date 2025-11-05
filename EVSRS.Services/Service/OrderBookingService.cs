@@ -860,5 +860,80 @@ namespace EVSRS.Services.Service
 
             return depositAmount / 2m; // half deposit
         }
+
+        public async Task CancelExpiredUnpaidOrdersAsync()
+        {
+            try
+            {
+                // Lấy timeout từ SystemConfig
+                var timeoutConfig = await _unitOfWork.SystemConfigRepository.GetSystemConfigByKeyAsync("ORDER_PAYMENT_TIMEOUT_HOURS");
+                int timeoutHours = 1; // Default 1 hour
+                if (timeoutConfig != null && !string.IsNullOrWhiteSpace(timeoutConfig.Value) 
+                    && int.TryParse(timeoutConfig.Value, out var parsedTimeout))
+                {
+                    timeoutHours = parsedTimeout;
+                }
+
+                var cutoffTime = DateTime.UtcNow.AddHours(-timeoutHours);
+
+                // Tìm các đơn hàng PENDING chưa thanh toán và quá thời hạn
+                var expiredOrders = await _unitOfWork.OrderRepository.GetExpiredUnpaidOrdersAsync(cutoffTime);
+
+                foreach (var order in expiredOrders)
+                {
+                    try
+                    {
+                        // Tự động hủy đơn hàng
+                        await CancelExpiredOrderAsync(order);
+                        Console.WriteLine($"Auto-cancelled expired order {order.Code} (ID: {order.Id})");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to cancel expired order {order.Code} (ID: {order.Id}): {ex.Message}");
+                    }
+                }
+
+                if (expiredOrders.Any())
+                {
+                    Console.WriteLine($"Processed {expiredOrders.Count()} expired orders");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in CancelExpiredUnpaidOrdersAsync: {ex.Message}");
+                throw;
+            }
+        }
+
+        private async Task CancelExpiredOrderAsync(OrderBooking order)
+        {
+            // Cập nhật status
+            order.Status = OrderBookingStatus.CANCELLED;
+            order.PaymentStatus = PaymentStatus.FAILED;
+            
+            // Thêm note về lý do hủy
+            var noteBuilder = new StringBuilder(order.Note ?? string.Empty);
+            noteBuilder.AppendLine($"Auto-cancelled at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} - Payment timeout (not paid within required timeframe)");
+            order.Note = noteBuilder.ToString();
+            
+            order.UpdatedBy = "System";
+            order.UpdatedAt = DateTime.UtcNow;
+
+            // Giải phóng xe
+            if (!string.IsNullOrEmpty(order.CarEVDetailId))
+            {
+                var car = await _unitOfWork.CarEVRepository.GetCarEVByIdAsync(order.CarEVDetailId);
+                if (car != null && car.Status == CarEvStatus.RESERVED)
+                {
+                    car.Status = CarEvStatus.AVAILABLE;
+                    car.UpdatedBy = "System";
+                    car.UpdatedAt = DateTime.UtcNow;
+                    await _unitOfWork.CarEVRepository.UpdateCarEVAsync(car);
+                }
+            }
+
+            await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(order);
+            await _unitOfWork.SaveChangesAsync();
+        }
     }
 }

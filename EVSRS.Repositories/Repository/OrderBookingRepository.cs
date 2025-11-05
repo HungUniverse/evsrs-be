@@ -167,5 +167,16 @@ namespace EVSRS.Repositories.Repository
         {
             await UpdateAsync(orderBooking);
         }
+
+        public async Task<IEnumerable<OrderBooking>> GetExpiredUnpaidOrdersAsync(DateTime cutoffTime)
+        {
+            return await _dbSet
+                .Include(o => o.User)
+                .Where(o => o.Status == OrderBookingStatus.PENDING && 
+                           o.PaymentStatus == PaymentStatus.PENDING &&
+                           o.CreatedAt < cutoffTime &&
+                           !o.IsDeleted)
+                .ToListAsync();
+        }
     }
 }
