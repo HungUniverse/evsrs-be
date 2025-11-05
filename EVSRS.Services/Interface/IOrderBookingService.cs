@@ -32,5 +32,6 @@ namespace EVSRS.Services.Interface
         Task<decimal> CalculateBookingCostAsync(string carId, DateTime startDate, DateTime endDate);
         Task<PaginatedList<OrderBookingResponseDto>> GetRefundPendingOrdersAsync(int pageNumber, int pageSize);
         Task<OrderBookingResponseDto> ConfirmRefundAsync(string id, decimal? refundedAmount = null, string? adminNote = null);
+        Task CancelExpiredUnpaidOrdersAsync();
     }
 }
