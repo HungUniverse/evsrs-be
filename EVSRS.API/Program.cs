@@ -3,6 +3,7 @@ using EVSRS.API.Constant;
 using EVSRS.API.DependencyInjection;
 using EVSRS.API.Middlewares;
 using EVSRS.Repositories.Helper;
+using EVSRS.Services.BackgroundServices;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NLog;
 using NLog.Web;
@@ -41,6 +42,10 @@ namespace EVSRS.API
                 builder.Services.AddJwtAuthentication(builder.Configuration);
                 builder.Services.AddHealthChecks()
                     .AddCheck("self", () => HealthCheckResult.Healthy());
+                
+                // Add background services
+                builder.Services.AddHostedService<OrderTimeoutService>();
+                
                 var app = builder.Build();
 
                 // Configure the HTTP request pipeline.
