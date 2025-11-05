@@ -70,26 +70,47 @@ namespace EVSRS.Services.Service
             // Ca chiều: 12:00 - 22:00 (hệ số 0.65)
             // Cả ngày: 6:00 - 22:00 (hệ số 1.0)
 
+            // ✅ DEBUG LOG
+            Console.WriteLine($"DEBUG - Raw StartDate: {startDate} (Kind: {startDate.Kind})");
+            Console.WriteLine($"DEBUG - Raw EndDate: {endDate} (Kind: {endDate.Kind})");
+            
+            // Convert to Vietnam timezone using helper method
+            var startDateVN = ConvertToVietnamTime(startDate);
+            var endDateVN = ConvertToVietnamTime(endDate);
+            
+            Console.WriteLine($"DEBUG - VN StartDate: {startDateVN} (TimeOfDay: {startDateVN.TimeOfDay})");
+            Console.WriteLine($"DEBUG - VN EndDate: {endDateVN} (TimeOfDay: {endDateVN.TimeOfDay})");
+
             var morningStart = new TimeSpan(6, 0, 0);
             var afternoonStart = new TimeSpan(12, 0, 0);
             var depotClose = new TimeSpan(22, 0, 0);
 
-            // Validate operating hours
+            // Validate operating hours using Vietnam time
             _validationService.CheckBadRequest(
-                startDate.TimeOfDay < morningStart || startDate.TimeOfDay > depotClose,
-                "Start time must be within depot operating hours (6:00 AM - 10:00 PM)"
+                startDateVN.TimeOfDay < morningStart || startDateVN.TimeOfDay > depotClose,
+                $"Start time must be within depot operating hours (6:00 AM - 10:00 PM). Received: {startDateVN.TimeOfDay} (VN time)"
             );
             
             _validationService.CheckBadRequest(
-                endDate.TimeOfDay < morningStart || endDate.TimeOfDay > depotClose,
-                "End time must be within depot operating hours (6:00 AM - 10:00 PM)"
+                endDateVN.TimeOfDay < morningStart || endDateVN.TimeOfDay > depotClose,
+                $"End time must be within depot operating hours (6:00 AM - 10:00 PM). Received: {endDateVN.TimeOfDay} (VN time)"
             );
 
+            // Use Vietnam time for all calculations
+            return CalculateCoefficient(startDateVN, endDateVN);
+        }
+
+        private decimal CalculateCoefficient(DateTime startDateVN, DateTime endDateVN)
+        {
+            var morningStart = new TimeSpan(6, 0, 0);
+            var afternoonStart = new TimeSpan(12, 0, 0);
+            var depotClose = new TimeSpan(22, 0, 0);
+
             // Nếu thuê trong cùng 1 ngày
-            if (startDate.Date == endDate.Date)
+            if (startDateVN.Date == endDateVN.Date)
             {
-                var startTime = startDate.TimeOfDay;
-                var endTime = endDate.TimeOfDay;
+                var startTime = startDateVN.TimeOfDay;
+                var endTime = endDateVN.TimeOfDay;
 
                 // Thuê chỉ trong ca sáng (6:00-12:00)
                 if (startTime >= morningStart && endTime <= afternoonStart)
@@ -113,11 +134,11 @@ namespace EVSRS.Services.Service
             }
 
             // Nếu thuê qua nhiều ngày
-            var daysDifference = (endDate.Date - startDate.Date).Days;
+            var daysDifference = (endDateVN.Date - startDateVN.Date).Days;
             decimal totalCoefficient = 0m;
 
             // Xử lý ngày đầu tiên
-            var firstDayStartTime = startDate.TimeOfDay;
+            var firstDayStartTime = startDateVN.TimeOfDay;
             if (firstDayStartTime >= morningStart && firstDayStartTime < afternoonStart)
             {
                 // Bắt đầu từ ca sáng → tính full ngày đầu
@@ -136,7 +157,7 @@ namespace EVSRS.Services.Service
             }
 
             // Xử lý ngày cuối cùng
-            var lastDayEndTime = endDate.TimeOfDay;
+            var lastDayEndTime = endDateVN.TimeOfDay;
             if (lastDayEndTime <= afternoonStart && lastDayEndTime >= morningStart)
             {
                 // Kết thúc trong ca sáng → chỉ tính ca sáng ngày cuối
@@ -810,6 +831,30 @@ namespace EVSRS.Services.Service
         }
 
         private static readonly Random _random = new Random();
+
+        private DateTime ConvertToVietnamTime(DateTime dateTime)
+        {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            
+            try
+            {
+                // Nếu DateTime có offset info (từ JSON với timezone)
+                if (dateTime.Kind != DateTimeKind.Unspecified)
+                {
+                    return TimeZoneInfo.ConvertTime(dateTime, vietnamTimeZone);
+                }
+                
+                // Nếu Unspecified, assume là local time và convert
+                var localDateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Local);
+                return TimeZoneInfo.ConvertTime(localDateTime, vietnamTimeZone);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Timezone conversion error: {ex.Message}");
+                // Fallback: assume input is already Vietnam time
+                return dateTime;
+            }
+        }
 
         private async Task<bool> HasActiveBookingAsync(string userId)
         {
