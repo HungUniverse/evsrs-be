@@ -48,24 +48,107 @@ namespace EVSRS.Services.Service
             var model = await _unitOfWork.ModelRepository.GetModelByIdAsync(car!.ModelId!);
             _validationService.CheckNotFound(model, $"Car model not found");
 
-            // Tính số giờ thuê - làm tròn lên nếu có phút lẻ
-            var duration = endDate - startDate;
-            var totalHours = (int)Math.Ceiling(duration.TotalHours);
-            if (totalHours <= 0) totalHours = 1; // Tối thiểu 1 giờ
-
-            // Ví dụ: 17:10 - 16:00 = 1 giờ 10 phút -> làm tròn thành 2 giờ
-
             // Giá thuê theo ngày và giảm giá
             var dailyPrice = (decimal)(model!.Price ?? 0);
             var discount = (decimal)(model.Sale ?? 0) / 100;
             var discountedDailyPrice = dailyPrice * (1 - discount);
 
-            // Tính giá thuê theo giờ: (giá_ngày_sau_giảm_giá / 24) * số_giờ
-            var hourlyRate = discountedDailyPrice / 24;
-            var totalCost = hourlyRate * totalHours;
+            // Tính hệ số thuê dựa trên ca làm việc
+            var rentalCoefficient = CalculateRentalCoefficient(startDate, endDate);
+
+            // Tổng tiền = giá_ngày_sau_giảm_giá * hệ_số_thuê
+            var totalCost = discountedDailyPrice * rentalCoefficient;
 
             // Làm tròn đến 2 chữ số thập phân (tiền tệ)
             return Math.Round(totalCost, 2, MidpointRounding.AwayFromZero);
+        }
+
+        private decimal CalculateRentalCoefficient(DateTime startDate, DateTime endDate)
+        {
+            // Depot hoạt động từ 6:00 - 22:00
+            // Ca sáng: 6:00 - 12:00 (hệ số 0.35)
+            // Ca chiều: 12:00 - 22:00 (hệ số 0.65)
+            // Cả ngày: 6:00 - 22:00 (hệ số 1.0)
+
+            var morningStart = new TimeSpan(6, 0, 0);
+            var afternoonStart = new TimeSpan(12, 0, 0);
+            var depotClose = new TimeSpan(22, 0, 0);
+
+            // Validate operating hours
+            _validationService.CheckBadRequest(
+                startDate.TimeOfDay < morningStart || startDate.TimeOfDay > depotClose,
+                "Start time must be within depot operating hours (6:00 AM - 10:00 PM)"
+            );
+            
+            _validationService.CheckBadRequest(
+                endDate.TimeOfDay < morningStart || endDate.TimeOfDay > depotClose,
+                "End time must be within depot operating hours (6:00 AM - 10:00 PM)"
+            );
+
+            // Nếu thuê trong cùng 1 ngày
+            if (startDate.Date == endDate.Date)
+            {
+                var startTime = startDate.TimeOfDay;
+                var endTime = endDate.TimeOfDay;
+
+                // Thuê chỉ trong ca sáng (6:00-12:00)
+                if (startTime >= morningStart && endTime <= afternoonStart)
+                {
+                    return 0.35m; // Ca sáng
+                }
+                // Thuê chỉ trong ca chiều (12:00-22:00)
+                else if (startTime >= afternoonStart && endTime <= depotClose)
+                {
+                    return 0.65m; // Ca chiều
+                }
+                // Thuê cả 2 ca trong ngày
+                else if (startTime >= morningStart && endTime <= depotClose)
+                {
+                    return 1.0m; // Cả ngày
+                }
+                else
+                {
+                    throw new ArgumentException("Invalid rental time within the same day");
+                }
+            }
+
+            // Nếu thuê qua nhiều ngày
+            var daysDifference = (endDate.Date - startDate.Date).Days;
+            decimal totalCoefficient = 0m;
+
+            // Xử lý ngày đầu tiên
+            var firstDayStartTime = startDate.TimeOfDay;
+            if (firstDayStartTime >= morningStart && firstDayStartTime < afternoonStart)
+            {
+                // Bắt đầu từ ca sáng → tính full ngày đầu
+                totalCoefficient += 1.0m;
+            }
+            else if (firstDayStartTime >= afternoonStart && firstDayStartTime <= depotClose)
+            {
+                // Bắt đầu từ ca chiều → chỉ tính ca chiều ngày đầu
+                totalCoefficient += 0.65m;
+            }
+
+            // Các ngày ở giữa (nếu có) → mỗi ngày tính full
+            if (daysDifference > 1)
+            {
+                totalCoefficient += (daysDifference - 1) * 1.0m;
+            }
+
+            // Xử lý ngày cuối cùng
+            var lastDayEndTime = endDate.TimeOfDay;
+            if (lastDayEndTime <= afternoonStart && lastDayEndTime >= morningStart)
+            {
+                // Kết thúc trong ca sáng → chỉ tính ca sáng ngày cuối
+                totalCoefficient += 0.35m;
+            }
+            else if (lastDayEndTime <= depotClose && lastDayEndTime > afternoonStart)
+            {
+                // Kết thúc trong ca chiều → tính full ngày cuối
+                totalCoefficient += 1.0m;
+            }
+
+            return totalCoefficient;
         }
 
         public async Task<OrderBookingResponseDto> CancelOrderAsync(string id, string reason)
@@ -388,6 +471,14 @@ namespace EVSRS.Services.Service
             _validationService.CheckNotFound(currentStaff, "Current staff not found");
             _validationService.CheckBadRequest(string.IsNullOrEmpty(currentStaff?.DepotId), "Staff must be assigned to a depot");
 
+            // ✅ THÊM: Kiểm tra user trong request đã có booking active chưa (nếu có UserId)
+            if (!string.IsNullOrEmpty(request.UserId))
+            {
+                var hasActiveBooking = await HasActiveBookingAsync(request.UserId);
+                _validationService.CheckBadRequest(hasActiveBooking, 
+                    "This customer already has an active booking. Please complete or cancel their current booking before creating a new one.");
+            }
+
             // Validate car availability
             var isAvailable = await CheckCarAvailabilityAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
             _validationService.CheckBadRequest(!isAvailable, "Car is not available for the selected dates");
@@ -457,6 +548,11 @@ namespace EVSRS.Services.Service
 
             var currentUserId = GetCurrentUserId();
             _validationService.CheckBadRequest(string.IsNullOrEmpty(currentUserId), "User must be logged in to create booking");
+
+            // ✅ THÊM: Kiểm tra user đã có booking active chưa
+            var hasActiveBooking = await HasActiveBookingAsync(currentUserId);
+            _validationService.CheckBadRequest(hasActiveBooking, 
+                "You already have an active booking. Please complete or cancel your current booking before creating a new one.");
 
             // Validate car availability
             var isAvailable = await CheckCarAvailabilityAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
@@ -714,6 +810,24 @@ namespace EVSRS.Services.Service
         }
 
         private static readonly Random _random = new Random();
+
+        private async Task<bool> HasActiveBookingAsync(string userId)
+        {
+            var activeBookings = await _unitOfWork.OrderRepository.GetOrderBookingByUserIdAsync(userId);
+            
+            // Các trạng thái được coi là "active" (chưa hoàn thành)
+            var activeStatuses = new[] {
+                OrderBookingStatus.PENDING,
+                OrderBookingStatus.CONFIRMED,
+                OrderBookingStatus.READY_FOR_CHECKOUT,
+                OrderBookingStatus.CHECKED_OUT,
+                OrderBookingStatus.IN_USE,
+                OrderBookingStatus.RETURNED
+            };
+            
+            return activeBookings.Any(b => b.Status.HasValue && activeStatuses.Contains(b.Status.Value));
+        }
+
         private string GenerateBookingCode()
         {
             string prefix = "ORD";
