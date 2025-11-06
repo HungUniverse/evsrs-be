@@ -105,6 +105,7 @@ namespace EVSRS.Services.Service
             var morningStart = new TimeSpan(6, 0, 0);
             var afternoonStart = new TimeSpan(12, 0, 0);
             var depotClose = new TimeSpan(22, 0, 0);
+            var earlyMorningEnd = new TimeSpan(7, 0, 0); // ✅ THÊM: 7:00 sáng để miễn phí
 
             // Nếu thuê trong cùng 1 ngày
             if (startDateVN.Date == endDateVN.Date)
@@ -115,12 +116,12 @@ namespace EVSRS.Services.Service
                 // Thuê chỉ trong ca sáng (6:00-12:00)
                 if (startTime >= morningStart && endTime <= afternoonStart)
                 {
-                    return 0.35m; // Ca sáng
+                    return 0.4m; // Ca sáng
                 }
                 // Thuê chỉ trong ca chiều (12:00-22:00)
                 else if (startTime >= afternoonStart && endTime <= depotClose)
                 {
-                    return 0.65m; // Ca chiều
+                    return 0.6m; // Ca chiều
                 }
                 // Thuê cả 2 ca trong ngày
                 else if (startTime >= morningStart && endTime <= depotClose)
@@ -147,7 +148,7 @@ namespace EVSRS.Services.Service
             else if (firstDayStartTime >= afternoonStart && firstDayStartTime <= depotClose)
             {
                 // Bắt đầu từ ca chiều → chỉ tính ca chiều ngày đầu
-                totalCoefficient += 0.65m;
+                totalCoefficient += 0.6m;
             }
 
             // Các ngày ở giữa (nếu có) → mỗi ngày tính full
@@ -158,10 +159,27 @@ namespace EVSRS.Services.Service
 
             // Xử lý ngày cuối cùng
             var lastDayEndTime = endDateVN.TimeOfDay;
+            
+            // ✅ CHECK: Đây có phải đơn hàng từ 2 ca trở lên không?
+            bool isMultiShiftRental = totalCoefficient >= 0.6m; // Ít nhất 1 ca chiều hoặc multi-day
+            
             if (lastDayEndTime <= afternoonStart && lastDayEndTime >= morningStart)
             {
-                // Kết thúc trong ca sáng → chỉ tính ca sáng ngày cuối
-                totalCoefficient += 0.35m;
+                // Kết thúc trong ca sáng
+                
+                // ✅ SPECIAL RULE: Nếu trả xe 6:00-7:00 sáng và là đơn từ 2 ca trở lên → MIỄN PHÍ
+                if (isMultiShiftRental && lastDayEndTime >= morningStart && lastDayEndTime <= earlyMorningEnd)
+                {
+                    // MIỄN PHÍ ca sáng - không cộng thêm gì
+                    totalCoefficient += 0m;
+                    Console.WriteLine($"DEBUG - Free early morning return: {lastDayEndTime} (multi-shift rental, coefficient: {totalCoefficient})");
+                }
+                else
+                {
+                    // Trả xe sau 7:00 sáng hoặc đơn hàng < 2 ca → tính phí ca sáng
+                    totalCoefficient += 0.4m;
+                    Console.WriteLine($"DEBUG - Charged morning return: {lastDayEndTime} (coefficient: {totalCoefficient})");
+                }
             }
             else if (lastDayEndTime <= depotClose && lastDayEndTime > afternoonStart)
             {
