@@ -66,8 +66,8 @@ namespace EVSRS.Services.Service
         private decimal CalculateRentalCoefficient(DateTime startDate, DateTime endDate)
         {
             // Depot hoạt động từ 6:00 - 22:00
-            // Ca sáng: 6:00 - 12:00 (hệ số 0.35)
-            // Ca chiều: 12:00 - 22:00 (hệ số 0.65)
+            // Ca sáng: 6:00 - 12:30 (hệ số 0.4)
+            // Ca chiều: 12:30 - 22:00 (hệ số 0.6)
             // Cả ngày: 6:00 - 22:00 (hệ số 1.0)
 
             // ✅ DEBUG LOG
@@ -82,7 +82,7 @@ namespace EVSRS.Services.Service
             Console.WriteLine($"DEBUG - VN EndDate: {endDateVN} (TimeOfDay: {endDateVN.TimeOfDay})");
 
             var morningStart = new TimeSpan(6, 0, 0);
-            var afternoonStart = new TimeSpan(12, 0, 0);
+            var afternoonStart = new TimeSpan(12, 30, 0);
             var depotClose = new TimeSpan(22, 0, 0);
 
             // Validate operating hours using Vietnam time
@@ -113,12 +113,12 @@ namespace EVSRS.Services.Service
                 var startTime = startDateVN.TimeOfDay;
                 var endTime = endDateVN.TimeOfDay;
 
-                // Thuê chỉ trong ca sáng (6:00-12:00)
+                // Thuê chỉ trong ca sáng (6:00-12:30)
                 if (startTime >= morningStart && endTime <= afternoonStart)
                 {
                     return 0.4m; // Ca sáng
                 }
-                // Thuê chỉ trong ca chiều (12:00-22:00)
+                // Thuê chỉ trong ca chiều (12:30-22:00)
                 else if (startTime >= afternoonStart && endTime <= depotClose)
                 {
                     return 0.6m; // Ca chiều
@@ -160,25 +160,26 @@ namespace EVSRS.Services.Service
             // Xử lý ngày cuối cùng
             var lastDayEndTime = endDateVN.TimeOfDay;
             
-            // ✅ CHECK: Đây có phải đơn hàng từ 2 ca trở lên không?
-            bool isMultiShiftRental = totalCoefficient >= 0.6m; // Ít nhất 1 ca chiều hoặc multi-day
+            // ✅ CHECK: Đếm số ca (morning/afternoon) trước khung sáng trả xe (06:00 của ngày trả xe)
+            int shiftsBeforeReturn = CountShiftsBeforeMorning(startDateVN, endDateVN);
+            bool eligibleForFreeMorning = shiftsBeforeReturn >= 2; // phải ít nhất 2 ca trước ca sáng trả xe
             
             if (lastDayEndTime <= afternoonStart && lastDayEndTime >= morningStart)
             {
                 // Kết thúc trong ca sáng
                 
                 // ✅ SPECIAL RULE: Nếu trả xe 6:00-7:00 sáng và là đơn từ 2 ca trở lên → MIỄN PHÍ
-                if (isMultiShiftRental && lastDayEndTime >= morningStart && lastDayEndTime <= earlyMorningEnd)
+                if (eligibleForFreeMorning && lastDayEndTime >= morningStart && lastDayEndTime <= earlyMorningEnd)
                 {
                     // MIỄN PHÍ ca sáng - không cộng thêm gì
                     totalCoefficient += 0m;
-                    Console.WriteLine($"DEBUG - Free early morning return: {lastDayEndTime} (multi-shift rental, coefficient: {totalCoefficient})");
+                    Console.WriteLine($"DEBUG - Free early morning return: {lastDayEndTime} (shiftsBeforeReturn: {shiftsBeforeReturn}, coefficient: {totalCoefficient})");
                 }
                 else
                 {
-                    // Trả xe sau 7:00 sáng hoặc đơn hàng < 2 ca → tính phí ca sáng
+                    // Trả xe sau 7:00 sáng hoặc không đủ 2 ca trước đó → tính phí ca sáng
                     totalCoefficient += 0.4m;
-                    Console.WriteLine($"DEBUG - Charged morning return: {lastDayEndTime} (coefficient: {totalCoefficient})");
+                    Console.WriteLine($"DEBUG - Charged morning return: {lastDayEndTime} (shiftsBeforeReturn: {shiftsBeforeReturn}, coefficient: {totalCoefficient})");
                 }
             }
             else if (lastDayEndTime <= depotClose && lastDayEndTime > afternoonStart)
@@ -188,6 +189,51 @@ namespace EVSRS.Services.Service
             }
 
             return totalCoefficient;
+        }
+
+        // Đếm số ca (morning/afternoon) mà booking đã trải qua BEFORE khung sáng trả xe (06:00 của ngày trả xe)
+        private int CountShiftsBeforeMorning(DateTime startDateVN, DateTime endDateVN)
+        {
+            var morningStart = new TimeSpan(6, 0, 0);
+            var afternoonStart = new TimeSpan(12, 30, 0);
+            var depotClose = new TimeSpan(22, 0, 0);
+
+            // Window end = 06:00 of the return day
+            var windowEnd = new DateTime(endDateVN.Year, endDateVN.Month, endDateVN.Day, morningStart.Hours, morningStart.Minutes, 0);
+
+            if (startDateVN >= windowEnd) return 0;
+
+            int shifts = 0;
+            var day = startDateVN.Date;
+
+            // Iterate days up to the day before the return day (windowEnd.Date)
+            while (day < windowEnd.Date)
+            {
+                var mStart = day.Add(morningStart);
+                var mEnd = day.Add(afternoonStart);
+
+                var aStart = day.Add(afternoonStart);
+                var aEnd = day.Add(depotClose);
+
+                // Morning shift: count if it starts before windowEnd and overlaps booking
+                if (mStart < windowEnd && mEnd > startDateVN && mEnd > mStart)
+                {
+                    // overlap check
+                    if (mEnd > startDateVN && mStart < windowEnd)
+                        shifts++;
+                }
+
+                // Afternoon shift: count if it starts before windowEnd and overlaps booking
+                if (aStart < windowEnd && aEnd > startDateVN)
+                {
+                    if (aStart < windowEnd)
+                        shifts++;
+                }
+
+                day = day.AddDays(1);
+            }
+
+            return shifts;
         }
 
         public async Task<OrderBookingResponseDto> CancelOrderAsync(string id, string reason)
