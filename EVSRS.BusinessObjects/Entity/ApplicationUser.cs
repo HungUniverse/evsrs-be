@@ -32,6 +32,8 @@ namespace EVSRS.BusinessObjects.Entity
         public virtual ICollection<OrderBooking>? OrderBookings { get; set; } = [];
         public Depot? Depot { get; set; }
 
+        // ONE-TO-ONE: Membership (một user có một membership)
+        public virtual Membership? Membership { get; set; }
 
     }
 }

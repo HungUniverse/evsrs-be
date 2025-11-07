@@ -11,6 +11,9 @@ namespace EVSRS.BusinessObjects.Datas
     {
         public static void Seed(ModelBuilder modelBuilder)
         {
+            // Seed MembershipConfigs first (no FK dependencies)
+            SeedMembershipConfigs(modelBuilder);
+
             // Seed Users
             SeedUsers(modelBuilder);
 
@@ -1230,6 +1233,60 @@ namespace EVSRS.BusinessObjects.Datas
                     UpdatedBy = "System",
                     CreatedAt = new DateTime(2025, 10, 21, 7, 28, 37, 503, DateTimeKind.Utc),
                     UpdatedAt = new DateTime(2025, 10, 21, 7, 28, 37, 503, DateTimeKind.Utc),   
+                    IsDeleted = false
+                }
+            );
+        }
+
+        private static void SeedMembershipConfigs(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<MembershipConfig>().HasData(
+                new MembershipConfig
+                {
+                    Id = "mc001noneconfig000000000000000000",
+                    Level = MembershipLevel.None,
+                    DiscountPercent = 0m,
+                    RequiredAmount = 0m,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 11, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 11, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                    IsDeleted = false
+                },
+                new MembershipConfig
+                {
+                    Id = "mc002bronzeconfig00000000000000000",
+                    Level = MembershipLevel.Bronze,
+                    DiscountPercent = 10m,
+                    RequiredAmount = 20000m,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 11, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 11, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                    IsDeleted = false
+                },
+                new MembershipConfig
+                {
+                    Id = "mc003silverconfig00000000000000000",
+                    Level = MembershipLevel.Silver,
+                    DiscountPercent = 20m,
+                    RequiredAmount = 50000m,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 11, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 11, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                    IsDeleted = false
+                },
+                new MembershipConfig
+                {
+                    Id = "mc004goldconfig0000000000000000000",
+                    Level = MembershipLevel.Gold,
+                    DiscountPercent = 30m,
+                    RequiredAmount = 100000m,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 11, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 11, 7, 0, 0, 0, 0, DateTimeKind.Utc),
                     IsDeleted = false
                 }
             );
