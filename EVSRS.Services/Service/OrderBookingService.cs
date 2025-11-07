@@ -587,14 +587,13 @@ namespace EVSRS.Services.Service
             }
 
             await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
-            await _unitOfWork.SaveChangesAsync();
 
-            // ✅ CẬP NHẬT MEMBERSHIP - Tự động nâng hạng khi order complete
-            try
+            // ✅ CẬP NHẬT MEMBERSHIP TRƯỚC KHI SAVE - Tự động nâng hạng khi order complete
+            if (!string.IsNullOrEmpty(booking.UserId))
             {
-                if (!string.IsNullOrEmpty(booking.UserId))
+                try
                 {
-                    // Chỉ cộng DepositAmount (tiền thuê xe gốc SAU GIẢM membership), không cộng TotalAmount (bao gồm phí phạt)
+                    // Parse DepositAmount an toàn (tiền thuê xe SAU GIẢM membership)
                     decimal depositAmount = 0m;
                     
                     if (!string.IsNullOrWhiteSpace(booking.DepositAmount))
@@ -605,7 +604,7 @@ namespace EVSRS.Services.Service
                         if (decimal.TryParse(cleanAmount, out decimal parsed))
                         {
                             depositAmount = parsed;
-                            Console.WriteLine($"💰 Order {id}: Parsed DepositAmount = {depositAmount:N0} VND");
+                            Console.WriteLine($"💰 Order {id}: Parsed DepositAmount = {depositAmount:N0} VND from '{booking.DepositAmount}'");
                         }
                         else
                         {
@@ -627,16 +626,18 @@ namespace EVSRS.Services.Service
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ Order {id}: DepositAmount is 0 or invalid, membership not updated");
+                        Console.WriteLine($"⚠️ Order {id}: DepositAmount is 0 or invalid, membership not updated. Value: '{booking.DepositAmount}'");
                     }
                 }
+                catch (Exception ex)
+                {
+                    // Log error nhưng không fail transaction chính
+                    Console.WriteLine($"❌ Order {id}: Error updating membership for user {booking.UserId}: {ex.Message}");
+                    Console.WriteLine($"❌ StackTrace: {ex.StackTrace}");
+                }
             }
-            catch (Exception ex)
-            {
-                // Log error nhưng không fail transaction chính
-                Console.WriteLine($"❌ Order {id}: Error updating membership for user {booking.UserId}: {ex.Message}");
-                Console.WriteLine($"❌ StackTrace: {ex.StackTrace}");
-            }
+
+            await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
