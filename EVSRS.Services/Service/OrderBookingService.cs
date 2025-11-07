@@ -594,24 +594,48 @@ namespace EVSRS.Services.Service
             {
                 if (!string.IsNullOrEmpty(booking.UserId))
                 {
-                    // Chỉ cộng DepositAmount (tiền thuê xe gốc), không cộng TotalAmount (bao gồm phí phạt)
+                    // Chỉ cộng DepositAmount (tiền thuê xe gốc SAU GIẢM membership), không cộng TotalAmount (bao gồm phí phạt)
                     decimal depositAmount = 0m;
-                    if (!string.IsNullOrEmpty(booking.DepositAmount) && 
-                        decimal.TryParse(booking.DepositAmount, out decimal parsedDeposit))
+                    
+                    if (!string.IsNullOrWhiteSpace(booking.DepositAmount))
                     {
-                        depositAmount = parsedDeposit;
+                        // Remove commas và whitespace nếu có (VD: "16,000" → "16000")
+                        string cleanAmount = booking.DepositAmount.Replace(",", "").Replace(" ", "").Trim();
+                        
+                        if (decimal.TryParse(cleanAmount, out decimal parsed))
+                        {
+                            depositAmount = parsed;
+                            Console.WriteLine($"💰 Order {id}: Parsed DepositAmount = {depositAmount:N0} VND");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"⚠️ Order {id}: Failed to parse DepositAmount '{booking.DepositAmount}'");
+                        }
                     }
-
-                    await _membershipService.UpdateMembershipAfterOrderCompleteAsync(
-                        booking.UserId,
-                        depositAmount
-                    );
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Order {id}: DepositAmount is null or empty");
+                    }
+                    
+                    if (depositAmount > 0)
+                    {
+                        await _membershipService.UpdateMembershipAfterOrderCompleteAsync(
+                            booking.UserId,
+                            depositAmount
+                        );
+                        Console.WriteLine($"✅ Order {id}: Updated membership for user {booking.UserId}. Amount added: {depositAmount:N0} VND");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Order {id}: DepositAmount is 0 or invalid, membership not updated");
+                    }
                 }
             }
             catch (Exception ex)
             {
                 // Log error nhưng không fail transaction chính
-                Console.WriteLine($"⚠️ Error updating membership for user {booking.UserId}: {ex.Message}");
+                Console.WriteLine($"❌ Order {id}: Error updating membership for user {booking.UserId}: {ex.Message}");
+                Console.WriteLine($"❌ StackTrace: {ex.StackTrace}");
             }
 
             return _mapper.Map<OrderBookingResponseDto>(booking);
