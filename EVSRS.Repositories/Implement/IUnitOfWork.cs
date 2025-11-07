@@ -21,6 +21,8 @@ namespace EVSRS.Repositories.Implement
         IContractRepository ContractRepository { get; }
         IIdentifyDocumentRepository IdentifyDocumentRepository { get; }
         ISystemConfigRepository SystemConfigRepository { get; }
+        IMembershipConfigRepository MembershipConfigRepository { get; }
+        IMembershipRepository MembershipRepository { get; }
 
         int SaveChanges();
         Task<int> SaveChangesAsync();

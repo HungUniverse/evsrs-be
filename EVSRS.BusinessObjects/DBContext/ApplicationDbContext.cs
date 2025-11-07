@@ -40,6 +40,8 @@ namespace EVSRS.BusinessObjects.DBContext
         public DbSet<Contract> Contracts { get; set; }
         public DbSet<ApplicationUserToken> ApplicationUserTokens { get; set; }
         public DbSet<SystemConfig> SystemConfigs { get; set; }
+        public DbSet<Membership> Memberships { get; set; }
+        public DbSet<MembershipConfig> MembershipConfigs { get; set; }
 
 
 
@@ -65,6 +67,8 @@ namespace EVSRS.BusinessObjects.DBContext
             modelBuilder.Entity<Contract>().ToTable("Contract");
             modelBuilder.Entity<ApplicationUserToken>().ToTable("ApplicationUserToken");
             modelBuilder.Entity<SystemConfig>().ToTable("SystemConfig");
+            modelBuilder.Entity<Membership>().ToTable("Membership");
+            modelBuilder.Entity<MembershipConfig>().ToTable("MembershipConfig");
             #endregion
 
             #region Configure Fluent Api
@@ -117,6 +121,43 @@ namespace EVSRS.BusinessObjects.DBContext
                     .HasForeignKey(u => u.DepotId)
                     .OnDelete(DeleteBehavior.SetNull); // Set null when depot is deleted
 
+            });
+
+            // Configure one-to-one relationship between ApplicationUser and Membership
+            modelBuilder.Entity<Membership>(options =>
+            {
+                options.HasOne(m => m.User)
+                    .WithOne(u => u.Membership)
+                    .HasForeignKey<Membership>(m => m.UserId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                options.HasIndex(m => m.UserId).IsUnique();
+
+                // FK to MembershipConfig
+                options.HasOne(m => m.MembershipConfig)
+                    .WithMany(mc => mc.Memberships)
+                    .HasForeignKey(m => m.MembershipConfigId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure decimal precision
+                options.Property(m => m.TotalOrderBill)
+                    .HasColumnType("decimal(18,2)");
+            });
+
+            // Configure MembershipConfig
+            modelBuilder.Entity<MembershipConfig>(options =>
+            {
+                // Unique constraint on Level
+                options.HasIndex(mc => mc.Level).IsUnique();
+
+                // Configure decimal precision
+                options.Property(mc => mc.DiscountPercent)
+                    .HasColumnType("decimal(5,2)");
+
+                options.Property(mc => mc.RequiredAmount)
+                    .HasColumnType("decimal(18,2)");
             });
 
             modelBuilder.Entity<OrderBooking>(options =>

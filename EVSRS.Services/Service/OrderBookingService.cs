@@ -25,22 +25,30 @@ namespace EVSRS.Services.Service
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IValidationService _validationService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IMembershipService _membershipService;
 
         public OrderBookingService(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             IValidationService validationService,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IMembershipService membershipService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _validationService = validationService;
             _serviceProvider = serviceProvider;
+            _membershipService = membershipService;
         }
 
         public async Task<decimal> CalculateBookingCostAsync(string carId, DateTime startDate, DateTime endDate)
+        {
+            return await CalculateBookingCostAsync(carId, startDate, endDate, null);
+        }
+
+        public async Task<decimal> CalculateBookingCostAsync(string carId, DateTime startDate, DateTime endDate, string? userId)
         {
             var car = await _unitOfWork.CarEVRepository.GetCarEVByIdAsync(carId);
             _validationService.CheckNotFound(car, $"Car with ID {carId} not found");
@@ -48,7 +56,7 @@ namespace EVSRS.Services.Service
             var model = await _unitOfWork.ModelRepository.GetModelByIdAsync(car!.ModelId!);
             _validationService.CheckNotFound(model, $"Car model not found");
 
-            // Giá thuê theo ngày và giảm giá
+            // Giá thuê theo ngày và giảm giá model
             var dailyPrice = (decimal)(model!.Price ?? 0);
             var discount = (decimal)(model.Sale ?? 0) / 100;
             var discountedDailyPrice = dailyPrice * (1 - discount);
@@ -56,11 +64,51 @@ namespace EVSRS.Services.Service
             // Tính hệ số thuê dựa trên ca làm việc
             var rentalCoefficient = CalculateRentalCoefficient(startDate, endDate);
 
-            // Tổng tiền = giá_ngày_sau_giảm_giá * hệ_số_thuê
+            // Tổng tiền trước khi áp dụng membership discount
             var totalCost = discountedDailyPrice * rentalCoefficient;
+
+            // ✅ Áp dụng membership discount nếu có userId
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var membershipDiscount = await GetMembershipDiscountAsync(userId);
+                if (membershipDiscount > 0)
+                {
+                    totalCost = totalCost * (1 - membershipDiscount / 100);
+                    Console.WriteLine($"💎 Applied {membershipDiscount}% membership discount for user {userId}. Final cost: {totalCost}");
+                }
+            }
 
             // Làm tròn đến 2 chữ số thập phân (tiền tệ)
             return Math.Round(totalCost, 2, MidpointRounding.AwayFromZero);
+        }
+
+        /// <summary>
+        /// Lấy % discount từ membership của user
+        /// </summary>
+        private async Task<decimal> GetMembershipDiscountAsync(string userId)
+        {
+            try
+            {
+                var membership = await _unitOfWork.MembershipRepository.GetByUserIdAsync(userId);
+
+                if (membership != null)
+                {
+                    var config = await _unitOfWork.MembershipConfigRepository
+                        .GetMembershipConfigByIdAsync(membership.MembershipConfigId);
+                    
+                    if (config != null)
+                    {
+                        return config.DiscountPercent;
+                    }
+                }
+
+                return 0m;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Error getting membership discount: {ex.Message}");
+                return 0m; // Không áp dụng discount nếu có lỗi
+            }
         }
 
         private decimal CalculateRentalCoefficient(DateTime startDate, DateTime endDate)
@@ -541,6 +589,31 @@ namespace EVSRS.Services.Service
             await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
             await _unitOfWork.SaveChangesAsync();
 
+            // ✅ CẬP NHẬT MEMBERSHIP - Tự động nâng hạng khi order complete
+            try
+            {
+                if (!string.IsNullOrEmpty(booking.UserId))
+                {
+                    // Chỉ cộng DepositAmount (tiền thuê xe gốc), không cộng TotalAmount (bao gồm phí phạt)
+                    decimal depositAmount = 0m;
+                    if (!string.IsNullOrEmpty(booking.DepositAmount) && 
+                        decimal.TryParse(booking.DepositAmount, out decimal parsedDeposit))
+                    {
+                        depositAmount = parsedDeposit;
+                    }
+
+                    await _membershipService.UpdateMembershipAfterOrderCompleteAsync(
+                        booking.UserId,
+                        depositAmount
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error nhưng không fail transaction chính
+                Console.WriteLine($"⚠️ Error updating membership for user {booking.UserId}: {ex.Message}");
+            }
+
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
 
@@ -568,8 +641,8 @@ namespace EVSRS.Services.Service
             var isAvailable = await CheckCarAvailabilityAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
             _validationService.CheckBadRequest(!isAvailable, "Car is not available for the selected dates");
 
-            // Calculate costs
-            var totalCost = await CalculateBookingCostAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
+            // Calculate costs với membership discount
+            var totalCost = await CalculateBookingCostAsync(request.CarEVDetailId, request.StartAt, request.EndAt, request.UserId);
 
             var booking = _mapper.Map<OrderBooking>(request);
             booking.Id = Guid.NewGuid().ToString();
@@ -643,8 +716,8 @@ namespace EVSRS.Services.Service
             var isAvailable = await CheckCarAvailabilityAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
             _validationService.CheckBadRequest(!isAvailable, "Car is not available for the selected dates");
 
-            // Calculate costs
-            var totalCost = await CalculateBookingCostAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
+            // Calculate costs với membership discount
+            var totalCost = await CalculateBookingCostAsync(request.CarEVDetailId, request.StartAt, request.EndAt, currentUserId);
             var depositFee = await _unitOfWork.SystemConfigRepository.GetSystemConfigByKeyAsync("DEPOSIT_FEE_PERCENTAGE");
             decimal depositPercent = 30m;
             if (depositFee != null && !string.IsNullOrWhiteSpace(depositFee.Value) && decimal.TryParse(depositFee.Value, out var parsedPercent))
@@ -846,8 +919,8 @@ namespace EVSRS.Services.Service
                     }
                 }
 
-                // Recalculate costs
-                var totalCost = await CalculateBookingCostAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
+                // Recalculate costs với membership discount
+                var totalCost = await CalculateBookingCostAsync(request.CarEVDetailId, request.StartAt, request.EndAt, booking.UserId);
                 var depositAmount = totalCost * 0.3m;
                 var remainingAmount = totalCost - depositAmount;
 
