@@ -30,7 +30,8 @@ public class AuthService : IAuthService
     private readonly IIdentifyDocumentService _identifyDocumentService;
     private readonly IMapper _mapper;
     private readonly IValidationService _validationService;
-    public AuthService(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IValidationService validationService, IEmailSenderSevice emailSenderService, IIdentifyDocumentService identifyDocumentService, IMapper mapper)
+    private readonly IMembershipService _membershipService;
+    public AuthService(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IValidationService validationService, IEmailSenderSevice emailSenderService, IIdentifyDocumentService identifyDocumentService, IMapper mapper, IMembershipService membershipService)
     {
         _unitOfWork = unitOfWork;
         _httpContextAccessor = httpContextAccessor;
@@ -39,6 +40,7 @@ public class AuthService : IAuthService
         _emailSenderService = emailSenderService;
         _identifyDocumentService = identifyDocumentService;
         _mapper = mapper;
+        _membershipService = membershipService;
     }
     public async Task CompleteRegisterAsync(RegisterUserRequestDto model)
     {
@@ -63,6 +65,17 @@ public class AuthService : IAuthService
 
         await _unitOfWork.UserRepository.UpdateUserAsync(user);
         await _unitOfWork.SaveChangesAsync();
+
+        // ✅ Tạo membership mới với hạng None cho user
+        try
+        {
+            await _membershipService.CreateInitialMembershipForUserAsync(user.Id);
+        }
+        catch (Exception ex)
+        {
+            // Log error nhưng không throw để không ảnh hưởng đến flow đăng ký
+            Console.WriteLine($"⚠️ Failed to create initial membership for user {user.Id}: {ex.Message}");
+        }
     }
 
     public async Task LogoutAsync(LogoutRequestDto model)
@@ -517,6 +530,17 @@ public class AuthService : IAuthService
         });
 
         await _unitOfWork.SaveChangesAsync();
+
+        // ✅ Tạo membership mới với hạng None cho user
+        try
+        {
+            await _membershipService.CreateInitialMembershipForUserAsync(user.Id);
+        }
+        catch (Exception ex)
+        {
+            // Log error nhưng không throw để không ảnh hưởng đến flow đăng ký
+            Console.WriteLine($"⚠️ Failed to create initial membership for user {user.Id}: {ex.Message}");
+        }
 
         return new RegisterUserAtDepotResponseDto
         {
