@@ -37,22 +37,59 @@ namespace EVSRS.Services.Service
                 throw new KeyNotFoundException($"MembershipConfig with ID {membership.MembershipConfigId} not found");
             }
 
+            // Tính progress và next level
+            var allConfigs = await _unitOfWork.MembershipConfigRepository.GetAllMembershipConfigsAsync();
+            var sortedConfigs = allConfigs.OrderBy(c => c.RequiredAmount).ToList();
+            
+            var currentIndex = sortedConfigs.FindIndex(c => c.Id == config.Id);
+            var nextConfig = currentIndex >= 0 && currentIndex < sortedConfigs.Count - 1 ? sortedConfigs[currentIndex + 1] : null;
+
+            decimal? progressToNextLevel = null;
+            decimal? amountToNextLevel = null;
+            string? nextLevelName = null;
+
+            if (nextConfig != null)
+            {
+                amountToNextLevel = nextConfig.RequiredAmount - membership.TotalOrderBill;
+                if (amountToNextLevel < 0) amountToNextLevel = 0;
+
+                var rangeToNext = nextConfig.RequiredAmount - config.RequiredAmount;
+                if (rangeToNext > 0)
+                {
+                    var currentProgress = membership.TotalOrderBill - config.RequiredAmount;
+                    progressToNextLevel = Math.Min(100, Math.Round((currentProgress / rangeToNext) * 100, 2));
+                }
+
+                nextLevelName = nextConfig.Level switch
+                {
+                    MembershipLevel.Bronze => "Đồng",
+                    MembershipLevel.Silver => "Bạc",
+                    MembershipLevel.Gold => "Vàng",
+                    _ => null
+                };
+            }
+
             return new MembershipResponseDto
             {
                 Id = membership.Id,
                 UserId = membership.UserId,
                 UserName = membership.User?.UserName ?? "Unknown",
-                Config = new MembershipConfigResponseDto
+                Level = config.Level,
+                LevelName = config.Level switch
                 {
-                    Id = config.Id,
-                    Level = config.Level,
-                    LevelName = config.Level.ToString(),
-                    DiscountPercent = config.DiscountPercent,
-                    RequiredAmount = config.RequiredAmount,
-                    CreatedAt = config.CreatedAt,
-                    UpdatedAt = config.UpdatedAt
+                    MembershipLevel.None => "Chưa có hạng",
+                    MembershipLevel.Bronze => "Đồng",
+                    MembershipLevel.Silver => "Bạc",
+                    MembershipLevel.Gold => "Vàng",
+                    _ => "Unknown"
                 },
+                DiscountPercent = config.DiscountPercent,
+                RequiredAmount = config.RequiredAmount,
                 TotalOrderBill = membership.TotalOrderBill,
+                ProgressToNextLevel = progressToNextLevel,
+                AmountToNextLevel = amountToNextLevel,
+                NextLevelName = nextLevelName,
+                MembershipConfigId = config.Id,
                 CreatedAt = membership.CreatedAt,
                 UpdatedAt = membership.UpdatedAt
             };
