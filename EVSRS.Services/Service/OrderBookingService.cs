@@ -588,13 +588,20 @@ namespace EVSRS.Services.Service
 
             await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
 
-            // ✅ CẬP NHẬT MEMBERSHIP TRƯỚC KHI SAVE - Tự động nâng hạng khi order complete
+            // ✅ SAVE ORDER TRƯỚC (đảm bảo order complete thành công)
+            await _unitOfWork.SaveChangesAsync();
+            Console.WriteLine($"✅ [CompleteOrder] Order {booking.Code} saved to database");
+
+            // ✅ SAU ĐÓ UPDATE MEMBERSHIP (MembershipService có SaveChanges riêng)
             if (!string.IsNullOrEmpty(booking.UserId))
             {
                 try
                 {
-                    // ✅ SỬA: Parse SubTotal thay vì DepositAmount (tổng tiền thuê xe)
                     decimal orderAmount = 0m;
+                    
+                    Console.WriteLine($"🎯 [CompleteOrder] Processing membership for Order: {booking.Code}");
+                    Console.WriteLine($"   - UserId: {booking.UserId}");
+                    Console.WriteLine($"   - SubTotal: '{booking.SubTotal ?? "NULL"}'");
                     
                     if (!string.IsNullOrWhiteSpace(booking.SubTotal))
                     {
@@ -604,40 +611,52 @@ namespace EVSRS.Services.Service
                         if (decimal.TryParse(cleanAmount, out decimal parsed))
                         {
                             orderAmount = parsed;
-                            Console.WriteLine($"💰 Order {id}: Parsed SubTotal = {orderAmount:N0} VND from '{booking.SubTotal}'");
+                            Console.WriteLine($"✅ [CompleteOrder] Parsed SubTotal successfully: {orderAmount:N0} VND");
                         }
                         else
                         {
-                            Console.WriteLine($"⚠️ Order {id}: Failed to parse SubTotal '{booking.SubTotal}'");
+                            Console.WriteLine($"❌ [CompleteOrder] Failed to parse SubTotal: '{booking.SubTotal}'");
                         }
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ Order {id}: SubTotal is null or empty");
+                        Console.WriteLine($"❌ [CompleteOrder] SubTotal is null or empty");
                     }
                     
                     if (orderAmount > 0)
                     {
+                        Console.WriteLine($"📤 [CompleteOrder] Calling MembershipService.UpdateMembershipAfterOrderCompleteAsync");
+                        
                         await _membershipService.UpdateMembershipAfterOrderCompleteAsync(
                             booking.UserId,
                             orderAmount
                         );
-                        Console.WriteLine($"✅ Order {id}: Updated membership for user {booking.UserId}. Amount added: {orderAmount:N0} VND");
+                        
+                        Console.WriteLine($"✅ [CompleteOrder] Membership updated successfully! User: {booking.UserId}, Amount: {orderAmount:N0} VND");
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ Order {id}: SubTotal is 0 or invalid, membership not updated. Value: '{booking.SubTotal}'");
+                        Console.WriteLine($"⚠️ [CompleteOrder] orderAmount = 0, skipping membership update. SubTotal value: '{booking.SubTotal}'");
                     }
                 }
                 catch (Exception ex)
                 {
-                    // Log error nhưng không fail transaction chính
-                    Console.WriteLine($"❌ Order {id}: Error updating membership for user {booking.UserId}: {ex.Message}");
-                    Console.WriteLine($"❌ StackTrace: {ex.StackTrace}");
+                    // Log error nhưng KHÔNG throw - Order đã complete thành công
+                    Console.WriteLine($"❌ [CompleteOrder] ERROR updating membership (Order already completed):");
+                    Console.WriteLine($"   - Order: {booking.Code}");
+                    Console.WriteLine($"   - User: {booking.UserId}");
+                    Console.WriteLine($"   - Message: {ex.Message}");
+                    Console.WriteLine($"   - StackTrace: {ex.StackTrace}");
+                    if (ex.InnerException != null)
+                    {
+                        Console.WriteLine($"   - Inner Exception: {ex.InnerException.Message}");
+                    }
                 }
             }
-
-            await _unitOfWork.SaveChangesAsync();
+            else
+            {
+                Console.WriteLine($"⚠️ [CompleteOrder] UserId is null for order {id}, skipping membership update");
+            }
 
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
