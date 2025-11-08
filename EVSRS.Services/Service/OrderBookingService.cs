@@ -593,40 +593,40 @@ namespace EVSRS.Services.Service
             {
                 try
                 {
-                    // Parse DepositAmount an toàn (tiền thuê xe SAU GIẢM membership)
-                    decimal depositAmount = 0m;
+                    // ✅ SỬA: Parse SubTotal thay vì DepositAmount (tổng tiền thuê xe)
+                    decimal orderAmount = 0m;
                     
-                    if (!string.IsNullOrWhiteSpace(booking.DepositAmount))
+                    if (!string.IsNullOrWhiteSpace(booking.SubTotal))
                     {
-                        // Remove commas và whitespace nếu có (VD: "16,000" → "16000")
-                        string cleanAmount = booking.DepositAmount.Replace(",", "").Replace(" ", "").Trim();
+                        // Remove commas và whitespace nếu có (VD: "60,000" → "60000")
+                        string cleanAmount = booking.SubTotal.Replace(",", "").Replace(" ", "").Trim();
                         
                         if (decimal.TryParse(cleanAmount, out decimal parsed))
                         {
-                            depositAmount = parsed;
-                            Console.WriteLine($"💰 Order {id}: Parsed DepositAmount = {depositAmount:N0} VND from '{booking.DepositAmount}'");
+                            orderAmount = parsed;
+                            Console.WriteLine($"💰 Order {id}: Parsed SubTotal = {orderAmount:N0} VND from '{booking.SubTotal}'");
                         }
                         else
                         {
-                            Console.WriteLine($"⚠️ Order {id}: Failed to parse DepositAmount '{booking.DepositAmount}'");
+                            Console.WriteLine($"⚠️ Order {id}: Failed to parse SubTotal '{booking.SubTotal}'");
                         }
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ Order {id}: DepositAmount is null or empty");
+                        Console.WriteLine($"⚠️ Order {id}: SubTotal is null or empty");
                     }
                     
-                    if (depositAmount > 0)
+                    if (orderAmount > 0)
                     {
                         await _membershipService.UpdateMembershipAfterOrderCompleteAsync(
                             booking.UserId,
-                            depositAmount
+                            orderAmount
                         );
-                        Console.WriteLine($"✅ Order {id}: Updated membership for user {booking.UserId}. Amount added: {depositAmount:N0} VND");
+                        Console.WriteLine($"✅ Order {id}: Updated membership for user {booking.UserId}. Amount added: {orderAmount:N0} VND");
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ Order {id}: DepositAmount is 0 or invalid, membership not updated. Value: '{booking.DepositAmount}'");
+                        Console.WriteLine($"⚠️ Order {id}: SubTotal is 0 or invalid, membership not updated. Value: '{booking.SubTotal}'");
                     }
                 }
                 catch (Exception ex)
