@@ -1,21 +1,29 @@
+using AutoMapper;
 using EVSRS.BusinessObjects.DTO.MembershipDto;
 using EVSRS.BusinessObjects.Entity;
 using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Implement;
 using EVSRS.Services.Interface;
+using Microsoft.AspNetCore.Http;
 
 namespace EVSRS.Services.Service
 {
     public class MembershipService : IMembershipService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IValidationService _validationService;
 
         public MembershipService(
             IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
             IValidationService validationService)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
             _validationService = validationService;
         }
 
@@ -125,6 +133,8 @@ namespace EVSRS.Services.Service
 
             var oldTotal = membership.TotalOrderBill;
             membership.TotalOrderBill += orderAmount;
+            membership.UpdatedAt = DateTime.UtcNow;
+            membership.UpdatedBy = GetCurrentUserName();
 
             var newConfig = await DetermineConfigFromTotalBillAsync(membership.TotalOrderBill);
 
@@ -133,8 +143,6 @@ namespace EVSRS.Services.Service
                 membership.MembershipConfigId = newConfig.Id;
             }
 
-            membership.UpdatedAt = DateTime.UtcNow;
-
             await _unitOfWork.MembershipRepository.UpdateMembershipAsync(membership);
             
             var saveResult = await _unitOfWork.SaveChangesAsync();
@@ -142,7 +150,7 @@ namespace EVSRS.Services.Service
             if (saveResult <= 0)
             {
                 throw new Exception($"Failed to save membership changes for user {userId}. " +
-                    $"Old total: {oldTotal}, New total: {membership.TotalOrderBill}, Added: {orderAmount}");
+                    $"SaveChanges returned {saveResult}. Old total: {oldTotal}, New total: {membership.TotalOrderBill}, Added: {orderAmount}");
             }
         }
 
@@ -172,11 +180,15 @@ namespace EVSRS.Services.Service
 
             var membership = new Membership
             {
+                Id = Guid.NewGuid().ToString(),
                 UserId = userId,
                 MembershipConfigId = noneConfig.Id,
                 TotalOrderBill = 0m,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                CreatedBy = GetCurrentUserName(),
+                UpdatedBy = GetCurrentUserName(),
+                IsDeleted = false
             };
 
             await _unitOfWork.MembershipRepository.CreateMembershipAsync(membership);
@@ -210,6 +222,11 @@ namespace EVSRS.Services.Service
             }
 
             return matchedConfig;
+        }
+
+        private string GetCurrentUserName()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirst("name")?.Value ?? "System";
         }
     }
 }

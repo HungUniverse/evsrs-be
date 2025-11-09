@@ -18,6 +18,7 @@ using EVSRS.BusinessObjects.DTO.AuthDto;
 using EVSRS.BusinessObjects.Enum;
 using EVSRS.BusinessObjects.Entity;
 using EVSRS.BusinessObjects.DTO.IdentifyDocumentDto;
+using EVSRS.BusinessObjects.DTO.MembershipDto;
 
 namespace EVSRS.Services.Mapper
 {
@@ -171,6 +172,31 @@ namespace EVSRS.Services.Mapper
             #region SystemConfig Mapper
             CreateMap<SystemConfig, SystemConfigResponseDto>().ReverseMap();
             CreateMap<SystemConfig, SystemConfigRequestDto>().ReverseMap();
+            #endregion
+
+            #region Membership Mapper
+            CreateMap<Membership, MembershipResponseDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.UserName : "Unknown"))
+                .ForMember(dest => dest.Level, opt => opt.MapFrom(src => src.MembershipConfig != null ? src.MembershipConfig.Level : MembershipLevel.None))
+                .ForMember(dest => dest.LevelName, opt => opt.MapFrom(src => 
+                    src.MembershipConfig != null 
+                        ? (src.MembershipConfig.Level == MembershipLevel.None ? "Chưa có hạng" :
+                           src.MembershipConfig.Level == MembershipLevel.Bronze ? "Đồng" :
+                           src.MembershipConfig.Level == MembershipLevel.Silver ? "Bạc" :
+                           src.MembershipConfig.Level == MembershipLevel.Gold ? "Vàng" : "Unknown")
+                        : "Chưa có hạng"))
+                .ForMember(dest => dest.DiscountPercent, opt => opt.MapFrom(src => src.MembershipConfig != null ? src.MembershipConfig.DiscountPercent : 0))
+                .ForMember(dest => dest.RequiredAmount, opt => opt.MapFrom(src => src.MembershipConfig != null ? src.MembershipConfig.RequiredAmount : 0))
+                .ForMember(dest => dest.ProgressToNextLevel, opt => opt.Ignore())
+                .ForMember(dest => dest.AmountToNextLevel, opt => opt.Ignore())
+                .ForMember(dest => dest.NextLevelName, opt => opt.Ignore());
+            
+            CreateMap<MembershipConfig, MembershipConfigResponseDto>()
+                .ForMember(dest => dest.LevelName, opt => opt.MapFrom(src => 
+                    src.Level == MembershipLevel.None ? "Chưa có hạng" :
+                    src.Level == MembershipLevel.Bronze ? "Đồng" :
+                    src.Level == MembershipLevel.Silver ? "Bạc" :
+                    src.Level == MembershipLevel.Gold ? "Vàng" : "Unknown"));
             #endregion
         }
     }

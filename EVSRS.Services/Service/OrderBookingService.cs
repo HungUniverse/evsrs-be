@@ -592,11 +592,13 @@ namespace EVSRS.Services.Service
             // Update membership after order is saved
             if (!string.IsNullOrEmpty(booking.UserId) && !string.IsNullOrWhiteSpace(booking.SubTotal))
             {
+                decimal orderAmount = 0m; // ✅ Declare outside try block
+                
                 try
                 {
                     string cleanAmount = booking.SubTotal.Replace(",", "").Replace(" ", "").Trim();
                     
-                    if (decimal.TryParse(cleanAmount, out decimal orderAmount) && orderAmount > 0)
+                    if (decimal.TryParse(cleanAmount, out orderAmount) && orderAmount > 0)
                     {
                         await _membershipService.UpdateMembershipAfterOrderCompleteAsync(
                             booking.UserId,
@@ -604,9 +606,19 @@ namespace EVSRS.Services.Service
                         );
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // Membership update failed but order is already completed
+                    // Log error and throw to see what's wrong
+                    var errorMsg = $"[CompleteOrder] Membership update FAILED for Order {booking.Code}, User {booking.UserId}, Amount {orderAmount}. Error: {ex.Message}";
+                    Console.WriteLine(errorMsg);
+                    Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                    if (ex.InnerException != null)
+                    {
+                        Console.WriteLine($"InnerException: {ex.InnerException.Message}");
+                    }
+                    
+                    // TEMPORARY: Throw to debug - remove after fixing
+                    throw new Exception(errorMsg, ex);
                 }
             }
 
