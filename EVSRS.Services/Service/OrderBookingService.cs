@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -93,8 +94,15 @@ namespace EVSRS.Services.Service
 
                 if (membership != null)
                 {
-                    var config = await _unitOfWork.MembershipConfigRepository
-                        .GetMembershipConfigByIdAsync(membership.MembershipConfigId);
+                    // ✅ OPTIMIZE: Dùng MembershipConfig đã được Include, không cần load lại
+                    var config = membership.MembershipConfig;
+                    
+                    // Nếu MembershipConfig chưa được load (trường hợp hiếm), load riêng
+                    if (config == null)
+                    {
+                        config = await _unitOfWork.MembershipConfigRepository
+                            .GetMembershipConfigByIdAsync(membership.MembershipConfigId);
+                    }
                     
                     if (config != null)
                     {
@@ -596,14 +604,44 @@ namespace EVSRS.Services.Service
                 
                 try
                 {
-                    string cleanAmount = booking.SubTotal.Replace(",", "").Replace(" ", "").Trim();
+                    // ✅ Cải thiện parse SubTotal - hỗ trợ nhiều format:
+                    // - Format VN: "100.000,00" hoặc "100.000"
+                    // - Format US: "100,000.00" hoặc "100,000"
+                    // - Format đơn giản: "100000" hoặc "100000.00"
+                    string cleanAmount = booking.SubTotal
+                        .Replace(" ", "")  // Remove spaces
+                        .Trim();
                     
-                    if (decimal.TryParse(cleanAmount, out orderAmount) && orderAmount > 0)
+                    // Thử parse với format hiện tại (có thể có dấu phẩy hoặc chấm)
+                    bool parseSuccess = false;
+                    
+                    // Thử parse trực tiếp trước (cho format "100000" hoặc "100000.00")
+                    if (decimal.TryParse(cleanAmount, NumberStyles.Any, 
+                        CultureInfo.InvariantCulture, out orderAmount))
+                    {
+                        parseSuccess = true;
+                    }
+                    else
+                    {
+                        // Nếu fail, thử remove tất cả dấu phân cách (cho format VN "100.000,00")
+                        string noSeparators = cleanAmount.Replace(",", "").Replace(".", "");
+                        if (decimal.TryParse(noSeparators, NumberStyles.Any,
+                            CultureInfo.InvariantCulture, out orderAmount))
+                        {
+                            parseSuccess = true;
+                        }
+                    }
+                    
+                    if (parseSuccess && orderAmount > 0)
                     {
                         await _membershipService.UpdateMembershipAfterOrderCompleteAsync(
                             booking.UserId,
                             orderAmount
                         );
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Failed to parse SubTotal for Order {booking.Code}: '{booking.SubTotal}'");
                     }
                 }
                 catch (Exception ex)
