@@ -132,6 +132,9 @@ namespace EVSRS.Services.Service
             }
 
             var oldTotal = membership.TotalOrderBill;
+            var oldLevel = membership.MembershipConfigId;
+            
+            // Modify properties - Entity đã được track từ GetByUserIdAsync, EF sẽ tự detect changes
             membership.TotalOrderBill += orderAmount;
             membership.UpdatedAt = DateTime.UtcNow;
             membership.UpdatedBy = GetCurrentUserName();
@@ -143,7 +146,10 @@ namespace EVSRS.Services.Service
                 membership.MembershipConfigId = newConfig.Id;
             }
 
-            await _unitOfWork.MembershipRepository.UpdateMembershipAsync(membership);
+            // ✅ KHÔNG CẦN gọi UpdateMembershipAsync vì:
+            // 1. Entity đã được track từ khi load với GetByUserIdAsync (có Include)
+            // 2. Khi gọi UpdateAsync → Attach() có thể gây conflict với entity đã được track
+            // 3. EF sẽ tự động detect changes khi modify properties và gọi SaveChangesAsync
             
             var saveResult = await _unitOfWork.SaveChangesAsync();
             
@@ -151,6 +157,12 @@ namespace EVSRS.Services.Service
             {
                 throw new Exception($"Failed to save membership changes for user {userId}. " +
                     $"SaveChanges returned {saveResult}. Old total: {oldTotal}, New total: {membership.TotalOrderBill}, Added: {orderAmount}");
+            }
+            
+            // Log để debug (có thể remove sau)
+            if (oldLevel != membership.MembershipConfigId)
+            {
+                Console.WriteLine($"🎉 User {userId} upgraded membership: TotalOrderBill {oldTotal} -> {membership.TotalOrderBill}, Level changed");
             }
         }
 
