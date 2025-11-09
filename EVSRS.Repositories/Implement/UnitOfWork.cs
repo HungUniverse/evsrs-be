@@ -91,9 +91,8 @@ public class UnitOfWork : IUnitOfWork
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error during SaveChangesAsync: {ex.Message}");
-                result = -1;
                 await transaction.RollbackAsync();
+                throw new Exception($"Failed to save changes: {ex.Message}", ex);
             }
         }
         return result;
