@@ -100,50 +100,50 @@ namespace EVSRS.Services.Service
         /// </summary>
         public async Task UpdateMembershipAfterOrderCompleteAsync(string userId, decimal orderAmount)
         {
-            await _validationService.ValidateAndThrowAsync(userId);
-
-            if (orderAmount < 0)
+            if (string.IsNullOrEmpty(userId))
             {
-                throw new ArgumentException("Order amount cannot be negative");
+                throw new ArgumentException("UserId cannot be null or empty");
             }
 
-            // 1. Lấy hoặc tạo membership cho user
+            if (orderAmount <= 0)
+            {
+                throw new ArgumentException("Order amount must be greater than 0");
+            }
+
             var membership = await _unitOfWork.MembershipRepository.GetByUserIdAsync(userId);
 
             if (membership == null)
             {
-                // Tạo membership mới với None level
                 await CreateInitialMembershipForUserAsync(userId);
                 membership = await _unitOfWork.MembershipRepository.GetByUserIdAsync(userId);
                 
                 if (membership == null)
                 {
-                    throw new Exception("Failed to create initial membership");
+                    throw new Exception($"Failed to create membership for user {userId}");
                 }
             }
 
-            // 2. Cộng thêm orderAmount vào TotalOrderBill
+            var oldTotal = membership.TotalOrderBill;
             membership.TotalOrderBill += orderAmount;
 
-            // 3. Xác định hạng mới dựa trên TotalOrderBill
             var newConfig = await DetermineConfigFromTotalBillAsync(membership.TotalOrderBill);
 
-            // 4. Nâng hạng nếu config mới khác config hiện tại
-            var oldConfigId = membership.MembershipConfigId;
             if (membership.MembershipConfigId != newConfig.Id)
             {
-                var oldConfig = await _unitOfWork.MembershipConfigRepository
-                    .GetMembershipConfigByIdAsync(oldConfigId);
-                
                 membership.MembershipConfigId = newConfig.Id;
-                
-                Console.WriteLine($"🎉 User {userId} upgraded from {oldConfig?.Level} to {newConfig.Level}! " +
-                    $"Total: {membership.TotalOrderBill:N0} VND");
             }
 
-            // 5. Lưu thay đổi
+            membership.UpdatedAt = DateTime.UtcNow;
+
             await _unitOfWork.MembershipRepository.UpdateMembershipAsync(membership);
-            await _unitOfWork.SaveChangesAsync();
+            
+            var saveResult = await _unitOfWork.SaveChangesAsync();
+            
+            if (saveResult <= 0)
+            {
+                throw new Exception($"Failed to save membership changes for user {userId}. " +
+                    $"Old total: {oldTotal}, New total: {membership.TotalOrderBill}, Added: {orderAmount}");
+            }
         }
 
         /// <summary>
@@ -151,16 +151,17 @@ namespace EVSRS.Services.Service
         /// </summary>
         public async Task CreateInitialMembershipForUserAsync(string userId)
         {
-            await _validationService.ValidateAndThrowAsync(userId);
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentException("UserId cannot be null or empty");
+            }
 
-            // Kiểm tra user đã có membership chưa
             var existingMembership = await _unitOfWork.MembershipRepository.GetByUserIdAsync(userId);
             if (existingMembership != null)
             {
-                return; // Đã có rồi, không tạo nữa
+                return;
             }
 
-            // Lấy config None
             var noneConfig = await _unitOfWork.MembershipConfigRepository
                 .GetMembershipConfigByLevelAsync(MembershipLevel.None);
 
@@ -169,18 +170,17 @@ namespace EVSRS.Services.Service
                 throw new Exception("None membership config not found. Please seed the database first.");
             }
 
-            // Tạo membership mới
             var membership = new Membership
             {
                 UserId = userId,
                 MembershipConfigId = noneConfig.Id,
-                TotalOrderBill = 0m
+                TotalOrderBill = 0m,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             await _unitOfWork.MembershipRepository.CreateMembershipAsync(membership);
             await _unitOfWork.SaveChangesAsync();
-
-            Console.WriteLine($"✅ Created initial membership (None) for user {userId}");
         }
 
         /// <summary>
