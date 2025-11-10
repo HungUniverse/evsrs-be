@@ -24,6 +24,7 @@ public class SepayService : ISepayService
     private readonly IValidationService _validationService;
     private readonly ITransactionService _transactionService;
     private readonly ILogger<SepayService> _logger;
+    private readonly IOrderBookingService _orderBookingService;
 
     public SepayService(
         IUnitOfWork unitOfWork,
@@ -31,7 +32,8 @@ public class SepayService : ISepayService
         IMapper mapper,
         IValidationService validationService,
         ITransactionService transactionService,
-        ILogger<SepayService> logger
+        ILogger<SepayService> logger,
+        IOrderBookingService orderBookingService
     )
     {
         _unitOfWork = unitOfWork;
@@ -40,6 +42,7 @@ public class SepayService : ISepayService
         _transactionService = transactionService;
         _sepaySettings = sepaySettings.Value;
         _logger = logger;
+        _orderBookingService = orderBookingService;
     }
 
     public async Task ProcessPaymentWebhookAsync(SepayWebhookPayload payload, string authHeader)
@@ -661,6 +664,9 @@ public class SepayService : ISepayService
                     orderBooking.UpdatedAt = DateTime.UtcNow;
                     orderBooking.UpdatedBy = "SepayWebhook";
                     await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(orderBooking);
+                    
+                    // ✅ Update membership when order completes via webhook
+                    await _orderBookingService.UpdateMembershipForCompletedOrderAsync(orderBooking);
                 }
             }
 

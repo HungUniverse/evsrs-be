@@ -1,5 +1,6 @@
 using EVSRS.BusinessObjects.DTO.OrderBookingDto;
 using EVSRS.BusinessObjects.DTO.SepayDto;
+using EVSRS.BusinessObjects.Entity;
 using EVSRS.BusinessObjects.Enum;
 using EVSRS.Repositories.Infrastructure;
 using System;
@@ -33,5 +34,10 @@ namespace EVSRS.Services.Interface
         Task<PaginatedList<OrderBookingResponseDto>> GetRefundPendingOrdersAsync(int pageNumber, int pageSize);
         Task<OrderBookingResponseDto> ConfirmRefundAsync(string id, decimal? refundedAmount = null, string? adminNote = null);
         Task CancelExpiredUnpaidOrdersAsync();
+        
+        /// <summary>
+        /// Update membership khi order complete - gọi từ mọi nơi complete order
+        /// </summary>
+        Task UpdateMembershipForCompletedOrderAsync(OrderBooking orderBooking);
     }
 }
