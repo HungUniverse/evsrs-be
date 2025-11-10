@@ -42,6 +42,12 @@ namespace EVSRS.BusinessObjects.DBContext
         public DbSet<SystemConfig> SystemConfigs { get; set; }
         public DbSet<Membership> Memberships { get; set; }
         public DbSet<MembershipConfig> MembershipConfigs { get; set; }
+        
+        // Demand Forecasting & Capacity Planning
+        public DbSet<InventorySnapshot> InventorySnapshots { get; set; }
+        public DbSet<DemandForecast> DemandForecasts { get; set; }
+        public DbSet<RebalancingPlan> RebalancingPlans { get; set; }
+        public DbSet<AdviceRun> AdviceRuns { get; set; }
 
 
 
@@ -69,6 +75,16 @@ namespace EVSRS.BusinessObjects.DBContext
             modelBuilder.Entity<SystemConfig>().ToTable("SystemConfig");
             modelBuilder.Entity<Membership>().ToTable("Membership");
             modelBuilder.Entity<MembershipConfig>().ToTable("MembershipConfig");
+            modelBuilder.Entity<InventorySnapshot>().ToTable("InventorySnapshot");
+            modelBuilder.Entity<DemandForecast>().ToTable("DemandForecast", t =>
+                t.HasCheckConstraint("CHK_DemandForecast_ConfidenceScore",
+                    "\"ConfidenceScore\" >= 0 AND \"ConfidenceScore\" <= 1"));
+            modelBuilder.Entity<RebalancingPlan>().ToTable("RebalancingPlan", t =>
+            {
+                t.HasCheckConstraint("CHK_RebalancingPlan_Quantity", "\"Quantity\" > 0");
+                t.HasCheckConstraint("CHK_RebalancingPlan_ActionType",
+                    "\"ActionType\" IN ('RELOCATE', 'PURCHASE', 'MAINTENANCE')");
+            });
             #endregion
 
             #region Configure Fluent Api
@@ -242,6 +258,80 @@ namespace EVSRS.BusinessObjects.DBContext
             modelBuilder.Entity<SettlementItem>(options =>
             {
                 // No need for composite key, using BaseEntity Id
+            });
+
+            // Configure InventorySnapshot
+            modelBuilder.Entity<InventorySnapshot>(options =>
+            {
+                options.HasOne(i => i.Depot)
+                    .WithMany()
+                    .HasForeignKey(i => i.DepotId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                options.HasOne(i => i.Model)
+                    .WithMany()
+                    .HasForeignKey(i => i.ModelId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                options.HasIndex(i => new { i.DepotId, i.SnapshotTime })
+                    .HasDatabaseName("IX_InventorySnapshot_DepotId_Time");
+
+                options.HasIndex(i => new { i.ModelId, i.SnapshotTime })
+                    .HasDatabaseName("IX_InventorySnapshot_ModelId_Time");
+            });
+
+            // Configure DemandForecast
+            modelBuilder.Entity<DemandForecast>(options =>
+            {
+                options.HasOne(d => d.Depot)
+                    .WithMany()
+                    .HasForeignKey(d => d.DepotId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                options.HasOne(d => d.Model)
+                    .WithMany()
+                    .HasForeignKey(d => d.ModelId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                options.HasIndex(d => new { d.DepotId, d.ForecastTime })
+                    .HasDatabaseName("IX_DemandForecast_DepotId_ForecastTime");
+
+                options.HasIndex(d => new { d.ModelId, d.ForecastTime })
+                    .HasDatabaseName("IX_DemandForecast_ModelId_ForecastTime");
+
+                options.Property(d => d.ConfidenceScore)
+                    .HasPrecision(5, 4);
+
+                options.Property(d => d.PredictedDemand)
+                    .HasPrecision(10, 2);
+            });
+
+            // Configure RebalancingPlan
+            modelBuilder.Entity<RebalancingPlan>(options =>
+            {
+                options.HasOne(r => r.FromDepot)
+                    .WithMany()
+                    .HasForeignKey(r => r.FromDepotId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                options.HasOne(r => r.ToDepot)
+                    .WithMany()
+                    .HasForeignKey(r => r.ToDepotId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                options.HasOne(r => r.Model)
+                    .WithMany()
+                    .HasForeignKey(r => r.ModelId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                options.HasIndex(r => new { r.PlanDate, r.Status })
+                    .HasDatabaseName("IX_RebalancingPlan_PlanDate_Status");
+
+                options.HasIndex(r => r.ToDepotId)
+                    .HasDatabaseName("IX_RebalancingPlan_ToDepotId");
+
+                options.Property(r => r.EstimatedCost)
+                    .HasPrecision(18, 2);
             });
 
             // Configure many-to-many relationship between Depot and OrderBooking
