@@ -163,7 +163,7 @@ namespace EVSRS.Services.Service
         private decimal CalculateCoefficient(DateTime startDateVN, DateTime endDateVN)
         {
             var morningStart = new TimeSpan(6, 0, 0);
-            var afternoonStart = new TimeSpan(12, 0, 0);
+            var afternoonStart = new TimeSpan(12, 30, 0);
             var depotClose = new TimeSpan(22, 0, 0);
             var earlyMorningEnd = new TimeSpan(7, 0, 0); // ✅ THÊM: 7:00 sáng để miễn phí
 
@@ -172,18 +172,34 @@ namespace EVSRS.Services.Service
             {
                 var startTime = startDateVN.TimeOfDay;
                 var endTime = endDateVN.TimeOfDay;
+                var morningEndTime = new TimeSpan(12, 0, 0); // Ca sáng kết thúc 12:00
 
-                // Thuê chỉ trong ca sáng (6:00-12:30)
-                if (startTime >= morningStart && endTime <= afternoonStart)
+                // ✅ SỬA: Nếu bắt đầu từ 12:00 trở đi → CHỈ tính ca chiều
+                if (startTime >= morningEndTime)
+                {
+                    // Thuê từ 12:00 trở đi (buffer hoặc ca chiều) → chỉ tính ca chiều
+                    if (endTime <= depotClose)
+                    {
+                        return 0.6m; // Chỉ ca chiều
+                    }
+                    else
+                    {
+                        throw new ArgumentException("End time exceeds depot close time");
+                    }
+                }
+                
+                // Bắt đầu TRƯỚC 12:00 (trong ca sáng)
+                // Thuê chỉ trong ca sáng (6:00-12:00)
+                if (startTime >= morningStart && endTime <= morningEndTime)
                 {
                     return 0.4m; // Ca sáng
                 }
                 // Thuê chỉ trong ca chiều (12:30-22:00)
                 else if (startTime >= afternoonStart && endTime <= depotClose)
                 {
-                    return 0.6m; // Ca chiều
+                    return 0.6m; // Ca chiều (không bao giờ xảy ra vì đã check startTime >= morningEndTime ở trên)
                 }
-                // Thuê cả 2 ca trong ngày
+                // Thuê cả 2 ca trong ngày (bắt đầu trước 12:00, kết thúc sau 12:00)
                 else if (startTime >= morningStart && endTime <= depotClose)
                 {
                     return 1.0m; // Cả ngày
@@ -198,54 +214,83 @@ namespace EVSRS.Services.Service
             var daysDifference = (endDateVN.Date - startDateVN.Date).Days;
             decimal totalCoefficient = 0m;
 
-            // Xử lý ngày đầu tiên
+            Console.WriteLine($"DEBUG - Multi-day rental: {daysDifference} days");
+            Console.WriteLine($"DEBUG - Start: {startDateVN} (TimeOfDay: {startDateVN.TimeOfDay})");
+            Console.WriteLine($"DEBUG - End: {endDateVN} (TimeOfDay: {endDateVN.TimeOfDay})");
+
+            // ✅ Xử lý ngày đầu tiên
             var firstDayStartTime = startDateVN.TimeOfDay;
-            if (firstDayStartTime >= morningStart && firstDayStartTime < afternoonStart)
+            
+            // Ca sáng: 6:00-12:00, Ca chiều: 12:30-22:00
+            var morningEnd = new TimeSpan(12, 0, 0); // Cuối ca sáng
+            
+            if (firstDayStartTime >= morningStart && firstDayStartTime < morningEnd)
             {
-                // Bắt đầu từ ca sáng → tính full ngày đầu
+                // Bắt đầu TRONG ca sáng (6:00-11:59) → dùng cả ca sáng + ca chiều → tính full ngày đầu
                 totalCoefficient += 1.0m;
+                Console.WriteLine($"DEBUG - First day (morning start {firstDayStartTime}): +1.0 → Total: {totalCoefficient}");
+            }
+            else if (firstDayStartTime >= morningEnd && firstDayStartTime < afternoonStart)
+            {
+                // ✅ SỬA: Bắt đầu trong buffer 12:00-12:29 → CHỈ dùng ca chiều → 0.6
+                totalCoefficient += 0.6m;
+                Console.WriteLine($"DEBUG - First day (buffer start {firstDayStartTime}): +0.6 → Total: {totalCoefficient}");
             }
             else if (firstDayStartTime >= afternoonStart && firstDayStartTime <= depotClose)
             {
-                // Bắt đầu từ ca chiều → chỉ tính ca chiều ngày đầu
+                // Bắt đầu từ ca chiều (12:30-22:00) → chỉ tính ca chiều ngày đầu
                 totalCoefficient += 0.6m;
+                Console.WriteLine($"DEBUG - First day (afternoon start {firstDayStartTime}): +0.6 → Total: {totalCoefficient}");
             }
 
             // Các ngày ở giữa (nếu có) → mỗi ngày tính full
             if (daysDifference > 1)
             {
-                totalCoefficient += (daysDifference - 1) * 1.0m;
+                var middleDays = daysDifference - 1;
+                totalCoefficient += middleDays * 1.0m;
+                Console.WriteLine($"DEBUG - Middle days: {middleDays} × 1.0 = +{middleDays} → Total: {totalCoefficient}");
             }
 
-            // Xử lý ngày cuối cùng
+            // ✅ Xử lý ngày cuối cùng
             var lastDayEndTime = endDateVN.TimeOfDay;
             
-            // ✅ CHECK: Đếm số ca (morning/afternoon) trước khung sáng trả xe (06:00 của ngày trả xe)
+            // CHECK: Đếm số ca (morning/afternoon) trước khung sáng trả xe (06:00 của ngày trả xe)
             int shiftsBeforeReturn = CountShiftsBeforeMorning(startDateVN, endDateVN);
             bool eligibleForFreeMorning = shiftsBeforeReturn >= 2; // phải ít nhất 2 ca trước ca sáng trả xe
             
-            if (lastDayEndTime <= afternoonStart && lastDayEndTime >= morningStart)
+            Console.WriteLine($"DEBUG - Last day end time: {lastDayEndTime}");
+            Console.WriteLine($"DEBUG - Shifts before return: {shiftsBeforeReturn}");
+            Console.WriteLine($"DEBUG - Eligible for free morning: {eligibleForFreeMorning}");
+            
+            if (lastDayEndTime <= morningEnd && lastDayEndTime >= morningStart)
             {
-                // Kết thúc trong ca sáng
+                // ✅ Kết thúc trong ca sáng (6:00-12:00)
                 
-                // ✅ SPECIAL RULE: Nếu trả xe 6:00-7:00 sáng và là đơn từ 2 ca trở lên → MIỄN PHÍ
+                // SPECIAL RULE: Nếu trả xe 6:00-7:00 sáng và là đơn từ 2 ca trở lên → MIỄN PHÍ
                 if (eligibleForFreeMorning && lastDayEndTime >= morningStart && lastDayEndTime <= earlyMorningEnd)
                 {
                     // MIỄN PHÍ ca sáng - không cộng thêm gì
                     totalCoefficient += 0m;
-                    Console.WriteLine($"DEBUG - Free early morning return: {lastDayEndTime} (shiftsBeforeReturn: {shiftsBeforeReturn}, coefficient: {totalCoefficient})");
+                    Console.WriteLine($"DEBUG - Last day FREE early morning return (6:00-7:00): +0.0 → Total: {totalCoefficient}");
                 }
                 else
                 {
                     // Trả xe sau 7:00 sáng hoặc không đủ 2 ca trước đó → tính phí ca sáng
                     totalCoefficient += 0.4m;
-                    Console.WriteLine($"DEBUG - Charged morning return: {lastDayEndTime} (shiftsBeforeReturn: {shiftsBeforeReturn}, coefficient: {totalCoefficient})");
+                    Console.WriteLine($"DEBUG - Last day (morning end {lastDayEndTime}): +0.4 → Total: {totalCoefficient}");
                 }
             }
-            else if (lastDayEndTime <= depotClose && lastDayEndTime > afternoonStart)
+            else if (lastDayEndTime >= morningEnd && lastDayEndTime < afternoonStart)
             {
-                // Kết thúc trong ca chiều → tính full ngày cuối
+                // ✅ SỬA: Kết thúc trong buffer 12:00-12:29 → Tính cả ca sáng (vì đã qua hết ca sáng)
+                totalCoefficient += 0.4m;
+                Console.WriteLine($"DEBUG - Last day (buffer end {lastDayEndTime}): +0.4 → Total: {totalCoefficient}");
+            }
+            else if (lastDayEndTime >= afternoonStart && lastDayEndTime <= depotClose)
+            {
+                // ✅ SỬA: Kết thúc trong ca chiều (12:30-22:00) → Tính cả ca sáng + ca chiều = 1.0
                 totalCoefficient += 1.0m;
+                Console.WriteLine($"DEBUG - Last day (afternoon end {lastDayEndTime}): +1.0 → Total: {totalCoefficient}");
             }
 
             return totalCoefficient;
