@@ -14,6 +14,9 @@ namespace EVSRS.BusinessObjects.Datas
             // Seed MembershipConfigs first (no FK dependencies)
             SeedMembershipConfigs(modelBuilder);
 
+            // Seed SystemConfigs
+            SeedSystemConfig(modelBuilder);
+
             // Seed Users
             SeedUsers(modelBuilder);
 
@@ -1227,12 +1230,24 @@ namespace EVSRS.BusinessObjects.Datas
                 {
                     Id = "5595fc17323c48a89f2583de3de9c51a",
                     Key = "DEPOSIT_FEE_PERCENTAGE",
-                    Value = "30m",
+                    Value = "30",
                     ConfigType = ConfigType.General,
                     CreatedBy = "System",
                     UpdatedBy = "System",
                     CreatedAt = new DateTime(2025, 10, 21, 7, 28, 37, 503, DateTimeKind.Utc),
                     UpdatedAt = new DateTime(2025, 10, 21, 7, 28, 37, 503, DateTimeKind.Utc),   
+                    IsDeleted = false
+                },
+                new SystemConfig
+                {
+                    Id = "booking001buffertime00000000000",
+                    Key = "BOOKING_BUFFER_TIME_MINUTES",
+                    Value = "60",
+                    ConfigType = ConfigType.General,
+                    CreatedBy = "System",
+                    UpdatedBy = "System",
+                    CreatedAt = new DateTime(2025, 11, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 11, 10, 0, 0, 0, 0, DateTimeKind.Utc),   
                     IsDeleted = false
                 }
             );

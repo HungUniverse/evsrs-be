@@ -18,8 +18,7 @@ namespace EVSRS.Repositories.Interface
         Task CreateCarEVAsync(CarEV carEV);
         Task UpdateCarEVAsync(CarEV carEV);
         Task DeleteCarEVAsync(CarEV carEV);
-       
-
-
+        Task<List<CarEV>> GetAvailableCarsByModelAndDepotAsync(string modelId, string depotId);
+        Task<CarEV?> FindAndLockAvailableCarAsync(string modelId, string depotId, DateTime startDate, DateTime endDate, int bufferMinutes);
     }
 }

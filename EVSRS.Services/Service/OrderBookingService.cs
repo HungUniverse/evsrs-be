@@ -9,6 +9,7 @@ using EVSRS.Repositories.Infrastructure;
 using EVSRS.Services.ExternalServices.SepayService;
 using EVSRS.Services.Interface;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,7 @@ namespace EVSRS.Services.Service
         private readonly IValidationService _validationService;
         private readonly IServiceProvider _serviceProvider;
         private readonly IMembershipService _membershipService;
+        private readonly IConfiguration _configuration;
 
         public OrderBookingService(
             IUnitOfWork unitOfWork,
@@ -34,7 +36,8 @@ namespace EVSRS.Services.Service
             IHttpContextAccessor httpContextAccessor,
             IValidationService validationService,
             IServiceProvider serviceProvider,
-            IMembershipService membershipService)
+            IMembershipService membershipService,
+            IConfiguration configuration)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
@@ -42,6 +45,7 @@ namespace EVSRS.Services.Service
             _validationService = validationService;
             _serviceProvider = serviceProvider;
             _membershipService = membershipService;
+            _configuration = configuration;
         }
 
         public async Task<decimal> CalculateBookingCostAsync(string carId, DateTime startDate, DateTime endDate)
@@ -452,6 +456,43 @@ namespace EVSRS.Services.Service
             return await _unitOfWork.OrderRepository.IsCarAvailableAsync(carId, startDate, endDate, excludeBookingId);
         }
 
+        public async Task<bool> CheckCarAvailabilityWithBufferAsync(string carId, DateTime startDate, DateTime endDate, string? excludeBookingId = null)
+        {
+            // Check if car exists and is available
+            var car = await _unitOfWork.CarEVRepository.GetCarEVByIdAsync(carId);
+            if (car == null || car.Status != CarEvStatus.AVAILABLE)
+                return false;
+
+            // Get buffer time from database SystemConfig (default 60 minutes if not found)
+            int bufferMinutes = 60; // Default fallback
+            var bufferConfig = await _unitOfWork.SystemConfigRepository.GetSystemConfigByKeyAsync("BOOKING_BUFFER_TIME_MINUTES");
+            if (bufferConfig != null && !string.IsNullOrWhiteSpace(bufferConfig.Value) && int.TryParse(bufferConfig.Value, out var parsedBuffer))
+            {
+                bufferMinutes = parsedBuffer;
+            }
+            
+            return await _unitOfWork.OrderRepository.IsCarAvailableWithBufferAsync(carId, startDate, endDate, bufferMinutes, excludeBookingId);
+        }
+
+        public async Task<string?> FindAvailableCarByModelAsync(string modelId, string depotId, DateTime startDate, DateTime endDate)
+        {
+            // 🔒 RACE CONDITION SAFE: Sử dụng database transaction để tránh 2 khách cùng book 1 xe
+            // Method này sẽ được gọi TRONG transaction của CreateOrderBookingAsync
+            
+            // Get buffer time from database SystemConfig (default 60 minutes if not found)
+            int bufferMinutes = 60; // Default fallback
+            var bufferConfig = await _unitOfWork.SystemConfigRepository.GetSystemConfigByKeyAsync("BOOKING_BUFFER_TIME_MINUTES");
+            if (bufferConfig != null && !string.IsNullOrWhiteSpace(bufferConfig.Value) && int.TryParse(bufferConfig.Value, out var parsedBuffer))
+            {
+                bufferMinutes = parsedBuffer;
+            }
+            
+            // Tìm xe available với lock (tránh race condition)
+            var availableCar = await _unitOfWork.CarEVRepository.FindAndLockAvailableCarAsync(
+                modelId, depotId, startDate, endDate, bufferMinutes);
+            
+            return availableCar?.Id;
+        }
 
 
         public async Task<OrderBookingResponseDto> CheckoutOrderAsync(string id)
@@ -693,17 +734,44 @@ namespace EVSRS.Services.Service
             var currentUserId = GetCurrentUserId();
             _validationService.CheckBadRequest(string.IsNullOrEmpty(currentUserId), "User must be logged in to create booking");
 
+            // ✅ Validate: Phải có ít nhất CarEVDetailId hoặc ModelId
+            _validationService.CheckBadRequest(
+                string.IsNullOrEmpty(request.CarEVDetailId) && string.IsNullOrEmpty(request.ModelId),
+                "Either CarEVDetailId or ModelId must be provided");
+            
+            _validationService.CheckBadRequest(
+                !string.IsNullOrEmpty(request.CarEVDetailId) && !string.IsNullOrEmpty(request.ModelId),
+                "Cannot provide both CarEVDetailId and ModelId. Choose one booking method.");
+
             // ✅ THÊM: Kiểm tra user đã có booking active chưa
             var hasActiveBooking = await HasActiveBookingAsync(currentUserId);
             _validationService.CheckBadRequest(hasActiveBooking, 
                 "You already have an active booking. Please complete or cancel your current booking before creating a new one.");
 
-            // Validate car availability
-            var isAvailable = await CheckCarAvailabilityAsync(request.CarEVDetailId, request.StartAt, request.EndAt);
-            _validationService.CheckBadRequest(!isAvailable, "Car is not available for the selected dates");
+            string finalCarId;
+            
+            // ✅ Xử lý 2 trường hợp: đặt xe cụ thể vs đặt theo model
+            if (!string.IsNullOrEmpty(request.CarEVDetailId))
+            {
+                // Case 1: Khách chọn xe cụ thể
+                finalCarId = request.CarEVDetailId;
+                var isAvailable = await CheckCarAvailabilityWithBufferAsync(finalCarId, request.StartAt, request.EndAt);
+                _validationService.CheckBadRequest(!isAvailable, 
+                    "Car is not available for the selected dates (including buffer time for cleaning)");
+            }
+            else
+            {
+                // Case 2: Khách chọn model, hệ thống tự tìm xe available
+                var availableCarId = await FindAvailableCarByModelAsync(request.ModelId!, request.DepotId, request.StartAt, request.EndAt);
+                _validationService.CheckBadRequest(availableCarId == null, 
+                    "No cars of this model are available at the selected depot for the requested time period (including buffer time for cleaning)");
+                
+                finalCarId = availableCarId!;
+                Console.WriteLine($"[BookByModel] Auto-selected car: {finalCarId} for model: {request.ModelId}");
+            }
 
             // Calculate costs với membership discount
-            var totalCost = await CalculateBookingCostAsync(request.CarEVDetailId, request.StartAt, request.EndAt, currentUserId);
+            var totalCost = await CalculateBookingCostAsync(finalCarId, request.StartAt, request.EndAt, currentUserId);
             var depositFee = await _unitOfWork.SystemConfigRepository.GetSystemConfigByKeyAsync("DEPOSIT_FEE_PERCENTAGE");
             decimal depositPercent = 30m;
             if (depositFee != null && !string.IsNullOrWhiteSpace(depositFee.Value) && decimal.TryParse(depositFee.Value, out var parsedPercent))
@@ -726,11 +794,12 @@ namespace EVSRS.Services.Service
             booking.CreatedBy = GetCurrentUserName();
             booking.CreatedAt = DateTime.UtcNow;
             booking.UpdatedAt = DateTime.UtcNow;
+            booking.CarEVDetailId = finalCarId; // ✅ Gán xe đã chọn (tự động hoặc manual)
 
             await _unitOfWork.OrderRepository.CreateOrderBookingAsync(booking);
 
             // Reserve the car
-            var car = await _unitOfWork.CarEVRepository.GetCarEVByIdAsync(request.CarEVDetailId);
+            var car = await _unitOfWork.CarEVRepository.GetCarEVByIdAsync(finalCarId);
             if (car != null)
             {
                 car.Status = CarEvStatus.RESERVED;
