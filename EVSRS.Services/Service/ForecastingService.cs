@@ -441,20 +441,44 @@ namespace EVSRS.Services.Service
                 "Loading current availability for station={StationId}, vehicle={VehicleType}",
                 stationId, vehicleType);
 
-            // Get minimum availability in next 24h from inventory snapshots
-            var sql = @"
-                SELECT COALESCE(MIN(available_count), 0) AS min_available
+            // Try to get from InventorySnapshot first (if exists)
+            var snapshotSql = @"
+                SELECT COALESCE(MIN(""AvailableCount""), 0) AS min_available
                 FROM ""InventorySnapshot""
-                WHERE ""StationId"" = {0}
-                  AND ""VehicleType"" = {1}
+                WHERE ""DepotId"" = {0}
+                  AND ""ModelId"" = {1}
                   AND ""SnapshotTime"" >= NOW()
                   AND ""SnapshotTime"" < NOW() + INTERVAL '24 hours'";
 
-            var result = await _dbContext.Database
-                .SqlQueryRaw<MinAvailableRow>(sql, stationId, vehicleType)
+            var snapshotResult = await _dbContext.Database
+                .SqlQueryRaw<MinAvailableRow>(snapshotSql, stationId, vehicleType)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            return result?.min_available ?? 0;
+            if (snapshotResult?.min_available > 0)
+            {
+                _logger.LogDebug("Found {Count} available from snapshots", snapshotResult.min_available);
+                return snapshotResult.min_available;
+            }
+
+            // Fallback: Count current available cars from CarEV table
+            _logger.LogDebug("No snapshots found, counting from CarEV table");
+            var carCountSql = @"
+                SELECT COUNT(*) AS min_available
+                FROM ""CarEV"" c
+                INNER JOIN ""Model"" m ON c.""ModelId"" = m.""Id""
+                WHERE c.""DepotId"" = {0}
+                  AND m.""Id"" = {1}
+                  AND c.""Status"" = 0
+                  AND c.""IsDeleted"" = FALSE";
+
+            var carCountResult = await _dbContext.Database
+                .SqlQueryRaw<MinAvailableRow>(carCountSql, stationId, vehicleType)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            var availableCount = carCountResult?.min_available ?? 0;
+            _logger.LogDebug("Found {Count} available cars from CarEV", availableCount);
+            
+            return availableCount;
         }
 
         // Helper classes for raw SQL queries
