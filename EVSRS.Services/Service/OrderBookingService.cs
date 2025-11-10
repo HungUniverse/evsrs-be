@@ -604,10 +604,6 @@ namespace EVSRS.Services.Service
                 
                 try
                 {
-                    // ✅ Cải thiện parse SubTotal - hỗ trợ nhiều format:
-                    // - Format VN: "100.000,00" hoặc "100.000"
-                    // - Format US: "100,000.00" hoặc "100,000"
-                    // - Format đơn giản: "100000" hoặc "100000.00"
                     string cleanAmount = booking.SubTotal
                         .Replace(" ", "")  // Remove spaces
                         .Trim();

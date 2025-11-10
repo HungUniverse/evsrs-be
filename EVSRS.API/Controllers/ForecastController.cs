@@ -1,6 +1,7 @@
 using EVSRS.API.Configuration;
 using EVSRS.API.Constant;
 using EVSRS.BusinessObjects.DTO.ForecastDto;
+using EVSRS.Repositories.Interface;
 using EVSRS.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,15 +18,21 @@ namespace EVSRS.API.Controllers;
 public class ForecastController : ControllerBase
 {
     private readonly IForecastingService _forecastingService;
+    private readonly IDepotRepository _depotRepository;
+    private readonly IModelRepository _modelRepository;
     private readonly FeaturesOptions _features;
     private readonly ILogger<ForecastController> _logger;
 
     public ForecastController(
         IForecastingService forecastingService,
+        IDepotRepository depotRepository,
+        IModelRepository modelRepository,
         IOptions<FeaturesOptions> features,
         ILogger<ForecastController> logger)
     {
         _forecastingService = forecastingService;
+        _depotRepository = depotRepository;
+        _modelRepository = modelRepository;
         _features = features.Value;
         _logger = logger;
     }
@@ -60,13 +67,17 @@ public class ForecastController : ControllerBase
         }
 
         _logger.LogInformation(
-            "Getting forecast for station={StationId}, vehicleType={VehicleType}, horizon={Horizon}",
+                "Getting forecast for station={StationId}, vehicleType={VehicleType}, horizon={Horizon}",
             stationId, vehicleType ?? "ALL", horizonDays);
 
         var endDate = DateTime.UtcNow;
         var startDate = endDate.AddDays(-horizonDays);
 
         var recommendations = new List<CapacityRecommendation>();
+
+        // Load depot name once
+        var depot = await _depotRepository.GetByIdAsync(stationId);
+        var stationName = depot?.Name ?? string.Empty;
 
         if (!string.IsNullOrEmpty(vehicleType))
         {
@@ -96,10 +107,16 @@ public class ForecastController : ControllerBase
             var gap = requiredUnits - currentAvailable;
             var recommendedAction = gap > 0 ? "BUY" : (gap < 0 ? "SURPLUS" : "OK");
 
+            // Load model name
+            var model = await _modelRepository.GetByIdAsync(vehicleType);
+            var vehicleTypeName = model?.ModelName ?? string.Empty;
+
             recommendations.Add(new CapacityRecommendation
             {
                 StationId = stationId,
+                StationName = stationName,
                 VehicleType = vehicleType,
+                VehicleTypeName = vehicleTypeName,
                 RequiredUnits = requiredUnits,
                 CurrentAvailablePeak24h = currentAvailable,
                 PeakP90Demand = stats.P90,
@@ -145,10 +162,16 @@ public class ForecastController : ControllerBase
                 var gap = requiredUnits - currentAvailable;
                 var recommendedAction = gap > 0 ? "BUY" : (gap < 0 ? "SURPLUS" : "OK");
 
+                // Load model name
+                var model = await _modelRepository.GetByIdAsync(vType);
+                var vehicleTypeName = model?.ModelName ?? string.Empty;
+
                 recommendations.Add(new CapacityRecommendation
                 {
                     StationId = stationId,
+                    StationName = stationName,
                     VehicleType = vType,
+                    VehicleTypeName = vehicleTypeName,
                     RequiredUnits = requiredUnits,
                     CurrentAvailablePeak24h = currentAvailable,
                     PeakP90Demand = stats.P90,
