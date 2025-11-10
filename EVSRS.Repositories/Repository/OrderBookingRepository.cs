@@ -163,6 +163,54 @@ namespace EVSRS.Repositories.Repository
             return !conflictingBookings;
         }
 
+        public async Task<bool> IsCarAvailableWithBufferAsync(string carId, DateTime startDate, DateTime endDate, int bufferMinutes, string? excludeBookingId = null)
+        {
+            // Kiểm tra overlap với buffer time:
+            // Booking mới cần có khoảng cách tối thiểu bufferMinutes với các booking hiện tại
+            // 
+            // Ví dụ: Buffer 60 phút
+            // Booking hiện tại: 7:00 - 11:00
+            // → Booking mới KHÔNG được trong khoảng: 11:00 - bufferMinutes đến 7:00 + bufferMinutes
+            // → Tức là: (5:00 đến 12:00) bị block
+            //
+            // Logic: Thêm buffer vào cả 2 đầu của booking hiện tại để kiểm tra overlap
+            var query = _dbSet
+                .Where(x => !x.IsDeleted &&
+                           x.CarEVDetailId == carId &&
+                           x.Status != OrderBookingStatus.CANCELLED &&
+                           x.Status != OrderBookingStatus.COMPLETED &&
+                           x.Status != OrderBookingStatus.RETURNED);
+            
+            // Loại trừ booking hiện tại nếu có (để update)
+            if (!string.IsNullOrEmpty(excludeBookingId))
+            {
+                query = query.Where(x => x.Id != excludeBookingId);
+            }
+
+            var existingBookings = await query.ToListAsync();
+
+            foreach (var existing in existingBookings)
+            {
+                // Skip nếu booking không có StartAt hoặc EndAt
+                if (!existing.StartAt.HasValue || !existing.EndAt.HasValue)
+                    continue;
+                
+                // Thêm buffer vào thời gian của booking hiện tại
+                var existingStartWithBuffer = existing.StartAt.Value.AddMinutes(-bufferMinutes);
+                var existingEndWithBuffer = existing.EndAt.Value.AddMinutes(bufferMinutes);
+                
+                // Kiểm tra overlap với booking có buffer
+                bool hasOverlap = startDate <= existingEndWithBuffer && endDate >= existingStartWithBuffer;
+                
+                if (hasOverlap)
+                {
+                    return false; // Có conflict
+                }
+            }
+
+            return true; // Không có conflict
+        }
+
         public async Task UpdateOrderBookingAsync(OrderBooking orderBooking)
         {
             await UpdateAsync(orderBooking);
