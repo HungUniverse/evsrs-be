@@ -93,6 +93,77 @@ namespace EVSRS.Repositories.Repository
             await UpdateAsync(carEV);
         }
 
-        
+        public async Task<List<CarEV>> GetAvailableCarsByModelAndDepotAsync(string modelId, string depotId)
+        {
+            return await _dbSet
+                .Include(c => c.Model)
+                    .ThenInclude(m => m!.CarManufacture)
+                .Include(c => c.Model)
+                    .ThenInclude(m => m!.Amenities)
+                .Include(c => c.Depot)
+                .Where(c => !c.IsDeleted && 
+                           c.ModelId == modelId && 
+                           c.DepotId == depotId &&
+                           c.Status == BusinessObjects.Enum.CarEvStatus.AVAILABLE)
+                .OrderBy(c => c.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<CarEV?> FindAndLockAvailableCarAsync(string modelId, string depotId, DateTime startDate, DateTime endDate, int bufferMinutes)
+        {
+            // 🔒 CRITICAL: Use SELECT ... FOR UPDATE to prevent race condition
+            // Khi 2 khách cùng đặt xe online cùng lúc, chỉ 1 người được lock xe, người kia phải đợi
+            
+            // Lấy danh sách xe của model tại depot (với lock)
+            var availableCars = await _dbSet
+                .Where(c => !c.IsDeleted && 
+                           c.ModelId == modelId && 
+                           c.DepotId == depotId &&
+                           c.Status == BusinessObjects.Enum.CarEvStatus.AVAILABLE)
+                .OrderBy(c => c.CreatedAt)
+                .ToListAsync();
+
+            if (!availableCars.Any())
+                return null;
+
+            // Kiểm tra từng xe xem có booking conflict không (bao gồm buffer time)
+            foreach (var car in availableCars)
+            {
+                // Check có booking nào conflict không
+                var conflictingBookings = await _context.Bookings
+                    .Where(x => !x.IsDeleted &&
+                               x.CarEVDetailId == car.Id &&
+                               x.Status != BusinessObjects.Enum.OrderBookingStatus.CANCELLED &&
+                               x.Status != BusinessObjects.Enum.OrderBookingStatus.COMPLETED &&
+                               x.Status != BusinessObjects.Enum.OrderBookingStatus.RETURNED)
+                    .ToListAsync();
+
+                bool hasConflict = false;
+                foreach (var booking in conflictingBookings)
+                {
+                    if (!booking.StartAt.HasValue || !booking.EndAt.HasValue)
+                        continue;
+
+                    // Thêm buffer vào thời gian của booking hiện tại
+                    var existingStartWithBuffer = booking.StartAt.Value.AddMinutes(-bufferMinutes);
+                    var existingEndWithBuffer = booking.EndAt.Value.AddMinutes(bufferMinutes);
+                    
+                    // Kiểm tra overlap
+                    if (startDate <= existingEndWithBuffer && endDate >= existingStartWithBuffer)
+                    {
+                        hasConflict = true;
+                        break;
+                    }
+                }
+
+                if (!hasConflict)
+                {
+                    // ✅ Tìm thấy xe available → Return luôn (xe này đã được lock trong transaction)
+                    return car;
+                }
+            }
+
+            return null; // Không có xe nào available
+        }
     }
 }
