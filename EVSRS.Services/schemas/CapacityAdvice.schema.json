@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "CapacityAdviceResponse",
+  "description": "LLM capacity advice response with prioritized actions",
+  "required": ["actions", "summary"],
+  "properties": {
+    "actions": {
+      "type": "array",
+      "description": "Prioritized list of capacity actions",
+      "items": {
+        "type": "object",
+        "required": ["stationId", "vehicleType", "actionType", "units", "priority", "rationale"],
+        "properties": {
+          "stationId": {
+            "type": "string",
+            "description": "Station identifier"
+          },
+          "vehicleType": {
+            "type": "string",
+            "description": "Vehicle type/model identifier"
+          },
+          "actionType": {
+            "type": "string",
+            "enum": ["BUY", "REALLOCATE_IN", "REALLOCATE_OUT", "SURPLUS", "NO_ACTION"],
+            "description": "Recommended action type"
+          },
+          "units": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of units to add/remove"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Priority score (0-100)"
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Brief explanation for this action"
+          },
+          "estimatedCost": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Estimated cost in currency units (optional)"
+          },
+          "relatedStationId": {
+            "type": "string",
+            "description": "Related station for REALLOCATE actions (optional)"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["totalCost", "stationsAffected", "unitsAdded", "unitsReallocated"],
+      "properties": {
+        "totalCost": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total estimated cost"
+        },
+        "stationsAffected": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of stations affected"
+        },
+        "unitsAdded": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total units to purchase/add"
+        },
+        "unitsReallocated": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total units to reallocate"
+        },
+        "budgetRemaining": {
+          "type": "number",
+          "description": "Budget remaining after actions (optional)"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes or warnings (optional)"
+        }
+      }
+    }
+  }
+}

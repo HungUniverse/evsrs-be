@@ -1,6 +1,8 @@
 using System;
 using System.Text;
 using System.Text.Json;
+using EVSRS.API.Configuration;
+using EVSRS.API.Services;
 using EVSRS.BusinessObjects.DBContext;
 using EVSRS.Repositories.Helper;
 using EVSRS.Repositories.Implement;
@@ -11,6 +13,7 @@ using EVSRS.Services.Interface;
 using EVSRS.Services.Mapper;
 using EVSRS.Services.Service;
 using EVSRS.Services.ExternalServices.SepayService;
+using EVSRS.Services.Infrastructure.Llm;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -72,6 +75,11 @@ namespace EVSRS.API.DependencyInjection
             services.AddScoped<ISystemConfigService, SystemConfigService>();
             services.AddScoped<IMembershipConfigService, MembershipConfigService>();
             services.AddScoped<IMembershipService, MembershipService>();
+            
+            // Forecasting & Capacity Planning
+            services.AddScoped<IForecastingService, ForecastingService>();
+            services.AddScoped<ILlmAdvisor, LlmAdvisor>();
+            services.AddScoped<ICapacityPlanner, CapacityPlanner>();
 
 
 
@@ -80,6 +88,13 @@ namespace EVSRS.API.DependencyInjection
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)
         {
             services.AddHttpClient();
+            
+            // Register OpenAI HTTP client with specific configuration
+            services.AddHttpClient("OpenAI", client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
+            
             return services;
         }
         public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
@@ -234,6 +249,11 @@ namespace EVSRS.API.DependencyInjection
             // Register configuration settings
             services.Configure<SepaySettings>(configuration.GetSection("SepaySettings"));
             services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
+            services.Configure<OpenAiOptions>(configuration.GetSection(OpenAiOptions.SectionName));
+            services.Configure<FeaturesOptions>(configuration.GetSection(FeaturesOptions.SectionName));
+
+            // Register cache services
+            services.AddSingleton<IConstraintsCache, InMemoryConstraintsCache>();
         }
         
         private static void AddAutoMapper(this IServiceCollection services)
