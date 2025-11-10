@@ -20,19 +20,22 @@ public class ReturnService : IReturnService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IValidationService _validationService;
     private readonly ISepayService _sepayService;
+    private readonly IOrderBookingService _orderBookingService;
 
     public ReturnService(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
         IValidationService validationService,
-        ISepayService sepayService)
+        ISepayService sepayService,
+        IOrderBookingService orderBookingService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _httpContextAccessor = httpContextAccessor;
         _validationService = validationService;
         _sepayService = sepayService;
+        _orderBookingService = orderBookingService;
     }
 
     public async Task<HandoverInspectionResponseDto> CreateReturnInspectionAsync(HandoverInspectionRequestDto request)
@@ -254,6 +257,9 @@ public class ReturnService : IReturnService
                 orderBooking.UpdatedAt = DateTime.UtcNow;
                 orderBooking.UpdatedBy = GetCurrentUserName();
                 await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(orderBooking);
+                
+                // ✅ Update membership when order completes via settlement payment
+                await _orderBookingService.UpdateMembershipForCompletedOrderAsync(orderBooking);
             }
         }
 

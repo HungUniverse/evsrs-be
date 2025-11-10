@@ -597,68 +597,8 @@ namespace EVSRS.Services.Service
             await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(booking);
             await _unitOfWork.SaveChangesAsync();
 
-            // Update membership after order is saved
-            if (!string.IsNullOrEmpty(booking.UserId) && !string.IsNullOrWhiteSpace(booking.SubTotal))
-            {
-                decimal orderAmount = 0m; // ✅ Declare outside try block
-                
-                try
-                {
-                    // ✅ Cải thiện parse SubTotal - hỗ trợ nhiều format:
-                    // - Format VN: "100.000,00" hoặc "100.000"
-                    // - Format US: "100,000.00" hoặc "100,000"
-                    // - Format đơn giản: "100000" hoặc "100000.00"
-                    string cleanAmount = booking.SubTotal
-                        .Replace(" ", "")  // Remove spaces
-                        .Trim();
-                    
-                    // Thử parse với format hiện tại (có thể có dấu phẩy hoặc chấm)
-                    bool parseSuccess = false;
-                    
-                    // Thử parse trực tiếp trước (cho format "100000" hoặc "100000.00")
-                    if (decimal.TryParse(cleanAmount, NumberStyles.Any, 
-                        CultureInfo.InvariantCulture, out orderAmount))
-                    {
-                        parseSuccess = true;
-                    }
-                    else
-                    {
-                        // Nếu fail, thử remove tất cả dấu phân cách (cho format VN "100.000,00")
-                        string noSeparators = cleanAmount.Replace(",", "").Replace(".", "");
-                        if (decimal.TryParse(noSeparators, NumberStyles.Any,
-                            CultureInfo.InvariantCulture, out orderAmount))
-                        {
-                            parseSuccess = true;
-                        }
-                    }
-                    
-                    if (parseSuccess && orderAmount > 0)
-                    {
-                        await _membershipService.UpdateMembershipAfterOrderCompleteAsync(
-                            booking.UserId,
-                            orderAmount
-                        );
-                    }
-                    else
-                    {
-                        Console.WriteLine($"⚠️ Failed to parse SubTotal for Order {booking.Code}: '{booking.SubTotal}'");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Log error and throw to see what's wrong
-                    var errorMsg = $"[CompleteOrder] Membership update FAILED for Order {booking.Code}, User {booking.UserId}, Amount {orderAmount}. Error: {ex.Message}";
-                    Console.WriteLine(errorMsg);
-                    Console.WriteLine($"StackTrace: {ex.StackTrace}");
-                    if (ex.InnerException != null)
-                    {
-                        Console.WriteLine($"InnerException: {ex.InnerException.Message}");
-                    }
-                    
-                    // TEMPORARY: Throw to debug - remove after fixing
-                    throw new Exception(errorMsg, ex);
-                }
-            }
+            // ✅ Update membership using helper method (don't throw if it fails)
+            await UpdateMembershipForCompletedOrderAsync(booking);
 
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
@@ -1162,6 +1102,81 @@ namespace EVSRS.Services.Service
 
             await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(order);
             await _unitOfWork.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Helper method để update membership khi order complete
+        /// Gọi method này từ mọi nơi complete order (manual, webhook, return settlement)
+        /// </summary>
+        public async Task UpdateMembershipForCompletedOrderAsync(OrderBooking orderBooking)
+        {
+            if (orderBooking == null)
+            {
+                Console.WriteLine("⚠️ Cannot update membership: orderBooking is null");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(orderBooking.UserId))
+            {
+                Console.WriteLine($"ℹ️ Skip membership update for order {orderBooking.Code}: No UserId");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(orderBooking.SubTotal))
+            {
+                Console.WriteLine($"⚠️ Cannot update membership for order {orderBooking.Code}: SubTotal is empty");
+                return;
+            }
+
+            decimal orderAmount = 0m;
+            
+            try
+            {
+                string cleanAmount = orderBooking.SubTotal
+                    .Replace(" ", "")  // Remove spaces
+                    .Trim();
+                
+                bool parseSuccess = false;
+                
+                // Thử parse trực tiếp trước (cho format "100000" hoặc "100000.00")
+                if (decimal.TryParse(cleanAmount, NumberStyles.Any, 
+                    CultureInfo.InvariantCulture, out orderAmount))
+                {
+                    parseSuccess = true;
+                }
+                else
+                {
+                    // Nếu fail, thử remove tất cả dấu phân cách (cho format VN "100.000,00")
+                    string noSeparators = cleanAmount.Replace(",", "").Replace(".", "");
+                    if (decimal.TryParse(noSeparators, NumberStyles.Any,
+                        CultureInfo.InvariantCulture, out orderAmount))
+                    {
+                        parseSuccess = true;
+                    }
+                }
+                
+                if (parseSuccess && orderAmount > 0)
+                {
+                    Console.WriteLine($"💎 Updating membership for User {orderBooking.UserId}, Order {orderBooking.Code}, Amount {orderAmount}");
+                    
+                    await _membershipService.UpdateMembershipAfterOrderCompleteAsync(
+                        orderBooking.UserId,
+                        orderAmount
+                    );
+                    
+                    Console.WriteLine($"✅ Membership updated successfully for User {orderBooking.UserId}, Order {orderBooking.Code}");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Failed to parse SubTotal for Order {orderBooking.Code}: '{orderBooking.SubTotal}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error nhưng KHÔNG throw - membership update không nên làm fail toàn bộ process
+                Console.WriteLine($"❌ [UpdateMembership] FAILED for Order {orderBooking.Code}, User {orderBooking.UserId}, Amount {orderAmount}. Error: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using EVSRS.API.Constant;
 using EVSRS.API.DependencyInjection;
 using EVSRS.API.Middlewares;
+using EVSRS.API.Services;
 using EVSRS.Repositories.Helper;
 using EVSRS.Services.BackgroundServices;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -45,6 +46,10 @@ namespace EVSRS.API
                 
                 // Add background services
                 builder.Services.AddHostedService<OrderTimeoutService>();
+                builder.Services.AddHostedService<MaterializedViewRefreshService>();
+                builder.Services.AddHostedService<InventorySnapshotService>();
+                builder.Services.AddHostedService<DemandForecastGeneratorService>();
+                builder.Services.AddHostedService<RebalancingPlannerService>();
                 
                 var app = builder.Build();
 
