@@ -121,6 +121,49 @@ public class UserService : IUserService
 
     }
 
+    public async Task UpdateUserNameAsync(string userId, EVSRS.BusinessObjects.DTO.UserDto.PatchUserNameDto patchUserNameDto)
+    {
+        await _validationService.ValidateAndThrowAsync(patchUserNameDto);
+        var existingUser = await _unitOfWork.UserRepository.GetUserByIdAsync(userId);
+        if (existingUser == null)
+        {
+            throw new KeyNotFoundException($"User with ID {userId} not found.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(patchUserNameDto.UserName))
+        {
+            var userWithSameName = await _unitOfWork.UserRepository.GetUserByUsernameAsync(patchUserNameDto.UserName!);
+            if (userWithSameName != null && userWithSameName.Id != userId)
+            {
+                _validationService.CheckBadRequest(true, "Username already exists");
+            }
+            existingUser.UserName = patchUserNameDto.UserName;
+            existingUser.UpdatedAt = DateTime.UtcNow;
+            existingUser.UpdatedBy = GetCurrentUserName();
+            await _unitOfWork.UserRepository.UpdateAsync(existingUser);
+            await _unitOfWork.SaveChangesAsync();
+        }
+    }
+
+    public async Task UpdateUserProfilePictureAsync(string userId, EVSRS.BusinessObjects.DTO.UserDto.PatchUserProfilePictureDto patchUserProfilePictureDto)
+    {
+        await _validationService.ValidateAndThrowAsync(patchUserProfilePictureDto);
+        var existingUser = await _unitOfWork.UserRepository.GetUserByIdAsync(userId);
+        if (existingUser == null)
+        {
+            throw new KeyNotFoundException($"User with ID {userId} not found.");
+        }
+
+        if (patchUserProfilePictureDto.ProfilePicture != null)
+        {
+            existingUser.ProfilePicture = patchUserProfilePictureDto.ProfilePicture;
+            existingUser.UpdatedAt = DateTime.UtcNow;
+            existingUser.UpdatedBy = GetCurrentUserName();
+            await _unitOfWork.UserRepository.UpdateAsync(existingUser);
+            await _unitOfWork.SaveChangesAsync();
+        }
+    }
+
     public async Task<UserResponseDto> CreateStaffAsync(CreateStaffRequestDto createStaffRequestDto)
     {
         await _validationService.ValidateAndThrowAsync(createStaffRequestDto);
