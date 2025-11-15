@@ -11,6 +11,8 @@ public interface IUserService
     Task<UserResponseDto> GetUserByPhoneAsync(string phone);
     Task<UserResponseDto> GetUserByUsernameAsync(string username);
     Task UpdateUserAsync(string userId, UserRequestDto updateUserRequestDto);
+    Task UpdateUserNameAsync(string userId, EVSRS.BusinessObjects.DTO.UserDto.PatchUserNameDto patchUserNameDto);
+    Task UpdateUserProfilePictureAsync(string userId, EVSRS.BusinessObjects.DTO.UserDto.PatchUserProfilePictureDto patchUserProfilePictureDto);
     Task UpdateStaffDepotIdAsync(string userId, string depotId);
 
     Task<UserResponseDto> RegisterUserAsync(RegisterUserRequestDto registerUserRequestDto);

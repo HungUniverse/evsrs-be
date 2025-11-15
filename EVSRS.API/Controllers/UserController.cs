@@ -113,6 +113,30 @@ namespace EVSRS.API.Controllers
             ));
         }
 
+        [HttpPatch("{id}/username")]
+        public async Task<IActionResult> PatchUserName(string id, [FromBody] EVSRS.BusinessObjects.DTO.UserDto.PatchUserNameDto patchUserNameDto)
+        {
+            await _userService.UpdateUserNameAsync(id, patchUserNameDto);
+            return Ok(new ResponseModel<string>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                null,
+                "User name updated successfully."
+            ));
+        }
+
+        [HttpPatch("{id}/profile-picture")]
+        public async Task<IActionResult> PatchUserProfilePicture(string id, [FromBody] EVSRS.BusinessObjects.DTO.UserDto.PatchUserProfilePictureDto patchUserProfilePictureDto)
+        {
+            await _userService.UpdateUserProfilePictureAsync(id, patchUserProfilePictureDto);
+            return Ok(new ResponseModel<string>(
+                StatusCodes.Status200OK,
+                ApiCodes.SUCCESS,
+                null,
+                "User profile picture updated successfully."
+            ));
+        }
+
         [HttpPost("staff")]
         public async Task<IActionResult> CreateStaff([FromBody] CreateStaffRequestDto createStaffRequestDto)
         {
