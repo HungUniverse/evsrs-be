@@ -31,7 +31,7 @@ public class OrderBookingResponseDto
     public PaymentStatus PaymentStatus { get; set; }
     public string? Note { get; set; }
     // Refund amount calculated by business logic when relevant (not persisted)
-    public decimal? RefundAmount { get; set; }
+    public string? RefundAmount { get; set; }
     
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
