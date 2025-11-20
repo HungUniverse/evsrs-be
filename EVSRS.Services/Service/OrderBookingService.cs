@@ -372,7 +372,7 @@ namespace EVSRS.Services.Service
             }
             else
             {
-                // Already paid → Calculate refund and wait for admin processing
+                // Already paid → Calculate refund (or no refund) and wait for admin processing when applicable
                 decimal depositAmount = 0m;
                 if (!string.IsNullOrEmpty(booking.DepositAmount))
                 {
@@ -380,47 +380,60 @@ namespace EVSRS.Services.Service
                 }
 
                 var now = DateTime.UtcNow;
-                // Normalize booking start time (handle Unspecified from frontend sent as VN local)
-                DateTime? bookingStartUtc = null;
-                if (booking.StartAt.HasValue)
+
+                // Business rule: if contract signed and full payment completed, allow cancel but NO refund
+                if (booking.Status == OrderBookingStatus.READY_FOR_CHECKOUT && booking.PaymentStatus == PaymentStatus.PAID_FULL)
                 {
-                    bookingStartUtc = ToUtcAssumeVietnam(booking.StartAt.Value);
-                }
-                if (bookingStartUtc.HasValue && now > bookingStartUtc.Value)
-                {
-                    // no refund after vehicle pickup
                     refundAmount = 0m;
+                    booking.Status = OrderBookingStatus.CANCELLED;
+                    booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nNo refund (contract signed & full payment).";
+                    booking.RefundAmount = null;
                 }
                 else
                 {
-                    var hoursSinceBooking = (now - booking.CreatedAt).TotalHours;
-                    if (hoursSinceBooking <= 24)
+                    // Normalize booking start time (handle Unspecified from frontend sent as VN local)
+                    DateTime? bookingStartUtc = null;
+                    if (booking.StartAt.HasValue)
                     {
-                        refundAmount = depositAmount; // full deposit
+                        bookingStartUtc = ToUtcAssumeVietnam(booking.StartAt.Value);
+                    }
+
+                    if (bookingStartUtc.HasValue && now > bookingStartUtc.Value)
+                    {
+                        // No refund after vehicle pickup
+                        refundAmount = 0m;
                     }
                     else
                     {
-                        refundAmount = depositAmount / 2m; // half deposit
+                        var hoursSinceBooking = (now - booking.CreatedAt).TotalHours;
+                        if (hoursSinceBooking <= 24)
+                        {
+                            refundAmount = depositAmount; // full deposit
+                        }
+                        else
+                        {
+                            refundAmount = depositAmount / 2m; // half deposit
+                        }
                     }
-                }
 
-                if (refundAmount > 0)
-                {
-                    // Need refund → Wait for admin processing
-                    booking.Status = OrderBookingStatus.REFUND_PENDING;
-                    var customerName = booking.User?.FullName ?? "(Offline/Unknown)";
-                    var customerPhone = booking.User?.PhoneNumber ?? "(Unknown)";
-                    // Persist cancellation reason and customer info, but do NOT duplicate numeric refund here
-                    booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nCustomer: {customerName} - {customerPhone}";
-                    // Persist computed refund amount as string (invariant format)
-                    booking.RefundAmount = refundAmount.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                }
-                else
-                {
-                    // Already paid but no refund (cancelled after pickup time) → Cancel directly
-                    booking.Status = OrderBookingStatus.CANCELLED;
-                    booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nNo refund (cancelled after pickup time)";
-                    booking.RefundAmount = null;
+                    if (refundAmount > 0)
+                    {
+                        // Need refund → Wait for admin processing
+                        booking.Status = OrderBookingStatus.REFUND_PENDING;
+                        var customerName = booking.User?.FullName ?? "(Offline/Unknown)";
+                        var customerPhone = booking.User?.PhoneNumber ?? "(Unknown)";
+                        // Persist cancellation reason and customer info, but do NOT duplicate numeric refund here
+                        booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nCustomer: {customerName} - {customerPhone}";
+                        // Persist computed refund amount as string (invariant format)
+                        booking.RefundAmount = refundAmount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        // Already paid but no refund (cancelled after pickup time) → Cancel directly
+                        booking.Status = OrderBookingStatus.CANCELLED;
+                        booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nNo refund (cancelled after pickup time)";
+                        booking.RefundAmount = null;
+                    }
                 }
             }
 
@@ -1224,6 +1237,11 @@ namespace EVSRS.Services.Service
             }
 
             var now = DateTime.UtcNow;
+            // If booking is already READY_FOR_CHECKOUT and paid full, business rule: no refund
+            if (booking.Status == OrderBookingStatus.READY_FOR_CHECKOUT && booking.PaymentStatus == PaymentStatus.PAID_FULL)
+            {
+                return 0m;
+            }
             if (booking.StartAt.HasValue)
             {
                 var bookingStartUtc = ToUtcAssumeVietnam(booking.StartAt.Value);
