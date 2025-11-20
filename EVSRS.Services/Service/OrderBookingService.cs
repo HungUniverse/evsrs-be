@@ -363,7 +363,9 @@ namespace EVSRS.Services.Service
                 // Not paid yet → Cancel directly, no refund needed
                 booking.Status = OrderBookingStatus.CANCELLED;
                 refundAmount = 0m;
-
+                // Clear persisted refund amount (string field) when no refund
+                booking.RefundAmount = null;
+                
                 var noteBuilder = new StringBuilder(booking.Note ?? string.Empty);
                 noteBuilder.AppendLine($"Cancelled before payment - Reason: {reason}");
                 booking.Note = noteBuilder.ToString();
@@ -378,7 +380,13 @@ namespace EVSRS.Services.Service
                 }
 
                 var now = DateTime.UtcNow;
-                if (booking.StartAt.HasValue && now > booking.StartAt.Value)
+                // Normalize booking start time (handle Unspecified from frontend sent as VN local)
+                DateTime? bookingStartUtc = null;
+                if (booking.StartAt.HasValue)
+                {
+                    bookingStartUtc = ToUtcAssumeVietnam(booking.StartAt.Value);
+                }
+                if (bookingStartUtc.HasValue && now > bookingStartUtc.Value)
                 {
                     // no refund after vehicle pickup
                     refundAmount = 0m;
@@ -402,13 +410,17 @@ namespace EVSRS.Services.Service
                     booking.Status = OrderBookingStatus.REFUND_PENDING;
                     var customerName = booking.User?.FullName ?? "(Offline/Unknown)";
                     var customerPhone = booking.User?.PhoneNumber ?? "(Unknown)";
-                    booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nRefundAmount: {refundAmount:C}\nCustomer: {customerName} - {customerPhone}";
+                    // Persist cancellation reason and customer info, but do NOT duplicate numeric refund here
+                    booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nCustomer: {customerName} - {customerPhone}";
+                    // Persist computed refund amount as string (invariant format)
+                    booking.RefundAmount = refundAmount.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 }
                 else
                 {
                     // Already paid but no refund (cancelled after pickup time) → Cancel directly
                     booking.Status = OrderBookingStatus.CANCELLED;
                     booking.Note = $"{booking.Note}\nCancellation reason: {reason}\nNo refund (cancelled after pickup time)";
+                    booking.RefundAmount = null;
                 }
             }
 
@@ -427,8 +439,10 @@ namespace EVSRS.Services.Service
             await _unitOfWork.SaveChangesAsync();
 
             var resultDto = _mapper.Map<OrderBookingResponseDto>(booking);
-            // Populate computed refund amount on returned DTO (not persisted)
-            resultDto.RefundAmount = refundAmount;
+            // Prefer persisted DB refund amount; fallback to computed value for immediate return
+            resultDto.RefundAmount = !string.IsNullOrWhiteSpace(booking.RefundAmount)
+                ? booking.RefundAmount
+                : (refundAmount > 0 ? refundAmount.ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
             return resultDto;
         }
 
@@ -437,16 +451,23 @@ namespace EVSRS.Services.Service
             var bookings = await _unitOfWork.OrderRepository.GetOrderBookingListAsync(pageNumber, pageSize);
             var pending = bookings.Items.Where(b => b.Status == OrderBookingStatus.REFUND_PENDING).ToList();
             var dtos = pending.Select(b => _mapper.Map<OrderBookingResponseDto>(b)).ToList();
-            // compute and populate refund amount for admin display
+            // Prefer persisted refund amount (DB) for admin display; fallback to computed when DB value missing
             for (int i = 0; i < pending.Count; i++)
             {
                 try
                 {
-                    dtos[i].RefundAmount = ComputeRefundAmount(pending[i]);
+                    if (!string.IsNullOrWhiteSpace(pending[i].RefundAmount))
+                    {
+                        dtos[i].RefundAmount = pending[i].RefundAmount;
+                    }
+                    else
+                    {
+                        var computed = ComputeRefundAmount(pending[i]);
+                        dtos[i].RefundAmount = computed > 0 ? computed.ToString(System.Globalization.CultureInfo.InvariantCulture) : null;
+                    }
                 }
                 catch
                 {
-                    // If any unexpected issue occurs, leave RefundAmount null to avoid breaking the listing
                     dtos[i].RefundAmount = null;
                 }
             }
@@ -467,6 +488,12 @@ namespace EVSRS.Services.Service
             // Update status/payment
             booking.Status = OrderBookingStatus.CANCELLED;
             booking.PaymentStatus = PaymentStatus.REFUNDED;
+
+            // Persist confirmed refund amount to DB (use invariant format)
+            if (refundedAmount.HasValue)
+            {
+                booking.RefundAmount = refundedAmount.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
 
             // Append admin confirmation info to note
             var noteBuilder = new StringBuilder(booking.Note ?? string.Empty);
@@ -727,6 +754,23 @@ namespace EVSRS.Services.Service
             booking.PaymentStatus = PaymentStatus.PENDING;
             booking.SubTotal = totalCost.ToString();
             booking.TotalAmount = totalCost.ToString();
+            // Normalize StartAt/EndAt to UTC assuming frontend may send VN time (GMT+7) without offset
+            try
+            {
+                if (request.StartAt != default(DateTime))
+                {
+                    booking.StartAt = ToUtcAssumeVietnam(request.StartAt);
+                }
+                if (request.EndAt != default(DateTime))
+                {
+                    booking.EndAt = ToUtcAssumeVietnam(request.EndAt);
+                }
+            }
+            catch
+            {
+                booking.StartAt = request.StartAt;
+                booking.EndAt = request.EndAt;
+            }
             booking.CreatedBy = GetCurrentUserName();
             booking.CreatedAt = DateTime.UtcNow;
             booking.UpdatedAt = DateTime.UtcNow;
@@ -836,6 +880,24 @@ namespace EVSRS.Services.Service
             booking.TotalAmount = totalCost.ToString();
             booking.DepositAmount = request.PaymentType == PaymentType.DEPOSIT ? depositAmount.ToString() : totalCost.ToString();
             booking.RemainingAmount = request.PaymentType == PaymentType.DEPOSIT ? remainingAmount.ToString() : "0";
+            // Normalize StartAt/EndAt to UTC assuming frontend may send VN time (GMT+7) without offset
+            try
+            {
+                if (request.StartAt != default(DateTime))
+                {
+                    booking.StartAt = ToUtcAssumeVietnam(request.StartAt);
+                }
+                if (request.EndAt != default(DateTime))
+                {
+                    booking.EndAt = ToUtcAssumeVietnam(request.EndAt);
+                }
+            }
+            catch
+            {
+                // If normalization fails for any reason, fall back to raw values (existing behavior)
+                booking.StartAt = request.StartAt;
+                booking.EndAt = request.EndAt;
+            }
             booking.CreatedBy = GetCurrentUserName();
             booking.CreatedAt = DateTime.UtcNow;
             booking.UpdatedAt = DateTime.UtcNow;
@@ -909,17 +971,24 @@ namespace EVSRS.Services.Service
             };
 
             var bookingsList = bookings.Items.ToList();
-            for (int i = 0; i < bookingsList.Count; i++)
+                for (int i = 0; i < bookingsList.Count; i++)
             {
                 if (bookingsList[i].Status.HasValue && refundableStatuses.Contains(bookingsList[i].Status.Value))
                 {
                     try
                     {
-                        bookingDtos[i].RefundAmount = ComputeRefundAmount(bookingsList[i]);
+                        if (!string.IsNullOrWhiteSpace(bookingsList[i].RefundAmount))
+                        {
+                            bookingDtos[i].RefundAmount = bookingsList[i].RefundAmount;
+                        }
+                        else
+                        {
+                            var computed = ComputeRefundAmount(bookingsList[i]);
+                            bookingDtos[i].RefundAmount = computed > 0 ? computed.ToString(System.Globalization.CultureInfo.InvariantCulture) : null;
+                        }
                     }
                     catch
                     {
-                        // If any unexpected issue occurs, leave RefundAmount null to avoid breaking the listing
                         bookingDtos[i].RefundAmount = null;
                     }
                 }
@@ -992,12 +1061,16 @@ namespace EVSRS.Services.Service
 
             await _validationService.ValidateAndThrowAsync(request);
 
+            // Normalize incoming dates to UTC for comparison and checks
+            DateTime startUtc = ToUtcAssumeVietnam(request.StartAt);
+            DateTime endUtc = ToUtcAssumeVietnam(request.EndAt);
+
             // If car or dates changed, check availability
             if (booking.CarEVDetailId != request.CarEVDetailId ||
-                booking.StartAt != request.StartAt ||
-                booking.EndAt != request.EndAt)
+                booking.StartAt != startUtc ||
+                booking.EndAt != endUtc)
             {
-                var isAvailable = await CheckCarAvailabilityAsync(request.CarEVDetailId, request.StartAt, request.EndAt, id);
+                var isAvailable = await CheckCarAvailabilityAsync(request.CarEVDetailId, startUtc, endUtc, id);
                 _validationService.CheckBadRequest(!isAvailable, "Car is not available for the selected dates");
 
                 // Free up old car if changed
@@ -1093,6 +1166,28 @@ namespace EVSRS.Services.Service
             }
         }
 
+        // Convert a DateTime to UTC, assuming Vietnam time when Kind is Unspecified.
+        // If DateTime.Kind == Utc, returns as-is. If Local, converts to UTC.
+        private DateTime ToUtcAssumeVietnam(DateTime dt)
+        {
+            if (dt.Kind == DateTimeKind.Utc) return dt;
+            if (dt.Kind == DateTimeKind.Local) return dt.ToUniversalTime();
+
+            // Unspecified -> assume Vietnam timezone (GMT+7)
+            TimeZoneInfo vietTz;
+            try
+            {
+                vietTz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // Windows
+            }
+            catch
+            {
+                vietTz = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"); // Linux fallback
+            }
+
+            var unspecified = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+            return TimeZoneInfo.ConvertTimeToUtc(unspecified, vietTz);
+        }
+
         private async Task<bool> HasActiveBookingAsync(string userId)
         {
             var activeBookings = await _unitOfWork.OrderRepository.GetOrderBookingByUserIdAsync(userId);
@@ -1129,9 +1224,13 @@ namespace EVSRS.Services.Service
             }
 
             var now = DateTime.UtcNow;
-            if (booking.StartAt.HasValue && now > booking.StartAt.Value)
+            if (booking.StartAt.HasValue)
             {
-                return 0m;
+                var bookingStartUtc = ToUtcAssumeVietnam(booking.StartAt.Value);
+                if (now > bookingStartUtc)
+                {
+                    return 0m;
+                }
             }
 
             var hoursSinceBooking = (now - booking.CreatedAt).TotalHours;
