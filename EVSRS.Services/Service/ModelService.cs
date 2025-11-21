@@ -87,16 +87,22 @@ namespace EVSRS.Services.Service
 
         public async Task UpdateModelAsync(string id, ModelRequestDto model)
         {
+            await _validationService.ValidateAndThrowAsync(model);
+            
             var existingModel = await _unitOfWork.ModelRepository.GetByIdAsync(id);
             if (existingModel == null)
             {
                 throw new KeyNotFoundException($"Model with ID {id} not found.");
             }
+            
+            // Map dữ liệu từ DTO vào entity
+            _mapper.Map(model, existingModel);
+            
             existingModel.UpdatedAt = DateTime.UtcNow;
             existingModel.UpdatedBy = GetCurrentUserName();
+            
             await _unitOfWork.ModelRepository.UpdateModelAsync(existingModel);
             await _unitOfWork.SaveChangesAsync();
-
         }
 
         public async Task<int> UpdateElectricityFeeForAllModelsAsync(UpdateElectricityFeeRequestDto request)
