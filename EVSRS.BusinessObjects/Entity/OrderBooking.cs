@@ -31,7 +31,6 @@ namespace EVSRS.BusinessObjects.Entity
         public string? RemainingBalance { get; set; }
         public string? Code { get; set; }
         public string? Note { get; set; }
-        public string? RefundAmount { get; set; }
 
         public ApplicationUser? User { get; set; }
         public virtual ICollection<Feedback>? Feedbacks { get; set; } =  [];

@@ -22,12 +22,14 @@
 ### Bài toán cần giải quyết
 
 **Vấn đề**:
+
 - Depot A có quá nhiều xe nhàn rỗi (thừa)
 - Depot B thiếu xe, không đủ đáp ứng nhu cầu khách hàng
 - Cần biết nên mua thêm bao nhiêu xe và loại nào
 - Cần biết nên di chuyển xe giữa các depot như thế nào
 
 **Giải pháp**:
+
 1. **Dự báo nhu cầu**: Phân tích lịch sử booking để dự đoán nhu cầu tương lai
 2. **Tính toán công suất**: So sánh nhu cầu dự báo với số xe hiện có
 3. **Đề xuất điều chỉnh**: Tự động đề xuất di chuyển xe hoặc mua thêm xe
@@ -60,12 +62,12 @@
 
 ### Các thành phần chính
 
-| Thành phần | Chức năng | Tần suất chạy |
-|------------|-----------|---------------|
-| **ForecastingService** | Tính toán thống kê nhu cầu (Mean, P90) | On-demand |
-| **DemandForecastGeneratorService** | Tạo dự báo nhu cầu 24h tới | 6 giờ/lần |
-| **RebalancingPlannerService** | Đề xuất điều chỉnh xe | 12 giờ/lần |
-| **MaterializedViewRefreshService** | Cập nhật dữ liệu lịch sử | 1 giờ/lần |
+| Thành phần                         | Chức năng                              | Tần suất chạy |
+| ---------------------------------- | -------------------------------------- | ------------- |
+| **ForecastingService**             | Tính toán thống kê nhu cầu (Mean, P90) | On-demand     |
+| **DemandForecastGeneratorService** | Tạo dự báo nhu cầu 24h tới             | 6 giờ/lần     |
+| **RebalancingPlannerService**      | Đề xuất điều chỉnh xe                  | 12 giờ/lần    |
+| **MaterializedViewRefreshService** | Cập nhật dữ liệu lịch sử               | 1 giờ/lần     |
 
 ---
 
@@ -74,21 +76,23 @@
 ### 1.1. Nguồn dữ liệu
 
 #### Materialized View: `vw_rental_demand_30m_last_56d`
+
 ```sql
 -- Lưu nhu cầu booking theo khung giờ 30 phút trong 56 ngày gần nhất
 CREATE MATERIALIZED VIEW vw_rental_demand_30m_last_56d AS
-SELECT 
+SELECT
     depot_id AS station_id,
     model_id AS vehicle_type,
     DATE_BIN('30 minutes', "StartAt", '1970-01-01'::timestamp) AS bin_ts,
     COUNT(*) AS demand
 FROM "OrderBooking"
 WHERE "StartAt" >= NOW() - INTERVAL '56 days'
-  AND "Status" NOT IN ('CANCELLED', 'REFUND_PENDING')
+  AND "Status" NOT IN ('CANCELLED')
 GROUP BY depot_id, model_id, bin_ts;
 ```
 
 **Ý nghĩa**:
+
 - Chia timeline thành các khung 30 phút (7:00-7:30, 7:30-8:00, ...)
 - Đếm số booking bắt đầu trong mỗi khung giờ
 - Lưu lịch sử 56 ngày (8 tuần) để phân tích xu hướng
@@ -105,6 +109,7 @@ GROUP BY depot_id, model_id, bin_ts;
 ### 1.2. Thuật toán dự báo: P90 (Percentile 90)
 
 #### Tại sao dùng P90?
+
 - **Mean (Trung bình)**: Nhạy cảm với outliers, không đủ an toàn
 - **P90**: Đảm bảo đáp ứng được 90% trường hợp
 - **P95/P99**: Quá dư thừa, tốn chi phí
@@ -117,18 +122,19 @@ private static double CalculateQuantile(double[] sortedValues, double p)
 {
     if (sortedValues.Length == 0) return 0;
     if (sortedValues.Length == 1) return sortedValues[0];
-    
+
     double pos = (sortedValues.Length - 1) * p;  // Vị trí trong mảng
     int lower = (int)Math.Floor(pos);            // Index dưới
     int upper = (int)Math.Ceiling(pos);          // Index trên
     double weight = pos - lower;                 // Trọng số nội suy
-    
+
     // Nội suy tuyến tính giữa 2 giá trị
     return sortedValues[lower] * (1 - weight) + sortedValues[upper] * weight;
 }
 ```
 
 **Ví dụ cụ thể**:
+
 ```
 Dữ liệu 8 tuần, mỗi thứ Hai 8:00-8:30 tại depot-001, Tesla Model 3:
 Week 1: 3 bookings
@@ -154,6 +160,7 @@ P90 = values[6] * 0.7 + values[7] * 0.3
 ### 1.3. Service: DemandForecastGeneratorService
 
 #### Chức năng
+
 - Chạy **mỗi 6 giờ** tự động
 - Tạo dự báo cho **24 giờ tiếp theo** (48 khung 30 phút)
 - Lưu vào bảng `DemandForecast`
@@ -184,7 +191,7 @@ private async Task GenerateForecastsAsync(CancellationToken cancellationToken)
     // Lấy tất cả cặp (depot, model)
     var stationVehicleTypes = await forecastingService
         .GetStationVehicleTypesAsync(cancellationToken);
-    
+
     var forecasts = new List<DemandForecast>();
     var startDate = DateTime.UtcNow.AddDays(-7); // 7 ngày lịch sử
     var endDate = DateTime.UtcNow;
@@ -201,12 +208,12 @@ private async Task GenerateForecastsAsync(CancellationToken cancellationToken)
         for (int i = 0; i < 48; i++)
         {
             var forecastTime = DateTime.UtcNow.AddMinutes(i * 30);
-            
+
             // Làm tròn xuống 30 phút (7:23 → 7:00, 7:34 → 7:30)
             forecastTime = new DateTime(
                 forecastTime.Year, forecastTime.Month, forecastTime.Day,
-                forecastTime.Hour, 
-                forecastTime.Minute < 30 ? 0 : 30, 
+                forecastTime.Hour,
+                forecastTime.Minute < 30 ? 0 : 30,
                 0, DateTimeKind.Utc);
 
             forecasts.Add(new DemandForecast
@@ -240,12 +247,12 @@ private async Task GenerateForecastsAsync(CancellationToken cancellationToken)
 
 Bảng `DemandForecast` sau khi chạy:
 
-| DepotId | ModelId | ForecastTime | PredictedDemand | Method |
-|---------|---------|--------------|-----------------|--------|
-| depot-001 | tesla-3 | 2025-11-10 08:00:00 | 6.3 | P90 |
-| depot-001 | tesla-3 | 2025-11-10 08:30:00 | 7.1 | P90 |
-| depot-001 | tesla-3 | 2025-11-10 09:00:00 | 5.8 | P90 |
-| depot-002 | vf8 | 2025-11-10 08:00:00 | 4.2 | P90 |
+| DepotId   | ModelId | ForecastTime        | PredictedDemand | Method |
+| --------- | ------- | ------------------- | --------------- | ------ |
+| depot-001 | tesla-3 | 2025-11-10 08:00:00 | 6.3             | P90    |
+| depot-001 | tesla-3 | 2025-11-10 08:30:00 | 7.1             | P90    |
+| depot-001 | tesla-3 | 2025-11-10 09:00:00 | 5.8             | P90    |
+| depot-002 | vf8     | 2025-11-10 08:00:00 | 4.2             | P90    |
 
 ---
 
@@ -254,6 +261,7 @@ Bảng `DemandForecast` sau khi chạy:
 ### 2.1. Công thức tính số xe cần thiết
 
 #### Input
+
 - **P90 Demand**: Số booking dự kiến (từ phần 1)
 - **Avg Trip Hours**: Thời gian thuê trung bình (mặc định: 2.0 giờ)
 - **Turnaround Hours**: Thời gian vệ sinh/bảo trì giữa các chuyến (mặc định: 1.0 giờ)
@@ -296,7 +304,7 @@ Kiểm chứng:
 public int GetRequiredUnits(double p90Demand, double avgTripHours, double turnaroundHours)
 {
     if (p90Demand <= 0) return 0;
-    
+
     var cycleHours = avgTripHours + turnaroundHours;
     var required = Math.Ceiling(p90Demand * avgTripHours / cycleHours);
     return (int)required;
@@ -346,6 +354,7 @@ Priority = MIN(100, Gap × 5 + P90 × 2)
 ```
 
 #### Ý nghĩa
+
 - **Gap lớn** → priority cao (thiếu nhiều xe)
 - **P90 cao** → priority cao (nhu cầu lớn)
 - Scale: 0-100 (0 = không ưu tiên, 100 = cực kỳ khẩn cấp)
@@ -423,6 +432,7 @@ GET /api/forecasting/capacity-recommendations
 ### 3.1. Service: RebalancingPlannerService
 
 #### Chức năng
+
 - Chạy **mỗi 12 giờ** tự động
 - Phân tích GAP của tất cả depot
 - Đề xuất 2 loại action:
@@ -468,7 +478,7 @@ foreach (var (vehicleType, gaps) in byVehicleType)
         .Where(g => g.Value.Gap > 0)
         .OrderByDescending(g => g.Value.Gap) // Ưu tiên thiếu nhiều
         .ToList();
-    
+
     var surpluses = gaps
         .Where(g => g.Value.Gap < 0)
         .OrderBy(g => g.Value.Gap) // Ưu tiên thừa nhiều
@@ -538,11 +548,11 @@ foreach (var (vehicleType, gaps) in byVehicleType)
 
 #### Tình huống ban đầu
 
-| Depot | Model | P90 Demand | Required | Current | GAP |
-|-------|-------|------------|----------|---------|-----|
-| Depot A | Tesla 3 | 8.0 | 6 | 10 | -4 (THỪA) |
-| Depot B | Tesla 3 | 15.0 | 10 | 7 | +3 (THIẾU) |
-| Depot C | Tesla 3 | 20.0 | 14 | 5 | +9 (THIẾU) |
+| Depot   | Model   | P90 Demand | Required | Current | GAP        |
+| ------- | ------- | ---------- | -------- | ------- | ---------- |
+| Depot A | Tesla 3 | 8.0        | 6        | 10      | -4 (THỪA)  |
+| Depot B | Tesla 3 | 15.0       | 10       | 7       | +3 (THIẾU) |
+| Depot C | Tesla 3 | 20.0       | 14       | 5       | +9 (THIẾU) |
 
 #### Bước 1: Matching
 
@@ -560,11 +570,11 @@ Depot B (thiếu 3 xe):
 
 #### Kết quả trong bảng `RebalancingPlan`
 
-| Id | PlanDate | FromDepotId | ToDepotId | ModelId | Qty | ActionType | Priority | Status |
-|----|----------|-------------|-----------|---------|-----|------------|----------|--------|
-| plan-1 | 2025-11-11 | depot-a | depot-c | tesla-3 | 4 | RELOCATE | 85 | PROPOSED |
-| plan-2 | 2025-11-11 | NULL | depot-c | tesla-3 | 5 | PURCHASE | 90 | PROPOSED |
-| plan-3 | 2025-11-11 | NULL | depot-b | tesla-3 | 3 | PURCHASE | 70 | PROPOSED |
+| Id     | PlanDate   | FromDepotId | ToDepotId | ModelId | Qty | ActionType | Priority | Status   |
+| ------ | ---------- | ----------- | --------- | ------- | --- | ---------- | -------- | -------- |
+| plan-1 | 2025-11-11 | depot-a     | depot-c   | tesla-3 | 4   | RELOCATE   | 85       | PROPOSED |
+| plan-2 | 2025-11-11 | NULL        | depot-c   | tesla-3 | 5   | PURCHASE   | 90       | PROPOSED |
+| plan-3 | 2025-11-11 | NULL        | depot-b   | tesla-3 | 3   | PURCHASE   | 70       | PROPOSED |
 
 ---
 
@@ -699,16 +709,17 @@ CREATE TABLE "DemandForecast" (
     "HorizonMinutes" INT,
     "CreatedAt" TIMESTAMPTZ NOT NULL,
     "IsDeleted" BOOLEAN DEFAULT FALSE,
-    
+
     FOREIGN KEY ("DepotId") REFERENCES "Depot"("Id"),
     FOREIGN KEY ("ModelId") REFERENCES "Model"("Id")
 );
 
-CREATE INDEX "IX_DemandForecast_Time_Depot" 
+CREATE INDEX "IX_DemandForecast_Time_Depot"
     ON "DemandForecast"("ForecastTime", "DepotId");
 ```
 
 **Ý nghĩa các trường**:
+
 - `ForecastTime`: Thời điểm dự báo (rounded to 30-min)
 - `PredictedDemand`: Số booking dự kiến (P90 value)
 - `ConfidenceScore`: Độ tin cậy (0-100)
@@ -737,17 +748,18 @@ CREATE TABLE "RebalancingPlan" (
     "CreatedAt" TIMESTAMPTZ NOT NULL,
     "CreatedBy" VARCHAR(255),
     "IsDeleted" BOOLEAN DEFAULT FALSE,
-    
+
     FOREIGN KEY ("FromDepotId") REFERENCES "Depot"("Id"),
     FOREIGN KEY ("ToDepotId") REFERENCES "Depot"("Id"),
     FOREIGN KEY ("ModelId") REFERENCES "Model"("Id")
 );
 
-CREATE INDEX "IX_RebalancingPlan_PlanDate_Status" 
+CREATE INDEX "IX_RebalancingPlan_PlanDate_Status"
     ON "RebalancingPlan"("PlanDate", "Status");
 ```
 
 **Ý nghĩa các trường**:
+
 - `FromDepotId`: Depot nguồn (NULL nếu mua mới)
 - `ToDepotId`: Depot đích
 - `ActionType`: RELOCATE (di chuyển) hoặc PURCHASE (mua mới)
@@ -760,15 +772,15 @@ CREATE INDEX "IX_RebalancingPlan_PlanDate_Status"
 
 ```sql
 CREATE MATERIALIZED VIEW vw_rental_demand_30m_last_56d AS
-SELECT 
+SELECT
     ob."DepotId" AS station_id,
     ob."ModelId" AS vehicle_type,
-    DATE_BIN('30 minutes'::INTERVAL, ob."StartAt", 
+    DATE_BIN('30 minutes'::INTERVAL, ob."StartAt",
         '1970-01-01 00:00:00'::TIMESTAMP) AS bin_ts,
     COUNT(*) AS demand
 FROM "OrderBooking" ob
 WHERE ob."StartAt" >= NOW() - INTERVAL '56 days'
-  AND ob."Status" NOT IN ('CANCELLED', 'REFUND_PENDING')
+  AND ob."Status" NOT IN ('CANCELLED')
   AND NOT ob."IsDeleted"
 GROUP BY ob."DepotId", ob."ModelId", bin_ts;
 
@@ -778,6 +790,7 @@ CREATE INDEX idx_rental_demand_station_vehicle_time
 ```
 
 **Refresh**:
+
 ```sql
 REFRESH MATERIALIZED VIEW CONCURRENTLY vw_rental_demand_30m_last_56d;
 ```
@@ -791,10 +804,12 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY vw_rental_demand_30m_last_56d;
 **Mục đích**: Lấy thống kê nhu cầu (Mean, P90) theo slot
 
 **Query Parameters**:
+
 - `stationIds[]`: Danh sách depot IDs (optional)
 - `vehicleTypes[]`: Danh sách model IDs (optional)
 
 **Response**:
+
 ```json
 {
   "stats": {
@@ -818,10 +833,12 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY vw_rental_demand_30m_last_56d;
 **Mục đích**: Lấy danh sách depot cần điều chỉnh
 
 **Query Parameters**:
+
 - `avgTripHours`: Thời gian thuê TB (default: 2.0)
 - `turnaroundHours`: Thời gian vệ sinh (default: 1.0)
 
 **Response**:
+
 ```json
 {
   "recommendations": [
@@ -854,11 +871,13 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY vw_rental_demand_30m_last_56d;
 **Mục đích**: Lấy danh sách kế hoạch điều chỉnh
 
 **Query Parameters**:
+
 - `planDate`: Ngày kế hoạch (yyyy-MM-dd)
 - `status`: PROPOSED / APPROVED / EXECUTED (optional)
 - `actionType`: RELOCATE / PURCHASE (optional)
 
 **Response**:
+
 ```json
 {
   "plans": [
@@ -902,6 +921,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY vw_rental_demand_30m_last_56d;
 **Mục đích**: Admin phê duyệt kế hoạch
 
 **Request Body**:
+
 ```json
 {
   "adminNote": "Approved for execution"
@@ -909,6 +929,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY vw_rental_demand_30m_last_56d;
 ```
 
 **Response**:
+
 ```json
 {
   "id": "plan-12345",
@@ -925,6 +946,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY vw_rental_demand_30m_last_56d;
 **Mục đích**: Đánh dấu kế hoạch đã thực hiện
 
 **Response**:
+
 ```json
 {
   "id": "plan-12345",
@@ -977,26 +999,32 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY vw_rental_demand_30m_last_56d;
 ## 🎓 TÓM TẮT KEY CONCEPTS
 
 ### 1. P90 (Percentile 90)
+
 - Giá trị mà 90% trường hợp ≤ giá trị đó
 - An toàn hơn Mean (không bị outliers ảnh hưởng)
 - Cân bằng giữa đáp ứng nhu cầu và chi phí
 
 ### 2. Required Units Formula
+
 ```
 Required = ⌈ P90 × Trip Time / (Trip + Turnaround) ⌉
 ```
+
 - Tính số xe cần để đáp ứng nhu cầu đỉnh
 - Tính đến thời gian vệ sinh/bảo trì
 
 ### 3. GAP Analysis
+
 ```
 GAP = Required - Current
 ```
+
 - GAP > 0: THIẾU xe (shortage)
 - GAP < 0: THỪA xe (surplus)
 - Cơ sở để matching và planning
 
 ### 4. Rebalancing Strategy
+
 - **Ưu tiên 1**: RELOCATE (di chuyển từ thừa → thiếu)
 - **Ưu tiên 2**: PURCHASE (mua mới nếu không đủ)
 - Mục tiêu: Minimize cost, maximize coverage
@@ -1008,10 +1036,12 @@ GAP = Required - Current
 ### Monitoring
 
 1. **Service Health**:
+
    - Check logs của 3 background services
    - Alert nếu service fail > 2 lần
 
 2. **Data Quality**:
+
    - Verify materialized view refresh
    - Check forecast coverage (phải có cho tất cả depots)
 
@@ -1022,10 +1052,12 @@ GAP = Required - Current
 ### Troubleshooting
 
 **Vấn đề**: Forecast không chính xác
+
 - **Nguyên nhân**: Ít dữ liệu lịch sử (<7 ngày)
 - **Giải pháp**: Đợi thu thập thêm data hoặc giảm confidence threshold
 
 **Vấn đề**: Quá nhiều PURCHASE plans
+
 - **Nguyên nhân**: Không có depot thừa để relocate
 - **Giải pháp**: Review demand forecasts, có thể điều chỉnh avgTripHours
 
@@ -1035,7 +1067,7 @@ GAP = Required - Current
 
 - **RFC Document**: `/docs/rfc-forecast-capacity.md`
 - **Implementation Summary**: `/docs/README-demand-forecasting.md`
-- **Service Code**: 
+- **Service Code**:
   - `EVSRS.Services/Service/ForecastingService.cs`
   - `EVSRS.API/Services/DemandForecastGeneratorService.cs`
   - `EVSRS.API/Services/RebalancingPlannerService.cs`
