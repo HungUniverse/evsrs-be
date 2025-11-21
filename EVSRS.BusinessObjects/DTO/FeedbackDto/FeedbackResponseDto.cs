@@ -15,7 +15,7 @@ namespace EVSRS.BusinessObjects.DTO.FeedbackDto
 
         public string Rated { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string Image { get; set; }
+        public string Images { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
