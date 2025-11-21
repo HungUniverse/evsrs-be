@@ -33,7 +33,7 @@ namespace EVSRS.Services.Service
             var newFeedback = _mapper.Map<EVSRS.BusinessObjects.Entity.Feedback>(feedbackRequestDto);
             
             // Set UserId from current user context
-            newFeedback.UserId = GetCurrentUserName();
+            newFeedback.UserId = GetCurrentUserId();
             
             await _unitOfWork.FeedbackRepository.CreateFeedbackAsync(newFeedback);
             await _unitOfWork.SaveChangesAsync();
@@ -44,7 +44,7 @@ namespace EVSRS.Services.Service
 
         public async Task DeleteFeedbackAsync(string id)
         {
-            await _validationService.ValidateAndThrowAsync(id);
+            _validationService.CheckBadRequest(string.IsNullOrEmpty(id), "Invalid feedback ID");
             var existingFeedback = await _unitOfWork.FeedbackRepository.GetFeedbackByIdAsync(id);
             if (existingFeedback == null)
             {
@@ -105,6 +105,11 @@ namespace EVSRS.Services.Service
         private string GetCurrentUserName()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst("name")?.Value ?? "System";
+        }
+
+        private string GetCurrentUserId()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirst("userId")?.Value ?? string.Empty;
         }
     }
 }

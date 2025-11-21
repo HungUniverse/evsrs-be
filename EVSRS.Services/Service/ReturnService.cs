@@ -187,10 +187,10 @@ public class ReturnService : IReturnService
         var orderBooking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(request.OrderBookingId);
         _validationService.CheckNotFound(orderBooking, "Order booking not found");
 
-        // Validate order is in IN_USE status
+        // Validate order is in RETURNED status
         _validationService.CheckBadRequest(
-            orderBooking?.Status != OrderBookingStatus.IN_USE,
-            "Order must be in IN_USE status to complete return"
+            orderBooking?.Status != OrderBookingStatus.RETURNED,
+            "Order must be in RETURNED status to complete return"
         );
 
         // Check if return inspection exists
@@ -198,8 +198,8 @@ public class ReturnService : IReturnService
             .GetHandoverInspectionByOrderAndTypeAsync(request.OrderBookingId, "RETURN");
         _validationService.CheckNotFound(returnInspection, "Return inspection must be completed first");
 
-        // Update order status to RETURNED
-        orderBooking!.Status = OrderBookingStatus.RETURNED;
+        // Update order status to COMPLETED
+        orderBooking!.Status = OrderBookingStatus.COMPLETED;
         orderBooking.UpdatedAt = DateTime.UtcNow;
         orderBooking.UpdatedBy = GetCurrentUserName();
 
@@ -213,6 +213,9 @@ public class ReturnService : IReturnService
         }
 
         await _unitOfWork.OrderRepository.UpdateOrderBookingAsync(orderBooking);
+        // ✅ Update membership when order completes via return process
+        await _orderBookingService.UpdateMembershipForCompletedOrderAsync(orderBooking);
+
         await _unitOfWork.SaveChangesAsync();
 
         return _mapper.Map<OrderBookingResponseDto>(orderBooking);
