@@ -33,8 +33,7 @@ namespace EVSRS.Services.Interface
         Task<OrderBookingResponseDto> ReturnOrderAsync(string id);
         Task<OrderBookingResponseDto> CancelOrderAsync(string id, string reason);
         Task<decimal> CalculateBookingCostAsync(string carId, DateTime startDate, DateTime endDate);
-        Task<PaginatedList<OrderBookingResponseDto>> GetRefundPendingOrdersAsync(int pageNumber, int pageSize);
-        Task<OrderBookingResponseDto> ConfirmRefundAsync(string id, decimal? refundedAmount = null, string? adminNote = null);
+        // Refund-related methods removed: refunds are no longer supported
         Task CancelExpiredUnpaidOrdersAsync();
         
         /// <summary>

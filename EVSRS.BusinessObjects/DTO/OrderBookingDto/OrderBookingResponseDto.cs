@@ -30,9 +30,7 @@ public class OrderBookingResponseDto
     public PaymentType PaymentType { get; set; }
     public PaymentStatus PaymentStatus { get; set; }
     public string? Note { get; set; }
-    // Refund amount calculated by business logic when relevant (not persisted)
-    public string? RefundAmount { get; set; }
-    
+    // Refund feature removed
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public string CreatedBy { get; set; } = string.Empty;
