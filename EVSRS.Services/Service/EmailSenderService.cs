@@ -8,9 +8,12 @@ using Microsoft.Extensions.Options;
 using RestSharp;
 using RestSharp.Authenticators;
 
-namespace EVSRS.Services.Service;
-
-public class EmailSenderService : IEmailSenderSevice
+namespace EVSRS.Services.Service
+{
+    /// <summary>
+    /// Service gửi email (notification, OTP, thông báo hệ thống) thông qua cấu hình SMTP.
+    /// </summary>
+    public class EmailSenderService : IEmailSenderService
 {
     private readonly EmailSettings _emailSettings;
 

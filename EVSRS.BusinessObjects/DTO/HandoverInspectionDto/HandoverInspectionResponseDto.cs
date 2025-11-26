@@ -11,6 +11,7 @@ public class HandoverInspectionResponseDto
     public string Odometer { get; set; } = string.Empty;
     public string? Images { get; set; }
     public string? Notes { get; set; }
+    public decimal? ReturnLateFee { get; set; } = 0m;
     public string StaffId { get; set; } = string.Empty;
     
     public DateTime CreatedAt { get; set; }

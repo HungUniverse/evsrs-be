@@ -12,7 +12,10 @@ using System.Threading.Tasks;
 
 namespace EVSRS.Services.Service
 {
-    public class AmenitiesService: IAmenitiesService
+    /// <summary>
+    /// Service quản lý tiện ích (amenities) của depot/model: tạo, sửa, xóa và truy vấn.
+    /// </summary>
+    public class AmenitiesService : IAmenitiesService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;

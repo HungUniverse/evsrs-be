@@ -10,6 +10,7 @@ using EVSRS.Repositories.Infrastructure;
 using EVSRS.Services.Interface;
 using EVSRS.Services.ExternalServices.SepayService;
 using Microsoft.AspNetCore.Http;
+using System.Globalization;
 
 namespace EVSRS.Services.Service;
 
@@ -64,11 +65,54 @@ public class ReturnService : IReturnService
         inspection.CreatedAt = DateTime.UtcNow;
         inspection.UpdatedAt = DateTime.UtcNow;
 
+        // tính phí trả xe trễ, cho phép trễ 30 phút
+        decimal lateFee = 0m;
+        try
+        {
+            // default values
+            int graceMinutes = 30;
+            decimal feePerHour = 50000m;
+
+            // try read from system config if available
+            var graceConfig = await _unitOfWork.SystemConfigRepository.GetSystemConfigByKeyAsync("LATE_RETURN_GRACE_MINUTES");
+            if (graceConfig != null && int.TryParse(graceConfig.Value, out var parsedGrace))
+                graceMinutes = parsedGrace;
+
+            var feeConfig = await _unitOfWork.SystemConfigRepository.GetSystemConfigByKeyAsync("LATE_RETURN_FEE_PER_HOUR");
+            if (feeConfig != null && decimal.TryParse(feeConfig.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedFee))
+                feePerHour = parsedFee;
+
+            if (orderBooking != null && orderBooking.EndAt.HasValue)
+            {
+                // Use the inspection.CreatedAt as the official returned time
+                var endAt = orderBooking.EndAt.Value;
+                var overdueMinutes = (inspection.CreatedAt - endAt).TotalMinutes;
+                if (overdueMinutes > graceMinutes)
+                {
+                    var effectiveMinutes = overdueMinutes - graceMinutes;
+                    var hoursLate = (int)Math.Ceiling(effectiveMinutes / 60.0);
+                    lateFee = hoursLate * feePerHour;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // không block flow nếu có lỗi cấu hình / tính toán
+            Console.WriteLine($"Error calculating late fee for order {request.OrderBookingId}: {ex.Message}");
+            lateFee = 0m;
+        }
+       
+        
+
         await _unitOfWork.HandoverInspectionRepository.InsertAsync(inspection);
         await _unitOfWork.SaveChangesAsync();
 
         var result = await _unitOfWork.HandoverInspectionRepository.GetByIdAsync(inspection.Id);
-        return _mapper.Map<HandoverInspectionResponseDto>(result);
+        var dto = _mapper.Map<HandoverInspectionResponseDto>(result);      
+        dto.ReturnLateFee = lateFee;
+       
+
+        return dto;
     }
 
     public async Task<ReturnSettlementResponseDto> CreateReturnSettlementAsync(ReturnSettlementRequestDto request)

@@ -19,6 +19,7 @@ public class HandoverInspectionRequestDto
     
     public string? Images { get; set; } // JSON array of image URLs
     
+    
     public string? Notes { get; set; }
     
     [Required(ErrorMessage = "Staff ID is required")]

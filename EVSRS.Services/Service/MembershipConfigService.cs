@@ -40,6 +40,11 @@ namespace EVSRS.Services.Service
             return result;
         }
 
+        /// <summary>
+        /// Lấy cấu hình membership theo Id.
+        /// Trả về <see cref="MembershipConfigResponseDto"/> hoặc null nếu không tìm thấy.
+        /// </summary>
+        /// <param name="id">ID của MembershipConfig</param>
         public async Task<MembershipConfigResponseDto?> GetMembershipConfigByIdAsync(string id)
         {
             await _validationService.ValidateAndThrowAsync(id);
@@ -62,6 +67,11 @@ namespace EVSRS.Services.Service
             };
         }
 
+        /// <summary>
+        /// Lấy cấu hình membership theo mức độ (Level).
+        /// Trả về <see cref="MembershipConfigResponseDto"/> hoặc null nếu không tồn tại cấu hình cho level này.
+        /// </summary>
+        /// <param name="level">Mức độ membership</param>
         public async Task<MembershipConfigResponseDto?> GetMembershipConfigByLevelAsync(MembershipLevel level)
         {
             var config = await _unitOfWork.MembershipConfigRepository.GetMembershipConfigByLevelAsync(level);
@@ -82,6 +92,11 @@ namespace EVSRS.Services.Service
             };
         }
 
+        /// <summary>
+        /// Tạo mới một cấu hình membership từ dữ liệu đầu vào.
+        /// Kiểm tra trùng level và trả về DTO của cấu hình vừa tạo.
+        /// </summary>
+        /// <param name="dto">Dữ liệu tạo cấu hình</param>
         public async Task<MembershipConfigResponseDto> CreateMembershipConfigAsync(CreateMembershipConfigDto dto)
         {
             await _validationService.ValidateAndThrowAsync(dto);
@@ -115,6 +130,12 @@ namespace EVSRS.Services.Service
             };
         }
 
+        /// <summary>
+        /// Cập nhật các trường có trong <paramref name="dto"/> cho cấu hình membership xác định bởi <paramref name="id"/>.
+        /// Trả về DTO sau khi cập nhật.
+        /// </summary>
+        /// <param name="id">ID của MembershipConfig cần cập nhật</param>
+        /// <param name="dto">Dữ liệu cập nhật</param>
         public async Task<MembershipConfigResponseDto> UpdateMembershipConfigAsync(string id, UpdateMembershipConfigDto dto)
         {
             await _validationService.ValidateAndThrowAsync(dto);
@@ -151,6 +172,10 @@ namespace EVSRS.Services.Service
             };
         }
 
+        /// <summary>
+        /// Xóa cấu hình membership theo Id. Không cho phép xóa level <see cref="MembershipLevel.None"/>.
+        /// </summary>
+        /// <param name="id">ID của MembershipConfig cần xóa</param>
         public async Task DeleteMembershipConfigAsync(string id)
         {
             await _validationService.ValidateAndThrowAsync(id);

@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace EVSRS.Services.Service
 {
+    /// <summary>
+    /// Service quản lý hợp đồng (contract): tạo, lưu trữ mẫu, và truy vấn hợp đồng liên quan đến booking.
+    /// </summary>
     public class ContractService : IContractService
     {
         private readonly IUnitOfWork _unitOfWork;

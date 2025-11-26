@@ -48,11 +48,23 @@ namespace EVSRS.Services.Service
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Tính tổng chi phí thuê cho một xe trong khoảng thời gian (không áp dụng membership nếu không có userId).
+        /// Gọi overload chi tiết hơn với userId = null.
+        /// </summary>
         public async Task<decimal> CalculateBookingCostAsync(string carId, DateTime startDate, DateTime endDate)
         {
             return await CalculateBookingCostAsync(carId, startDate, endDate, null);
         }
 
+        /// <summary>
+        /// Tính tổng chi phí thuê cho một xe trong khoảng thời gian, áp dụng membership discount nếu cung cấp <paramref name="userId"/>.
+        /// Trả về giá đã làm tròn đến 2 chữ số thập phân.
+        /// </summary>
+        /// <param name="carId">ID xe</param>
+        /// <param name="startDate">Thời gian bắt đầu</param>
+        /// <param name="endDate">Thời gian kết thúc</param>
+        /// <param name="userId">(Tùy chọn) UserId để áp discount</param>
         public async Task<decimal> CalculateBookingCostAsync(string carId, DateTime startDate, DateTime endDate, string? userId)
         {
             var car = await _unitOfWork.CarEVRepository.GetCarEVByIdAsync(carId);
@@ -160,6 +172,10 @@ namespace EVSRS.Services.Service
             return CalculateCoefficient(startDateVN, endDateVN);
         }
 
+        /// <summary>
+        /// Tính hệ số thuê (coefficient) dựa trên thời gian bắt đầu/kết thúc ở múi giờ VN.
+        /// Trả về hệ số tương ứng cho ca sáng/chiều/cả ngày hoặc tổng các ca khi thuê nhiều ngày.
+        /// </summary>
         private decimal CalculateCoefficient(DateTime startDateVN, DateTime endDateVN)
         {
             var morningStart = new TimeSpan(6, 0, 0);
@@ -296,7 +312,10 @@ namespace EVSRS.Services.Service
             return totalCoefficient;
         }
 
-        // Đếm số ca (morning/afternoon) mà booking đã trải qua BEFORE khung sáng trả xe (06:00 của ngày trả xe)
+        /// <summary>
+        /// Đếm số ca (morning/afternoon) mà booking đã trải qua trước khung sáng trả xe (06:00 của ngày trả xe).
+        /// Sử dụng để quyết định rule miễn phí sáng sớm khi trả xe.
+        /// </summary>
         private int CountShiftsBeforeMorning(DateTime startDateVN, DateTime endDateVN)
         {
             var morningStart = new TimeSpan(6, 0, 0);
@@ -341,6 +360,12 @@ namespace EVSRS.Services.Service
             return shifts;
         }
 
+        /// <summary>
+        /// Hủy đơn hàng theo <paramref name="id"/> với <paramref name="reason"/>.
+        /// Cập nhật trạng thái thành CANCELLED và giải phóng xe nếu cần.
+        /// </summary>
+        /// <param name="id">ID đơn</param>
+        /// <param name="reason">Lý do hủy</param>
         public async Task<OrderBookingResponseDto> CancelOrderAsync(string id, string reason)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -379,6 +404,10 @@ namespace EVSRS.Services.Service
 
         // ConfirmRefundAsync removed - refund flows are no longer supported
 
+        /// <summary>
+        /// Kiểm tra xem xe cụ thể có khả dụng trong khoảng thời gian (startDate, endDate).
+        /// Trả về false nếu xe không tồn tại hoặc không ở trạng thái AVAILABLE.
+        /// </summary>
         public async Task<bool> CheckCarAvailabilityAsync(string carId, DateTime startDate, DateTime endDate, string? excludeBookingId = null)
         {
             // Check if car exists and is available
@@ -389,6 +418,9 @@ namespace EVSRS.Services.Service
             return await _unitOfWork.OrderRepository.IsCarAvailableAsync(carId, startDate, endDate, excludeBookingId);
         }
 
+        /// <summary>
+        /// Kiểm tra tính khả dụng của xe với buffer (thời gian dọn xe) được cấu hình trong SystemConfig.
+        /// </summary>
         public async Task<bool> CheckCarAvailabilityWithBufferAsync(string carId, DateTime startDate, DateTime endDate, string? excludeBookingId = null)
         {
             // Check if car exists and is available
@@ -407,6 +439,10 @@ namespace EVSRS.Services.Service
             return await _unitOfWork.OrderRepository.IsCarAvailableWithBufferAsync(carId, startDate, endDate, bufferMinutes, excludeBookingId);
         }
 
+        /// <summary>
+        /// Tìm một xe khả dụng theo model tại depot trong khoảng thời gian, trả về Id xe nếu tìm được.
+        /// Phần tìm này dự kiến được gọi trong transaction để tránh race condition.
+        /// </summary>
         public async Task<string?> FindAvailableCarByModelAsync(string modelId, string depotId, DateTime startDate, DateTime endDate)
         {
             // 🔒 RACE CONDITION SAFE: Sử dụng database transaction để tránh 2 khách cùng book 1 xe
@@ -428,6 +464,10 @@ namespace EVSRS.Services.Service
         }
 
 
+        /// <summary>
+        /// Thực hiện checkout (bắt đầu thuê) cho đơn có <paramref name="id"/>.
+        /// Kiểm tra payment và handover inspection trước khi chuyển trạng thái sang CHECKED_OUT.
+        /// </summary>
         public async Task<OrderBookingResponseDto> CheckoutOrderAsync(string id)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -468,6 +508,9 @@ namespace EVSRS.Services.Service
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
 
+        /// <summary>
+        /// Bắt đầu đơn thuê (customer bắt đầu sử dụng xe). Cần ở trạng thái CHECKED_OUT.
+        /// </summary>
         public async Task<OrderBookingResponseDto> StartOrderAsync(string id)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -499,6 +542,9 @@ namespace EVSRS.Services.Service
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
 
+        /// <summary>
+        /// Xử lý bước trả xe: validate return inspection, đánh dấu RETURNED, tính phí trả muộn nếu có, và giải phóng xe.
+        /// </summary>
         public async Task<OrderBookingResponseDto> ProcessReturnOrderAsync(string id)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -520,6 +566,7 @@ namespace EVSRS.Services.Service
             booking.UpdatedBy = GetCurrentUserName();
             booking.UpdatedAt = DateTime.UtcNow;
 
+
             // Update car status
             if (!string.IsNullOrEmpty(booking.CarEVDetailId))
             {
@@ -537,6 +584,9 @@ namespace EVSRS.Services.Service
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
 
+        /// <summary>
+        /// Hoàn tất đơn sau khi đã kiểm tra settlement (nếu có). Chuyển trạng thái sang COMPLETED và cập nhật membership.
+        /// </summary>
         public async Task<OrderBookingResponseDto> CompleteOrderAsync(string id)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -577,6 +627,10 @@ namespace EVSRS.Services.Service
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
 
+        /// <summary>
+        /// Tạo đơn offline do staff tại depot thực hiện. Kiểm tra staff, availability, tính chi phí, tạo booking và reserve xe.
+        /// Nếu PaymentMethod = BANKING sẽ tạo QR qua Sepay.
+        /// </summary>
         public async Task<SepayQrResponse> CreateOfflineOrderBookingAsync(OrderBookingOfflineRequestDto request)
         {
             await _validationService.ValidateAndThrowAsync(request);
@@ -677,6 +731,10 @@ namespace EVSRS.Services.Service
 
         }
 
+        /// <summary>
+        /// Tạo đơn booking từ user (app). Hỗ trợ đặt theo xe cụ thể hoặc theo model (tự chọn xe), tính phí và reserve xe.
+        /// Trả về Sepay QR nếu yêu cầu thanh toán bằng ngân hàng.
+        /// </summary>
         public async Task<SepayQrResponse> CreateOrderBookingAsync(OrderBookingRequestDto request)
         {
             await _validationService.ValidateAndThrowAsync(request);
@@ -803,6 +861,9 @@ namespace EVSRS.Services.Service
             return qrResponse;
         }
 
+        /// <summary>
+        /// Xóa đơn nếu đơn đang ở trạng thái PENDING hoặc CANCELLED.
+        /// </summary>
         public async Task DeleteOrderBookingAsync(string id)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -817,6 +878,9 @@ namespace EVSRS.Services.Service
             await _unitOfWork.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Lấy danh sách tất cả đơn hàng theo phân trang, trả về DTO đã map.
+        /// </summary>
         public async Task<PaginatedList<OrderBookingResponseDto>> GetAllOrderBookingsAsync(int pageNumber, int pageSize)
         {
             var bookings = await _unitOfWork.OrderRepository.GetOrderBookingListAsync(pageNumber, pageSize);
@@ -827,6 +891,9 @@ namespace EVSRS.Services.Service
             return new PaginatedList<OrderBookingResponseDto>(bookingDtos, bookings.TotalCount, pageNumber, pageSize);
         }
 
+        /// <summary>
+        /// Lấy chi tiết đơn theo ID và trả về OrderBookingResponseDto.
+        /// </summary>
         public async Task<OrderBookingResponseDto> GetOrderBookingByIdAsync(string id)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -834,18 +901,27 @@ namespace EVSRS.Services.Service
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
 
+        /// <summary>
+        /// Lấy danh sách đơn theo depotId.
+        /// </summary>
         public async Task<List<OrderBookingResponseDto>> GetOrderBookingsByDepotIdAsync(string depotId)
         {
             var bookings = await _unitOfWork.OrderRepository.GetOrderBookingByDepotIdAsync(depotId);
             return bookings.Select(b => _mapper.Map<OrderBookingResponseDto>(b)).ToList();
         }
 
+        /// <summary>
+        /// Lấy danh sách đơn của một user theo userId.
+        /// </summary>
         public async Task<List<OrderBookingResponseDto>> GetOrderBookingsByUserIdAsync(string userId)
         {
             var bookings = await _unitOfWork.OrderRepository.GetOrderBookingByUserIdAsync(userId);
             return bookings.Select(b => _mapper.Map<OrderBookingResponseDto>(b)).ToList();
         }
 
+        /// <summary>
+        /// Đánh dấu đơn là RETURNED (customer đã trả xe) và giải phóng xe.
+        /// </summary>
         public async Task<OrderBookingResponseDto> ReturnOrderAsync(string id)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -878,6 +954,9 @@ namespace EVSRS.Services.Service
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
 
+        /// <summary>
+        /// Cập nhật thông tin đơn (chỉ cho phép khi trạng thái là PENDING). Kiểm tra availability nếu thay đổi xe/thoigian.
+        /// </summary>
         public async Task UpdateOrderBookingAsync(string id, OrderBookingRequestDto request)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -940,6 +1019,9 @@ namespace EVSRS.Services.Service
             await _unitOfWork.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Cập nhật trạng thái đơn (admin endpoint có thể gọi). Có thể kèm cập nhật PaymentStatus.
+        /// </summary>
         public async Task<OrderBookingResponseDto> UpdateOrderStatusAsync(string id, OrderBookingStatus status, PaymentStatus? paymentStatus = null)
         {
             var booking = await _unitOfWork.OrderRepository.GetOrderBookingByIdAsync(id);
@@ -959,11 +1041,17 @@ namespace EVSRS.Services.Service
             return _mapper.Map<OrderBookingResponseDto>(booking);
         }
 
+        /// <summary>
+        /// Lấy tên người dùng hiện tại từ HttpContext claims; nếu không có trả về "System".
+        /// </summary>
         private string GetCurrentUserName()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst("name")?.Value ?? "System";
         }
 
+        /// <summary>
+        /// Lấy userId của người dùng hiện tại từ HttpContext claims; trả về chuỗi rỗng nếu không tồn tại.
+        /// </summary>
         private string GetCurrentUserId()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst("userId")?.Value ?? string.Empty;
@@ -971,6 +1059,12 @@ namespace EVSRS.Services.Service
 
         private static readonly Random _random = new Random();
 
+        /// <summary>
+        /// Chuyển một <see cref="DateTime"/> sang giờ Việt Nam (SE Asia Standard Time).
+        /// Nếu input có Kind khác <see cref="DateTimeKind.Unspecified"/> sẽ convert tương ứng;
+        /// nếu Unspecified giả định là Local trước khi convert.
+        /// Trả về DateTime đã chuyển múi giờ (nếu lỗi trả về nguyên bản input).
+        /// </summary>
         private DateTime ConvertToVietnamTime(DateTime dateTime)
         {
             var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
@@ -995,8 +1089,11 @@ namespace EVSRS.Services.Service
             }
         }
 
-        // Convert a DateTime to UTC, assuming Vietnam time when Kind is Unspecified.
-        // If DateTime.Kind == Utc, returns as-is. If Local, converts to UTC.
+        /// <summary>
+        /// Chuyển một <see cref="DateTime"/> sang UTC. Nếu <paramref name="dt"/> có Kind = Unspecified,
+        /// sẽ giả sử giá trị là giờ Việt Nam (GMT+7) khi chuyển.
+        /// Nếu đã là UTC trả về trực tiếp; nếu là Local sẽ gọi <c>ToUniversalTime()</c>.
+        /// </summary>
         private DateTime ToUtcAssumeVietnam(DateTime dt)
         {
             if (dt.Kind == DateTimeKind.Utc) return dt;
@@ -1034,6 +1131,9 @@ namespace EVSRS.Services.Service
             return activeBookings.Any(b => b.Status.HasValue && activeStatuses.Contains(b.Status.Value));
         }
 
+        /// <summary>
+        /// Sinh mã đặt xe ngắn gọn với tiền tố `ORD` và phần số ngẫu nhiên.
+        /// </summary>
         private string GenerateBookingCode()
         {
             string prefix = "ORD";
@@ -1043,6 +1143,10 @@ namespace EVSRS.Services.Service
 
         // ComputeRefundAmount removed - refunds are disabled
 
+        /// <summary>
+        /// Quét và hủy các đơn PENDING quá thời hạn thanh toán (theo cấu hình ORDER_PAYMENT_TIMEOUT_HOURS).
+        /// Thường được gọi từ background worker.
+        /// </summary>
         public async Task CancelExpiredUnpaidOrdersAsync()
         {
             try
