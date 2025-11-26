@@ -71,7 +71,7 @@ public class ReturnService : IReturnService
         {
             // default values
             int graceMinutes = 30;
-            decimal feePerHour = 50000m;
+            decimal feePerHour = 10000m;
 
             // try read from system config if available
             var graceConfig = await _unitOfWork.SystemConfigRepository.GetSystemConfigByKeyAsync("LATE_RETURN_GRACE_MINUTES");
