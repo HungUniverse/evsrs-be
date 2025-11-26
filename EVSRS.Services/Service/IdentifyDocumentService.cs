@@ -14,6 +14,9 @@ using System.Threading.Tasks;
 
 namespace EVSRS.Services.Service
 {
+    /// <summary>
+    /// Service quản lý tài liệu định danh (identify documents): upload, verify và lưu trữ trạng thái chứng từ.
+    /// </summary>
     public class IdentifyDocumentService : IIdentifyDocumentService
     {
         private readonly IUnitOfWork _unitOfWork;

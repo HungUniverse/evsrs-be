@@ -8,9 +8,12 @@ using EVSRS.Repositories.Infrastructure;
 using EVSRS.Services.Interface;
 using Microsoft.AspNetCore.Http;
 
-namespace EVSRS.Services.Service;
-
-public class HandoverService : IHandoverService
+namespace EVSRS.Services.Service
+{
+    /// <summary>
+    /// Service xử lý handover/return inspections và các bước bàn giao xe giữa staff và khách.
+    /// </summary>
+    public class HandoverService : IHandoverService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;

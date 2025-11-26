@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace EVSRS.Services.Service
 {
+    /// <summary>
+    /// Service quản lý xe điện (CarEV): CRUD, trạng thái, và các truy vấn liên quan xe.
+    /// </summary>
     public class CarEVService : ICarEVService
     {
         private readonly IUnitOfWork _unitOfWork;

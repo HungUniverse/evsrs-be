@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace EVSRS.Services.Service
 {
+    /// <summary>
+    /// Service quản lý depot: thông tin depot, cấu hình, và các API liên quan depot.
+    /// </summary>
     public class DepotService : IDepotService
     {
         private readonly IUnitOfWork _unitOfWork;

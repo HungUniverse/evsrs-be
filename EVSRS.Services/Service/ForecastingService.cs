@@ -13,8 +13,9 @@ using Microsoft.Extensions.Logging;
 namespace EVSRS.Services.Service
 {
     /// <summary>
-    /// Implementation of demand forecasting service
-    /// Uses materialized view vw_rental_demand_30m_last_56d for historical analysis
+    /// Service dự báo nhu cầu (forecast): thu thập dữ liệu lịch sử, tính thống kê (P90/mean)
+    /// và sinh forecast cho các slot 30 phút.
+    /// Sử dụng materialized view `vw_rental_demand_30m_last_56d` làm nguồn dữ liệu lịch sử.
     /// </summary>
     public class ForecastingService : IForecastingService
     {
