@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace EVSRS.Services.Service
 {
+    /// <summary>
+    /// Service quản lý hãng xe (manufacture), thông tin model và metadata liên quan.
+    /// </summary>
     public class CarManufactureService : ICarManufactureService
     {
         private readonly IUnitOfWork _unitOfWork;

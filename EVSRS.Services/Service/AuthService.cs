@@ -19,9 +19,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace EVSRS.Services.Service;
-
-public class AuthService : IAuthService
+namespace EVSRS.Services.Service
+{
+    /// <summary>
+    /// Service xử lý xác thực: đăng ký (OTP), xác thực OTP, đăng nhập (password/google), refresh và quản lý refresh token.
+    /// </summary>
+    public class AuthService : IAuthService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IHttpContextAccessor _httpContextAccessor;
