@@ -532,7 +532,7 @@ namespace EVSRS.Services.Service
         private class AggregatedDemandRow
         {
             public double mean_demand { get; set; }
-            public int[] demand_samples { get; set; } = null!;
+            public int[]? demand_samples { get; set; }
         }
 
         private class MinAvailableRow
