@@ -406,20 +406,60 @@ namespace EVSRS.Services.Service
                 .SqlQueryRaw<AggregatedDemandRow>(sql, sqlParams)
                 .FirstOrDefaultAsync(cancellationToken);
 
+            // If the aggregated array is missing or empty, try to synthesize samples
+            // by fetching raw demand_count rows ordered by bin_ts. This ensures
+            // downstream callers (including any LLM/forecasting adapters) receive
+            // a non-empty `demand_samples` when possible.
+            List<int>? rawSamples = null;
             if (result == null || result.demand_samples == null || result.demand_samples.Length == 0)
             {
-                _logger.LogWarning(
-                    "No demand data for station={StationId}, vehicle={VehicleType}",
+                _logger.LogDebug(
+                    "Aggregated demand_samples empty; attempting to fetch raw demand_count rows for station={StationId}, vehicle={VehicleType}",
                     stationId, vehicleType);
-                return null;
+
+                var sampleSql = @"
+                    SELECT demand_count
+                    FROM vw_rental_demand_30m_last_56d
+                    WHERE station_id = {0}
+                      AND vehicle_type = {1}
+                      AND bin_ts >= {2}
+                      AND bin_ts < {3}
+                    ORDER BY bin_ts";
+
+                rawSamples = await _dbContext.Database
+                    .SqlQueryRaw<int>(sampleSql, stationId, vehicleType, startDate, endDate)
+                    .ToListAsync(cancellationToken);
+
+                if (rawSamples == null || rawSamples.Count == 0)
+                {
+                    _logger.LogWarning(
+                        "No demand data for station={StationId}, vehicle={VehicleType}",
+                        stationId, vehicleType);
+                    return null;
+                }
             }
 
-            var sortedSamples = result.demand_samples.Select(x => (double)x).OrderBy(x => x).ToArray();
+            // Use whichever samples we have: aggregated result first, otherwise rawSamples
+            int[] samplesArray = result != null && result.demand_samples != null && result.demand_samples.Length > 0
+                ? result.demand_samples
+                : rawSamples!.ToArray();
+
+            var sortedSamples = samplesArray.Select(x => (double)x).OrderBy(x => x).ToArray();
             var p90 = CalculateQuantile(sortedSamples, 0.90);
+
+            double mean;
+            if (result != null && !double.IsNaN(result.mean_demand) && result.mean_demand > 0)
+            {
+                mean = result.mean_demand;
+            }
+            else
+            {
+                mean = samplesArray.Length > 0 ? samplesArray.Average() : 0.0;
+            }
 
             return new DemandStats
             {
-                Mean = result.mean_demand,
+                Mean = mean,
                 P90 = p90
             };
         }
