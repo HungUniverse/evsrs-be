@@ -543,7 +543,7 @@ namespace EVSRS.Services.Service
         }
 
         /// <summary>
-        /// Xử lý bước trả xe: validate return inspection, đánh dấu RETURNED, tính phí trả muộn nếu có, và giải phóng xe.
+        /// Xử lý bước trả xe: validate return inspection, đánh dấu RETURNED, và giải phóng xe.
         /// </summary>
         public async Task<OrderBookingResponseDto> ProcessReturnOrderAsync(string id)
         {

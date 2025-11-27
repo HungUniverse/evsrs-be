@@ -15,6 +15,7 @@ namespace EVSRS.BusinessObjects.Entity
         public string? Odometer { get; set; }
         public string? Images { get; set; }
         public string? Notes { get; set; }
+        public string? ReturnLateFee { get; set; }
         public string? StaffId { get; set; }
 
         public OrderBooking? OrderBooking { get; set; }
