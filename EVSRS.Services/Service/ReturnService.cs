@@ -86,12 +86,36 @@ public class ReturnService : IReturnService
             {
                 // Use the inspection.CreatedAt as the official returned time
                 var endAt = orderBooking.EndAt.Value;
-                var overdueMinutes = (inspection.CreatedAt - endAt).TotalMinutes;
+
+                // inspection.CreatedAt is set to UTC when created above, but normalize defensively
+                var returnedAtUtc = inspection.CreatedAt.Kind == DateTimeKind.Utc
+                    ? inspection.CreatedAt
+                    : inspection.CreatedAt.ToUniversalTime();
+
+                // Normalize endAt safely:
+                // - If Kind==Utc -> keep
+                // - If Kind==Local -> convert to UTC
+                // - If Kind==Unspecified -> assume it's stored as UTC (avoid ToUniversalTime assumption)
+                DateTime endAtUtc;
+                if (endAt.Kind == DateTimeKind.Utc)
+                    endAtUtc = endAt;
+                else if (endAt.Kind == DateTimeKind.Local)
+                    endAtUtc = endAt.ToUniversalTime();
+                else
+                    endAtUtc = DateTime.SpecifyKind(endAt, DateTimeKind.Utc);
+
+                // Debug log to help troubleshoot late-fee calculations in production/dev
+                Console.WriteLine($"[ReturnFeeDebug] Order={request.OrderBookingId} endAt={endAt:O} endKind={endAt.Kind} endAtUtc={endAtUtc:O} returnedAtUtc={returnedAtUtc:O} graceMin={graceMinutes} feePerHour={feePerHour}");
+
+                var overdueMinutes = (returnedAtUtc - endAtUtc).TotalMinutes;
                 if (overdueMinutes > graceMinutes)
                 {
                     var effectiveMinutes = overdueMinutes - graceMinutes;
-                    var hoursLate = (int)Math.Ceiling(effectiveMinutes / 60.0);
-                    lateFee = hoursLate * feePerHour;
+                    if (effectiveMinutes > 0)
+                    {
+                        var hoursLate = (int)Math.Ceiling(effectiveMinutes / 60.0);
+                        lateFee = hoursLate * feePerHour;
+                    }
                 }
             }
         }
@@ -104,15 +128,16 @@ public class ReturnService : IReturnService
        
         
 
+        // persist late fee on the inspection entity as string (new field)
+        inspection.ReturnLateFee = lateFee.ToString(CultureInfo.InvariantCulture);
+
         await _unitOfWork.HandoverInspectionRepository.InsertAsync(inspection);
         await _unitOfWork.SaveChangesAsync();
 
         var result = await _unitOfWork.HandoverInspectionRepository.GetByIdAsync(inspection.Id);
-        var dto = _mapper.Map<HandoverInspectionResponseDto>(result);      
-        dto.ReturnLateFee = lateFee;
-       
+        return _mapper.Map<HandoverInspectionResponseDto>(result);
 
-        return dto;
+        
     }
 
     public async Task<ReturnSettlementResponseDto> CreateReturnSettlementAsync(ReturnSettlementRequestDto request)
