@@ -9,8 +9,8 @@ using EVSRS.Services.Infrastructure.Llm;
 using EVSRS.Services.Interface;
 using Microsoft.Extensions.Logging;
 
-namespace EVSRS.Services.Service
-{
+namespace EVSRS.Services.Service;
+
     /// <summary>
     /// Planner tính toán nhu cầu và đề xuất hành động (mua/lease/rebalance) dựa trên forecast và inventory.
     /// </summary>
@@ -296,4 +296,4 @@ public class CapacityPlanner : ICapacityPlanner
             return Convert.ToHexString(bytes).ToLowerInvariant();
         }
     }
-}
+

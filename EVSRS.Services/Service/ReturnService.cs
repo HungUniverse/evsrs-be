@@ -39,6 +39,15 @@ public class ReturnService : IReturnService
         _orderBookingService = orderBookingService;
     }
 
+    /// <summary>
+    /// Tạo bản kiểm tra (handover) khi khách trả xe cho một đơn hàng.
+    /// - Xác thực dữ liệu vào, kiểm tra đơn đang ở trạng thái IN_USE.
+    /// - Tính phí trả trễ (nếu có), lưu vào trường <c>ReturnLateFee</c> của bản kiểm tra.
+    /// - Lưu bản kiểm tra vào cơ sở dữ liệu và trả về DTO đã lưu.
+    /// Phương thức này chỉ tạo bản kiểm tra, không thực hiện việc hoàn tất đơn (complete).
+    /// </summary>
+    /// <param name="request">Dữ liệu yêu cầu kiểm tra trả xe.</param>
+    /// <returns>DTO của bản kiểm tra đã được lưu.</returns>
     public async Task<HandoverInspectionResponseDto> CreateReturnInspectionAsync(HandoverInspectionRequestDto request)
     {
         await _validationService.ValidateAndThrowAsync(request);
@@ -86,36 +95,15 @@ public class ReturnService : IReturnService
             {
                 // Use the inspection.CreatedAt as the official returned time
                 var endAt = orderBooking.EndAt.Value;
-
-                // inspection.CreatedAt is set to UTC when created above, but normalize defensively
-                var returnedAtUtc = inspection.CreatedAt.Kind == DateTimeKind.Utc
-                    ? inspection.CreatedAt
-                    : inspection.CreatedAt.ToUniversalTime();
-
-                // Normalize endAt safely:
-                // - If Kind==Utc -> keep
-                // - If Kind==Local -> convert to UTC
-                // - If Kind==Unspecified -> assume it's stored as UTC (avoid ToUniversalTime assumption)
-                DateTime endAtUtc;
-                if (endAt.Kind == DateTimeKind.Utc)
-                    endAtUtc = endAt;
-                else if (endAt.Kind == DateTimeKind.Local)
-                    endAtUtc = endAt.ToUniversalTime();
-                else
-                    endAtUtc = DateTime.SpecifyKind(endAt, DateTimeKind.Utc);
-
-                // Debug log to help troubleshoot late-fee calculations in production/dev
-                Console.WriteLine($"[ReturnFeeDebug] Order={request.OrderBookingId} endAt={endAt:O} endKind={endAt.Kind} endAtUtc={endAtUtc:O} returnedAtUtc={returnedAtUtc:O} graceMin={graceMinutes} feePerHour={feePerHour}");
+                var returnedAtUtc = inspection.CreatedAt.Kind == DateTimeKind.Utc ? inspection.CreatedAt : inspection.CreatedAt.ToUniversalTime();
+                var endAtUtc = endAt.Kind == DateTimeKind.Utc ? endAt : endAt.ToUniversalTime();
 
                 var overdueMinutes = (returnedAtUtc - endAtUtc).TotalMinutes;
                 if (overdueMinutes > graceMinutes)
                 {
                     var effectiveMinutes = overdueMinutes - graceMinutes;
-                    if (effectiveMinutes > 0)
-                    {
-                        var hoursLate = (int)Math.Ceiling(effectiveMinutes / 60.0);
-                        lateFee = hoursLate * feePerHour;
-                    }
+                    var hoursLate = (int)Math.Ceiling(effectiveMinutes / 60.0);
+                    lateFee = hoursLate * feePerHour;
                 }
             }
         }
@@ -140,6 +128,13 @@ public class ReturnService : IReturnService
         
     }
 
+    /// <summary>
+    /// Tạo bản thanh toán (return settlement) cho một đơn đã trả.
+    /// - Kiểm tra dữ liệu đầu vào và ngăn chặn tạo trùng cho cùng một đơn.
+    /// - Tạo các mục settlement (SettlementItems), lưu bản settlement và trả về DTO đã lưu.
+    /// </summary>
+    /// <param name="request">Dữ liệu tạo settlement.</param>
+    /// <returns>DTO settlement đã lưu.</returns>
     public async Task<ReturnSettlementResponseDto> CreateReturnSettlementAsync(ReturnSettlementRequestDto request)
     {
         await _validationService.ValidateAndThrowAsync(request);
@@ -183,6 +178,14 @@ public class ReturnService : IReturnService
         return _mapper.Map<ReturnSettlementResponseDto>(result);
     }
 
+    /// <summary>
+    /// Cập nhật một return settlement hiện có và các mục kèm theo.
+    /// - Xác thực yêu cầu, cập nhật trường của settlement và thay thế danh sách SettlementItems.
+    /// - Lưu các thay đổi và trả về DTO cập nhật.
+    /// </summary>
+    /// <param name="id">Id của settlement cần cập nhật.</param>
+    /// <param name="request">Dữ liệu settlement mới.</param>
+    /// <returns>DTO settlement sau khi cập nhật.</returns>
     public async Task<ReturnSettlementResponseDto> UpdateReturnSettlementAsync(string id, ReturnSettlementRequestDto request)
     {
         await _validationService.ValidateAndThrowAsync(request);
@@ -213,6 +216,12 @@ public class ReturnService : IReturnService
         return _mapper.Map<ReturnSettlementResponseDto>(settlement);
     }
 
+    /// <summary>
+    /// Lấy return settlement theo id, bao gồm các mục (items).
+    /// Ném lỗi nếu không tìm thấy settlement tương ứng.
+    /// </summary>
+    /// <param name="id">Id của settlement.</param>
+    /// <returns>DTO của settlement.</returns>
     public async Task<ReturnSettlementResponseDto> GetReturnSettlementByIdAsync(string id)
     {
         var settlement = await _unitOfWork.ReturnSettlementRepository.GetReturnSettlementWithItemsAsync(id);
@@ -220,18 +229,36 @@ public class ReturnService : IReturnService
         return _mapper.Map<ReturnSettlementResponseDto>(settlement);
     }
 
+    /// <summary>
+    /// Lấy settlement của một đơn theo OrderBookingId nếu có.
+    /// Trả về null nếu chưa có settlement cho đơn đó.
+    /// </summary>
+    /// <param name="orderBookingId">Id đơn hàng.</param>
+    /// <returns>DTO settlement hoặc null.</returns>
     public async Task<ReturnSettlementResponseDto?> GetReturnSettlementByOrderIdAsync(string orderBookingId)
     {
         var settlement = await _unitOfWork.ReturnSettlementRepository.GetReturnSettlementByOrderIdAsync(orderBookingId);
         return settlement != null ? _mapper.Map<ReturnSettlementResponseDto>(settlement) : null;
     }
 
+    /// <summary>
+    /// Lấy danh sách return settlement được tạo trong khoảng thời gian (startDate - endDate).
+    /// </summary>
+    /// <param name="startDate">Ngày bắt đầu (bao gồm).</param>
+    /// <param name="endDate">Ngày kết thúc (bao gồm).</param>
+    /// <returns>Danh sách DTO settlement trong khoảng.</returns>
     public async Task<List<ReturnSettlementResponseDto>> GetReturnSettlementsByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
         var settlements = await _unitOfWork.ReturnSettlementRepository.GetReturnSettlementsByDateRangeAsync(startDate, endDate);
         return settlements.Select(s => _mapper.Map<ReturnSettlementResponseDto>(s)).ToList();
     }
 
+    /// <summary>
+    /// Lấy bản kiểm tra trả xe (handover inspection) theo OrderBookingId.
+    /// Ném lỗi nếu không tìm thấy bản kiểm tra.
+    /// </summary>
+    /// <param name="orderBookingId">Id đơn hàng.</param>
+    /// <returns>DTO của bản kiểm tra.</returns>
     public async Task<HandoverInspectionResponseDto> GetReturnInspectionByOrderIdAsync(string orderBookingId)
     {
         var inspection = await _unitOfWork.HandoverInspectionRepository
@@ -240,6 +267,10 @@ public class ReturnService : IReturnService
         return _mapper.Map<HandoverInspectionResponseDto>(inspection);
     }
 
+    /// <summary>
+    /// Xóa một return settlement theo id. Ném lỗi nếu không tồn tại.
+    /// </summary>
+    /// <param name="id">Id của settlement cần xóa.</param>
     public async Task DeleteReturnSettlementAsync(string id)
     {
         var settlement = await _unitOfWork.ReturnSettlementRepository.GetByIdAsync(id);
@@ -249,6 +280,13 @@ public class ReturnService : IReturnService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Hoàn tất quá trình trả xe cho một đơn hàng.
+    /// - Kiểm tra các điều kiện cần thiết (inspection/settlement đã có), chuyển trạng thái đơn sang <c>COMPLETED</c>.
+    /// - Cập nhật trạng thái xe về AVAILABLE và cập nhật membership nếu có.
+    /// </summary>
+    /// <param name="request">Dữ liệu yêu cầu hoàn tất trả xe (chứa OrderBookingId).</param>
+    /// <returns>DTO đơn hàng sau khi hoàn tất.</returns>
     public async Task<OrderBookingResponseDto> CompleteReturnProcessAsync(CompleteReturnRequestDto request)
     {
         await _validationService.ValidateAndThrowAsync(request);
@@ -290,6 +328,12 @@ public class ReturnService : IReturnService
         return _mapper.Map<OrderBookingResponseDto>(orderBooking);
     }
 
+    /// <summary>
+    /// Xử lý thanh toán cho một return settlement: xác thực, đánh dấu PAID và nếu cần hoàn tất đơn.
+    /// Cập nhật thông tin thanh toán và trả về DTO settlement đã cập nhật.
+    /// </summary>
+    /// <param name="request">Dữ liệu thanh toán cho settlement.</param>
+    /// <returns>DTO settlement sau khi xử lý thanh toán.</returns>
     public async Task<ReturnSettlementResponseDto> ProcessReturnSettlementPaymentAsync(ReturnSettlementPaymentRequestDto request)
     {
         await _validationService.ValidateAndThrowAsync(request);
@@ -340,6 +384,12 @@ public class ReturnService : IReturnService
         return _mapper.Map<ReturnSettlementResponseDto>(settlement);
     }
 
+    /// <summary>
+    /// Tạo URL QR mã thanh toán SePay cho một return settlement để khách hàng thanh toán.
+    /// Kiểm tra tính hợp lệ của settlement và gọi dịch vụ SePay để tạo QR.
+    /// </summary>
+    /// <param name="returnSettlementId">Id settlement cần tạo QR.</param>
+    /// <returns>Chuỗi URL của QR code.</returns>
     public async Task<string> GenerateSepayQrForReturnSettlementAsync(string returnSettlementId)
     {
         var settlement = await _unitOfWork.ReturnSettlementRepository.GetReturnSettlementWithItemsAsync(returnSettlementId);
@@ -376,6 +426,12 @@ public class ReturnService : IReturnService
         return sepayQrResponse.QrUrl;
     }
 
+    /// <summary>
+    /// Lấy trạng thái thanh toán cho một return settlement và (tuỳ) tạo QR nếu thanh toán đang chờ.
+    /// Trả về DTO chứa thông tin thanh toán và URL QR khi có.
+    /// </summary>
+    /// <param name="returnSettlementId">Id settlement.</param>
+    /// <returns>DTO trạng thái thanh toán.</returns>
     public async Task<ReturnSettlementPaymentStatusDto> GetReturnSettlementPaymentStatusAsync(string returnSettlementId)
     {
         // Get settlement by ID
