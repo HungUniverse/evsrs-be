@@ -448,9 +448,9 @@ namespace EVSRS.Services.Service
             var p90 = CalculateQuantile(sortedSamples, 0.90);
 
             double mean;
-            if (result != null && !double.IsNaN(result.mean_demand) && result.mean_demand > 0)
+            if (result != null && result.mean_demand.HasValue && !double.IsNaN(result.mean_demand.Value) && result.mean_demand.Value > 0)
             {
-                mean = result.mean_demand;
+                mean = result.mean_demand.Value;
             }
             else
             {
@@ -531,7 +531,7 @@ namespace EVSRS.Services.Service
 
         private class AggregatedDemandRow
         {
-            public double mean_demand { get; set; }
+            public double? mean_demand { get; set; }
             public int[]? demand_samples { get; set; }
         }
 
